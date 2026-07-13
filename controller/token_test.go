@@ -16,6 +16,8 @@ import (
 	"github.com/QuantumNous/new-api/model"
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -537,4 +539,42 @@ func TestGetTokenKeyRequiresOwnershipAndReturnsFullKey(t *testing.T) {
 	if strings.Contains(unauthorizedRecorder.Body.String(), token.Key) {
 		t.Fatalf("unauthorized key response leaked raw token key: %s", unauthorizedRecorder.Body.String())
 	}
+}
+
+func TestDirectSaleTokenLifecycle(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	body := map[string]any{
+		"name":                 "direct-sale-token",
+		"expired_time":         common.GetTimestamp() + 3600,
+		"remain_quota":         1000,
+		"unlimited_quota":      false,
+		"model_limits_enabled": true,
+		"model_limits":         "gpt-4o-mini",
+		"group":                "default",
+	}
+
+	createCtx, createRecorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/", body, 42)
+	AddToken(createCtx)
+	require.True(t, decodeAPIResponse(t, createRecorder).Success)
+
+	var token model.Token
+	require.NoError(t, db.Where("user_id = ?", 42).First(&token).Error)
+	assert.Equal(t, 1000, token.RemainQuota)
+	assert.Greater(t, token.ExpiredTime, common.GetTimestamp())
+	assert.Equal(t, []string{"gpt-4o-mini"}, token.GetModelLimits())
+
+	disableCtx, disableRecorder := newAuthenticatedContext(t, http.MethodPut, "/api/token/?status_only=1", map[string]any{
+		"id":     token.Id,
+		"status": common.TokenStatusDisabled,
+	}, 42)
+	UpdateToken(disableCtx)
+	require.True(t, decodeAPIResponse(t, disableRecorder).Success)
+	require.NoError(t, db.First(&token, token.Id).Error)
+	assert.Equal(t, common.TokenStatusDisabled, token.Status)
+
+	deleteCtx, deleteRecorder := newAuthenticatedContext(t, http.MethodDelete, "/api/token/"+strconv.Itoa(token.Id), nil, 42)
+	deleteCtx.Params = gin.Params{{Key: "id", Value: strconv.Itoa(token.Id)}}
+	DeleteToken(deleteCtx)
+	require.True(t, decodeAPIResponse(t, deleteRecorder).Success)
+	assert.ErrorIs(t, db.First(&model.Token{}, token.Id).Error, gorm.ErrRecordNotFound)
 }

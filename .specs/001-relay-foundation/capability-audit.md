@@ -2,7 +2,7 @@
 
 ## 结论
 
-锁定基线已经具备可复用的数据面、token、usage 日志和基础计费能力。BlackRain 不应重写模型中转核心；下一阶段应增加薄的 enterprise control plane，补齐 tenant/subject、service credential、受控发 token 和可重放 usage export。
+锁定基线已经具备直销所需的数据面、用户、充值、token、usage 日志和基础计费能力。BlackRain 不应重写模型中转或普通客户账户核心；下一阶段只为企业自动化场景增加薄的 control plane，补齐 tenant/subject、service credential、受控发 token 和可重放 usage export。
 
 ## 能力矩阵
 

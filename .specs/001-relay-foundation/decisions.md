@@ -20,3 +20,17 @@
 - 原因：三个产品独立运营、独立故障域和独立账本，避免把 BlackRain 身份模型写死在公开中转站。
 - 替代方案：Relay 直接验证 Supabase JWT；共享数据库；Cloud 代理模型正文。
 - 后续复查条件：实现前冻结管理 API、token、usage 和撤销合同。
+
+## 2026-07-13：直销复用 New API 原生账户能力
+
+- 决策：普通直销客户使用现有 `User`、`Group`、`Token`、充值和请求级计费；仅为需要自动化下游发行与对账的客户增加 enterprise tenant 映射层。
+- 原因：现有能力已经覆盖开户、授额、模型白名单、过期、撤销和 usage，重复建设会增加迁移、账务与安全成本。
+- 替代方案：所有客户统一迁移到新 tenant 系统；为 BlackRain Cloud 定制专用账户模型。
+- 后续复查条件：原生账户无法满足多成员组织、统一账单或企业 RBAC 时，再扩展 enterprise tenant 能力。
+
+## 2026-07-13：采用 dev 到 production 发布路径
+
+- 决策：小团队暂不维护长期 staging 环境；开发验证通过后，以内部账户和 BlackRain Cloud 测试租户小流量发布到 production。
+- 原因：减少环境维护成本，同时保留真实生产链路验证。
+- 替代方案：长期 staging；直接全量开放 production。
+- 发布门槛：独立 Secret、TLS、迁移前备份、健康检查、监控告警、快速回滚以及计费/限流/流式/对账 smoke 全部通过。

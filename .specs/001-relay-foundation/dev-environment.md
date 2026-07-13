@@ -62,4 +62,5 @@ make dev-reset
 
 - `.env.dev` 被 Git 忽略；提交的是 `.env.dev.example`。
 - 示例密码只允许本机开发，不得复制到云端环境。
-- staging/production 必须使用独立 Secret、托管数据库、TLS、备份、监控和发布流水线。
+- production 必须使用独立 Secret、托管数据库、TLS、备份、监控和发布流水线；本项目暂不维护长期 staging 环境。
+- 首次 production 发布只允许内部账户与 BlackRain Cloud 测试租户小流量验证，通过计费、限流、流式和对账 smoke 后再开放销售。

@@ -10,11 +10,13 @@
 - [x] 跑锁定上游的前端构建、完整 Go 测试和 SQLite/PostgreSQL/MySQL 基础测试
 - [x] 建立本地 PostgreSQL/Redis dev 环境和前后端开发入口
 
-## 阶段 1：企业客户与 Token
+## 阶段 1：直销闭环与企业客户
 
+- [x] 冻结直销客户复用 New API `User`/`Group`/`Token` 的边界
+- [x] 验证 token 签发、模型白名单、额度、过期、禁用和删除生命周期
 - [ ] 冻结 Cloud service account 与管理 API 权限
 - [ ] 冻结 enterprise tenant、external subject 和 token 数据模型
-- [ ] 实现/验证模型白名单、额度、速率、过期和撤销
+- [ ] 实现/验证 enterprise token 的客户/subject 归属与速率策略
 - [ ] 禁止 Desktop token 访问管理 API
 
 ## 阶段 2：Usage 与结算
@@ -33,7 +35,8 @@
 ## 阶段 4：生产运营
 
 - [x] 本地开发环境和仅限开发的 Secret 模板
-- [ ] 预发布/生产环境和 Secret 管理
+- [ ] production 环境和独立 Secret 管理
+- [ ] 内部账户与 BlackRain Cloud 测试租户小流量发布
 - [ ] 数据库 migration/rollback、备份、恢复和灾难演练
 - [ ] 日志脱敏、监控、告警、容量和成本看板
 - [ ] AGPL 源码提供、上游授权、支付/税务和国内运营合规审查

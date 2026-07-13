@@ -5,6 +5,10 @@
 ## 总体拓扑
 
 ```text
+Direct customer control/data plane
+  --user session---------> Relay account/top-up/token API
+  --scoped model token---> Relay model API
+
 BlackRain Cloud control plane
   --enterprise credential--> Relay management API
   <--scoped model token----- Relay
@@ -19,7 +23,7 @@ Relay usage/API --idempotent records--> BlackRain Cloud reconciliation
 
 ## 所有权
 
-- Relay：企业客户、模型渠道、路由、scoped token、原始 usage、执行 quota、速率限制、渠道成本和批发结算。
+- Relay：直销客户身份与商业账本、企业客户、模型渠道、路由、scoped token、原始 usage、执行 quota、速率限制、渠道成本和批发结算。
 - Cloud：Supabase 身份、BlackRain 套餐、商业 credit ledger、支付、退款、市场和创作者结算。
 - Desktop：本地项目、工作台、双引擎、系统凭据和本地 CODE 协议翻译。
 
@@ -36,6 +40,12 @@ Relay usage/API --idempotent records--> BlackRain Cloud reconciliation
 - `main` 基于评估过的 exact tag/commit，不跟随上游 HEAD。
 - 上游源码尽量保持原状；BlackRain 自有文档、合同和适配优先放独立文件/模块，降低升级冲突。
 - 任何 UI 修改继续保留 New API 指定署名和原项目链接。
+
+## 客户模型
+
+- 普通直销客户直接使用 New API 现有 `User`、`Group` 和 `Token`，不增加平行账户体系。
+- 需要自动签发下游 token、外部 subject 映射和批发结算的客户才进入 enterprise tenant 控制面。
+- BlackRain Cloud 按上述企业合同接入，不获得 Relay 管理员权限，也不形成专用业务分支。
 
 ## 失败原则
 
