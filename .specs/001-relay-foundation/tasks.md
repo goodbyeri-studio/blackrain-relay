@@ -7,7 +7,8 @@
 - [x] 保留 AGPLv3、NOTICE、Section 7 署名和原项目链接
 - [x] 建立 BlackRain 文档、AGENTS、上游纪律和 foundation spec
 - [x] 运行锁定上游的 Go 测试并记录前端 `dist` 前置条件
-- [ ] 跑锁定上游的前端构建、完整 Go 测试和数据库基础测试
+- [x] 跑锁定上游的前端构建、完整 Go 测试和 SQLite/PostgreSQL/MySQL 基础测试
+- [x] 建立本地 PostgreSQL/Redis dev 环境和前后端开发入口
 
 ## 阶段 1：企业客户与 Token
 
@@ -31,7 +32,8 @@
 
 ## 阶段 4：生产运营
 
-- [ ] 开发/预发布/生产环境和 Secret 管理
+- [x] 本地开发环境和仅限开发的 Secret 模板
+- [ ] 预发布/生产环境和 Secret 管理
 - [ ] 数据库 migration/rollback、备份、恢复和灾难演练
 - [ ] 日志脱敏、监控、告警、容量和成本看板
 - [ ] AGPL 源码提供、上游授权、支付/税务和国内运营合规审查
