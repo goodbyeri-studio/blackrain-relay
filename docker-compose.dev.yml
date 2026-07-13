@@ -1,34 +1,36 @@
-# Frontend Development - Backend built from local source
+# BlackRain Relay local development
 #
 # Usage:
-#   1. docker compose -f docker-compose.dev.yml up -d
-#   2. cd web && bun install && bun run dev
-#   3. Open http://localhost:3001 (Rsbuild dev server, API auto-proxied to :3000)
+#   1. make dev-bootstrap
+#   2. make dev-api-rebuild
+#   3. make dev-frontend
+#   4. Open http://127.0.0.1:3001
 #
 # Rebuild backend after Go code changes:
-#   docker compose -f docker-compose.dev.yml up -d --build new-api
+#   make dev-api-rebuild
 #
 # Stop:
-#   docker compose -f docker-compose.dev.yml down
+#   make dev-down
 #
 # Reset data:
-#   docker compose -f docker-compose.dev.yml down -v
+#   make dev-reset
 
 services:
   new-api:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    image: new-api-dev:local
-    container_name: new-api-dev
+    image: blackrain-relay-dev:local
+    container_name: blackrain-relay-dev
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:${PORT}:3000"
     volumes:
       - dev_data:/data
     environment:
-      - SQL_DSN=postgresql://root:123456@postgres:5432/new-api
-      - REDIS_CONN_STRING=redis://redis
+      - SQL_DSN=postgresql://${DEV_POSTGRES_USER}:${DEV_POSTGRES_PASSWORD}@postgres:5432/${DEV_POSTGRES_DB}
+      - REDIS_CONN_STRING=redis://:${DEV_REDIS_PASSWORD}@redis:6379/0
+      - SESSION_SECRET=${SESSION_SECRET}
       - TZ=Asia/Shanghai
       - BATCH_UPDATE_ENABLED=true
       # Enable only when accessing the dev backend through HTTPS. SESSION_COOKIE_TRUSTED_URL is required when true.
@@ -36,7 +38,7 @@ services:
       # - SESSION_COOKIE_TRUSTED_URL=https://example.com,https://admin.example.com
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
@@ -44,32 +46,45 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: new-api-dev-redis
+    container_name: blackrain-relay-dev-redis
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${DEV_REDIS_PASSWORD}"]
+    ports:
+      - "127.0.0.1:${DEV_REDIS_PORT}:6379"
+    volumes:
+      - dev_redis_data:/data
     networks:
       - dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${DEV_REDIS_PASSWORD}", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
   postgres:
     image: postgres:15-alpine
-    container_name: new-api-dev-pg
+    container_name: blackrain-relay-dev-pg
     restart: unless-stopped
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: new-api
+      POSTGRES_USER: ${DEV_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${DEV_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DEV_POSTGRES_DB}
+    ports:
+      - "127.0.0.1:${DEV_POSTGRES_PORT}:5432"
     volumes:
       - dev_pg_data:/var/lib/postgresql/data
     networks:
       - dev-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d new-api"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${DEV_POSTGRES_USER} -d ${DEV_POSTGRES_DB}"]
+      interval: 2s
       timeout: 3s
-      retries: 5
+      retries: 30
 
 volumes:
   dev_data:
   dev_pg_data:
+  dev_redis_data:
 
 networks:
   dev-network:
