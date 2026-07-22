@@ -2,12 +2,57 @@ package controller
 
 import (
 	"testing"
+	"time"
 
 	"github.com/QuantumNous/new-api/model"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestGetDeepKeyPricingCatalogServesStaleWhileRefreshing(t *testing.T) {
+	originalFetcher := deepKeyCatalogFetcher
+	defer func() {
+		deepKeyCatalogFetcher = originalFetcher
+		deepKeyCatalogCache.Lock()
+		deepKeyCatalogCache.catalog = nil
+		deepKeyCatalogCache.fetchedAt = time.Time{}
+		deepKeyCatalogCache.Unlock()
+	}()
+
+	stale := &deepKeyPricingCatalog{Models: []model.Pricing{{ModelName: "stale"}}}
+	refreshed := &deepKeyPricingCatalog{Models: []model.Pricing{{ModelName: "fresh"}}}
+	started := make(chan struct{})
+	release := make(chan struct{})
+	deepKeyCatalogFetcher = func() (*deepKeyPricingCatalog, error) {
+		close(started)
+		<-release
+		return refreshed, nil
+	}
+	deepKeyCatalogCache.Lock()
+	deepKeyCatalogCache.catalog = stale
+	deepKeyCatalogCache.fetchedAt = time.Now().Add(-deepKeyCatalogCacheTTL)
+	deepKeyCatalogCache.Unlock()
+
+	start := time.Now()
+	catalog, err := getDeepKeyPricingCatalog()
+	require.NoError(t, err)
+	assert.Same(t, stale, catalog)
+	assert.Less(t, time.Since(start), 500*time.Millisecond)
+
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("stale catalog did not start a background refresh")
+	}
+	close(release)
+
+	assert.Eventually(t, func() bool {
+		deepKeyCatalogCache.RLock()
+		defer deepKeyCatalogCache.RUnlock()
+		return deepKeyCatalogCache.catalog == refreshed
+	}, time.Second, 10*time.Millisecond)
+}
 
 func TestApplyDeepKeyCatalogMarkup(t *testing.T) {
 	items := []model.Pricing{

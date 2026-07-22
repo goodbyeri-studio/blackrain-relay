@@ -73,16 +73,16 @@ func GetPricing(c *gin.Context) {
 	if catalog, err := getDeepKeyPricingCatalog(); err != nil {
 		common.SysLog("load DeepKey pricing catalog failed: " + err.Error())
 	} else {
-		pricing = mergePricingCatalog(pricing, catalog.Models)
+		// The public catalog is descriptive data, not an authorization source.
+		// Only expose catalog models whose groups are already enabled locally.
+		pricing = mergePricingCatalog(pricing, filterPricingByUsableGroups(catalog.Models, usableGroup))
 		vendors = mergePricingVendors(vendors, catalog.Vendors)
 		for catalogGroup, ratio := range catalog.GroupRatio {
+			if _, allowed := usableGroup[catalogGroup]; !allowed {
+				continue
+			}
 			if _, exists := groupRatio[catalogGroup]; !exists {
 				groupRatio[catalogGroup] = ratio
-			}
-		}
-		for catalogGroup, description := range catalog.UsableGroup {
-			if _, exists := usableGroup[catalogGroup]; !exists {
-				usableGroup[catalogGroup] = description
 			}
 		}
 		for endpoint, info := range catalog.SupportedEndpoint {
@@ -90,7 +90,6 @@ func GetPricing(c *gin.Context) {
 				supportedEndpoint[endpoint] = info
 			}
 		}
-		autoGroups = mergeStringList(autoGroups, catalog.AutoGroups)
 	}
 
 	c.JSON(200, gin.H{
