@@ -88,6 +88,11 @@ export function usePricingColumns(
             <span className='truncate font-mono text-sm font-medium'>
               {model.model_name}
             </span>
+            {model.catalog_only ? (
+              <span className='border-border bg-muted text-muted-foreground shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium'>
+                {t('Catalog only')}
+              </span>
+            ) : null}
           </div>
         )
       },

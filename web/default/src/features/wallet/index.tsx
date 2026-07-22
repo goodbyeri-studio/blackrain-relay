@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
@@ -25,10 +25,12 @@ import { useSystemConfig } from '@/hooks/use-system-config'
 import { getSelf } from '@/lib/api'
 
 import { AffiliateRewardsCard } from './components/affiliate-rewards-card'
+import { AlipayPrecreateDialog } from './components/dialogs/alipay-precreate-dialog'
 import { BillingHistoryDialog } from './components/dialogs/billing-history-dialog'
 import { CreemConfirmDialog } from './components/dialogs/creem-confirm-dialog'
 import { PaymentConfirmDialog } from './components/dialogs/payment-confirm-dialog'
 import { TransferDialog } from './components/dialogs/transfer-dialog'
+import { WechatNativeDialog } from './components/dialogs/wechat-native-dialog'
 import { RechargeFormCard } from './components/recharge-form-card'
 import { SubscriptionPlansCard } from './components/subscription-plans-card'
 import { WalletStatsCard } from './components/wallet-stats-card'
@@ -41,11 +43,15 @@ import {
   useCreemPayment,
   useWaffoPayment,
   useWaffoPancakePayment,
+  useWechatNativePayment,
+  useAlipayPrecreatePayment,
 } from './hooks'
 import {
   getDefaultPaymentType,
   getMinTopupAmount,
+  isAlipayPrecreatePayment,
   isWaffoPancakePayment,
+  isWechatNativePayment,
 } from './lib'
 import type {
   UserWalletData,
@@ -104,6 +110,10 @@ export function Wallet(props: WalletProps) {
   const { processWaffoPayment } = useWaffoPayment()
   const { processing: pancakeProcessing, processWaffoPancakePayment } =
     useWaffoPancakePayment()
+  const wechatPayment = useWechatNativePayment()
+  const alipayPayment = useAlipayPrecreatePayment()
+  const creditedWechatTradeNo = useRef<string | null>(null)
+  const creditedAlipayTradeNo = useRef<string | null>(null)
 
   // Fetch and refresh user data
   const fetchUser = useCallback(async () => {
@@ -132,17 +142,38 @@ export function Wallet(props: WalletProps) {
     }
   }, [props.initialShowHistory])
 
-  // Initialize topup amount when topup info is loaded
   useEffect(() => {
-    if (topupInfo && topupAmount === 0) {
-      const minTopup = getMinTopupAmount(topupInfo)
-      setTopupAmount(minTopup)
-
-      // Calculate initial payment amount with default payment type
-      const defaultPaymentType = getDefaultPaymentType(topupInfo)
-      calculatePaymentAmount(minTopup, defaultPaymentType)
+    if (
+      wechatPayment.order?.status !== 'credited' ||
+      creditedWechatTradeNo.current === wechatPayment.order.trade_no
+    ) {
+      return
     }
-  }, [topupInfo, topupAmount, calculatePaymentAmount])
+    creditedWechatTradeNo.current = wechatPayment.order.trade_no
+    void fetchUser()
+  }, [wechatPayment.order, fetchUser])
+
+  useEffect(() => {
+    if (
+      alipayPayment.order?.status !== 'credited' ||
+      creditedAlipayTradeNo.current === alipayPayment.order.trade_no
+    ) {
+      return
+    }
+    creditedAlipayTradeNo.current = alipayPayment.order.trade_no
+    void fetchUser()
+  }, [alipayPayment.order, fetchUser])
+
+  // Initialize the checkout with the first configured package.
+  useEffect(() => {
+    if (!topupInfo || topupAmount !== 0 || presetAmounts.length === 0) return
+
+    const initialAmount = presetAmounts[0].value
+    const defaultPaymentType = getDefaultPaymentType(topupInfo)
+    setTopupAmount(initialAmount)
+    setSelectedPreset(initialAmount)
+    calculatePaymentAmount(initialAmount, defaultPaymentType)
+  }, [topupInfo, topupAmount, presetAmounts, calculatePaymentAmount])
 
   // Get current payment type (selected or default)
   const getCurrentPaymentType = useCallback(() => {
@@ -188,13 +219,24 @@ export function Wallet(props: WalletProps) {
     if (!selectedPaymentMethod) return
 
     const isPancake = isWaffoPancakePayment(selectedPaymentMethod.type)
-    const success = isPancake
-      ? await processWaffoPancakePayment(topupAmount)
-      : await processPayment(topupAmount, selectedPaymentMethod.type)
+    const isWechat = isWechatNativePayment(selectedPaymentMethod.type)
+    const isAlipay = isAlipayPrecreatePayment(selectedPaymentMethod.type)
+    let success = false
+    if (isPancake) {
+      success = await processWaffoPancakePayment(topupAmount)
+    } else if (isWechat) {
+      success = await wechatPayment.processWechatNativePayment(topupAmount)
+    } else if (isAlipay) {
+      success = await alipayPayment.processAlipayPrecreatePayment(topupAmount)
+    } else {
+      success = await processPayment(topupAmount, selectedPaymentMethod.type)
+    }
 
     if (success) {
       setConfirmDialogOpen(false)
-      await fetchUser()
+      if (!isWechat && !isAlipay) {
+        await fetchUser()
+      }
     }
   }
 
@@ -337,7 +379,12 @@ export function Wallet(props: WalletProps) {
         paymentAmount={paymentAmount}
         paymentMethod={selectedPaymentMethod}
         calculating={calculating}
-        processing={processing || pancakeProcessing}
+        processing={
+          processing ||
+          pancakeProcessing ||
+          wechatPayment.creating ||
+          alipayPayment.creating
+        }
         discountRate={getDiscountRate()}
         usdExchangeRate={effectiveUsdExchangeRate}
       />
@@ -361,6 +408,24 @@ export function Wallet(props: WalletProps) {
         onConfirm={handleCreemConfirm}
         product={selectedCreemProduct}
         processing={creemProcessing}
+      />
+
+      <WechatNativeDialog
+        open={wechatPayment.open}
+        onOpenChange={wechatPayment.setOpen}
+        order={wechatPayment.order}
+        refreshing={wechatPayment.refreshing}
+        refreshError={wechatPayment.refreshError}
+        onRefresh={() => void wechatPayment.refresh()}
+      />
+
+      <AlipayPrecreateDialog
+        open={alipayPayment.open}
+        onOpenChange={alipayPayment.setOpen}
+        order={alipayPayment.order}
+        refreshing={alipayPayment.refreshing}
+        refreshError={alipayPayment.refreshError}
+        onRefresh={() => void alipayPayment.refresh()}
       />
     </>
   )

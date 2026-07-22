@@ -8,9 +8,10 @@ type UpstreamDTO struct {
 }
 
 type UpstreamRequest struct {
-	ChannelIDs []int64       `json:"channel_ids"`
-	Upstreams  []UpstreamDTO `json:"upstreams"`
-	Timeout    int           `json:"timeout"`
+	ChannelIDs    []int64       `json:"channel_ids"`
+	Upstreams     []UpstreamDTO `json:"upstreams"`
+	Timeout       int           `json:"timeout"`
+	MarkupPercent float64       `json:"markup_percent"`
 }
 
 // TestResult 上游测试连通性结果

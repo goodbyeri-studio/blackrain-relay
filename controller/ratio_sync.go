@@ -40,6 +40,9 @@ const (
 	modelsDevPresetID           = -101
 	modelsDevPresetName         = "models.dev 价格预设"
 	modelsDevPresetBaseURL      = "https://models.dev"
+	deepKeyPresetID             = -102
+	deepKeyPresetName           = "DeepKey 模型定价"
+	deepKeyPresetBaseURL        = "https://deepkey.top"
 	modelsDevHost               = "models.dev"
 	modelsDevPath               = "/api.json"
 	modelsDevInputCostRatioBase = 1000.0
@@ -131,6 +134,41 @@ func normalizeSyncValue(field string, value any) any {
 	return value
 }
 
+func applyPricingMarkup(data map[string]any, markupPercent float64) {
+	if markupPercent == 0 {
+		return
+	}
+	multiplier := 1 + markupPercent/100
+	for _, field := range []string{"model_ratio", "model_price"} {
+		values := valueMap(data[field])
+		if len(values) == 0 {
+			continue
+		}
+		markedUp := make(map[string]any, len(values))
+		for modelName, value := range values {
+			parsed, ok := asFloat64(value)
+			if !ok {
+				markedUp[modelName] = value
+				continue
+			}
+			markedUp[modelName] = roundRatioValue(parsed * multiplier)
+		}
+		data[field] = markedUp
+	}
+}
+
+func normalizePricingResponseJSON(body []byte) []byte {
+	var encoded string
+	if err := common.Unmarshal(body, &encoded); err != nil {
+		return body
+	}
+	encoded = strings.TrimSpace(encoded)
+	if encoded == "" {
+		return body
+	}
+	return []byte(encoded)
+}
+
 func getLocalPricingSyncData() map[string]any {
 	data := billing_setting.GetPricingSyncData(map[string]any(ratio_setting.GetExposedData()))
 	data["image_ratio"] = ratio_setting.GetImageRatioCopy()
@@ -149,6 +187,10 @@ func FetchUpstreamRatios(c *gin.Context) {
 
 	if req.Timeout <= 0 {
 		req.Timeout = defaultTimeoutSeconds
+	}
+	if math.IsNaN(req.MarkupPercent) || math.IsInf(req.MarkupPercent, 0) || req.MarkupPercent < 0 || req.MarkupPercent > 1000 {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "加价百分比必须在 0 到 1000 之间"})
+		return
 	}
 
 	var upstreams []dto.UpstreamDTO
@@ -341,6 +383,7 @@ func FetchUpstreamRatios(c *gin.Context) {
 			// 兼容两种上游接口格式：
 			//  type1: /api/ratio_config -> data 为 map[string]any，包含 model_ratio/completion_ratio/cache_ratio/model_price
 			//  type2: /api/pricing      -> data 为 []Pricing 列表，需要转换为与 type1 相同的 map 格式
+			bodyBytes = normalizePricingResponseJSON(bodyBytes)
 			var body struct {
 				Success bool            `json:"success"`
 				Data    json.RawMessage `json:"data"`
@@ -511,6 +554,7 @@ func FetchUpstreamRatios(c *gin.Context) {
 				Error:  r.Err,
 			})
 		} else {
+			applyPricingMarkup(r.Data, req.MarkupPercent)
 			testResults = append(testResults, dto.TestResult{
 				Name:   r.Name,
 				Status: "success",
@@ -1018,6 +1062,13 @@ func GetSyncableChannels(c *gin.Context) {
 		ID:      modelsDevPresetID,
 		Name:    modelsDevPresetName,
 		BaseURL: modelsDevPresetBaseURL,
+		Status:  1,
+	})
+
+	syncableChannels = append(syncableChannels, dto.SyncableChannel{
+		ID:      deepKeyPresetID,
+		Name:    deepKeyPresetName,
+		BaseURL: deepKeyPresetBaseURL,
 		Status:  1,
 	})
 

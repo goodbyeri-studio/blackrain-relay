@@ -38,7 +38,6 @@ func SetApiRouter(router *gin.Engine) {
 			perfMetricsRoute.GET("/summary", controller.GetPerfMetricsSummary)
 			perfMetricsRoute.GET("", controller.GetPerfMetrics)
 		}
-		apiRouter.GET("/rankings", middleware.HeaderNavModuleAuth("rankings"), controller.GetRankings)
 		apiRouter.GET("/verification", middleware.EmailVerificationRateLimit(), middleware.TurnstileCheck(), controller.SendEmailVerification)
 		apiRouter.GET("/reset_password", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.SendPasswordResetEmail)
 		apiRouter.POST("/user/reset", middleware.CriticalRateLimit(), anonymousRequestBodyLimit, controller.ResetPassword)
@@ -60,6 +59,8 @@ func SetApiRouter(router *gin.Engine) {
 		// :env separates test vs prod URLs so the operator can register each
 		// in Pancake's matching webhook slot; handler enforces env match.
 		apiRouter.POST("/waffo-pancake/webhook/:env", anonymousRequestBodyLimit, controller.WaffoPancakeWebhook)
+		apiRouter.POST("/payment/wechat/notify", anonymousRequestBodyLimit, controller.WechatPayNotify)
+		apiRouter.POST("/payment/alipay/notify", anonymousRequestBodyLimit, controller.AlipayNotify)
 
 		// Universal secure verification routes
 		apiRouter.POST("/verify", middleware.UserAuth(), middleware.CriticalRateLimit(), controller.UniversalVerify)
@@ -105,6 +106,10 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/waffo/pay", middleware.CriticalRateLimit(), controller.RequestWaffoPay)
 				selfRoute.POST("/waffo-pancake/amount", controller.RequestWaffoPancakeAmount)
 				selfRoute.POST("/waffo-pancake/pay", middleware.CriticalRateLimit(), controller.RequestWaffoPancakePay)
+				selfRoute.POST("/wechat/native/pay", middleware.CriticalRateLimit(), controller.RequestWechatNativePay)
+				selfRoute.GET("/wechat/native/order/:trade_no", controller.GetWechatNativePayStatus)
+				selfRoute.POST("/alipay/precreate/pay", middleware.CriticalRateLimit(), controller.RequestAlipayPrecreate)
+				selfRoute.GET("/alipay/precreate/order/:trade_no", controller.GetAlipayPrecreateStatus)
 				selfRoute.POST("/aff_transfer", controller.TransferAffQuota)
 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
 

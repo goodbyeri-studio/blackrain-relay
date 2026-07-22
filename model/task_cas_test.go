@@ -43,6 +43,10 @@ func TestMain(m *testing.M) {
 		&QuotaData{},
 		&Ability{},
 		&TopUp{},
+		&WechatPayOrder{},
+		&WechatPayNotification{},
+		&AlipayOrder{},
+		&AlipayNotification{},
 		&SubscriptionPlan{},
 		&SubscriptionOrder{},
 		&UserSubscription{},
@@ -69,6 +73,10 @@ func truncateTables(t *testing.T) {
 		DB.Exec("DELETE FROM quota_data")
 		DB.Exec("DELETE FROM abilities")
 		DB.Exec("DELETE FROM top_ups")
+		DB.Exec("DELETE FROM wechat_pay_notifications")
+		DB.Exec("DELETE FROM wechat_pay_orders")
+		DB.Exec("DELETE FROM alipay_notifications")
+		DB.Exec("DELETE FROM alipay_orders")
 		DB.Exec("DELETE FROM subscription_orders")
 		DB.Exec("DELETE FROM subscription_plans")
 		DB.Exec("DELETE FROM user_subscriptions")

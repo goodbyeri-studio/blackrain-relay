@@ -252,6 +252,7 @@ export type BillingSettings = {
   QuotaForInvitee: number
   TopUpLink: string
   'general_setting.docs_link': string
+  'general_setting.monitor_link': string
   'quota_setting.enable_free_model_pre_consume': boolean
   QuotaPerUnit: number
   USDExchangeRate: number
@@ -429,6 +430,7 @@ export type UpstreamConfig = {
 export type FetchUpstreamRatiosRequest = {
   upstreams: UpstreamConfig[]
   timeout: number
+  markup_percent: number
 }
 
 export type TestResult = {

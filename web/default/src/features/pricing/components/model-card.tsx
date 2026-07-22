@@ -211,9 +211,16 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
             )}
           </div>
           <div className='min-w-0'>
-            <h3 className='text-foreground truncate font-mono text-[15px] leading-tight font-bold'>
-              {props.model.model_name}
-            </h3>
+            <div className='flex min-w-0 items-center gap-2'>
+              <h3 className='text-foreground truncate font-mono text-[15px] leading-tight font-bold'>
+                {props.model.model_name}
+              </h3>
+              {props.model.catalog_only ? (
+                <span className='border-border bg-muted text-muted-foreground shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium'>
+                  {t('Catalog only')}
+                </span>
+              ) : null}
+            </div>
             <div className='mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm sm:mt-1 sm:gap-x-3'>
               {priceSummary}
             </div>

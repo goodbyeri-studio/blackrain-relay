@@ -4,6 +4,9 @@
 .history
 upload
 *.exe
+*.key
+*.p12
+*.pem
 *.db
 build
 *.db-journal

@@ -52,6 +52,40 @@ func GetTopUpInfo(c *gin.Context) {
 		}
 	}
 
+	if isWechatPayTopUpEnabled() {
+		hasWechatPay := false
+		for _, method := range payMethods {
+			if method["type"] == model.PaymentMethodWechatNative {
+				hasWechatPay = true
+				break
+			}
+		}
+		if !hasWechatPay {
+			payMethods = append(payMethods, map[string]string{
+				"name":      "WeChat Pay",
+				"type":      model.PaymentMethodWechatNative,
+				"min_topup": strconv.Itoa(operation_setting.MinTopUp),
+			})
+		}
+	}
+
+	if isAlipayTopUpEnabled() {
+		hasAlipay := false
+		for _, method := range payMethods {
+			if method["type"] == model.PaymentMethodAlipayPrecreate {
+				hasAlipay = true
+				break
+			}
+		}
+		if !hasAlipay {
+			payMethods = append(payMethods, map[string]string{
+				"name":      "Alipay QR",
+				"type":      model.PaymentMethodAlipayPrecreate,
+				"min_topup": strconv.Itoa(operation_setting.MinTopUp),
+			})
+		}
+	}
+
 	// Waffo Pancake displayed above the legacy Waffo gateway.
 	enableWaffoPancake := isWaffoPancakeTopUpEnabled()
 	if enableWaffoPancake {
@@ -101,6 +135,8 @@ func GetTopUpInfo(c *gin.Context) {
 		"enable_creem_topup":               isCreemTopUpEnabled(),
 		"enable_waffo_topup":               enableWaffo,
 		"enable_waffo_pancake_topup":       enableWaffoPancake,
+		"enable_wechat_pay":                isWechatPayTopUpEnabled(),
+		"enable_alipay":                    isAlipayTopUpEnabled(),
 		"enable_redemption":                complianceConfirmed,
 		"payment_compliance_confirmed":     complianceConfirmed,
 		"payment_compliance_terms_version": operation_setting.CurrentComplianceTermsVersion,

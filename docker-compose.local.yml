@@ -1,0 +1,14 @@
+# Local deployment override: build the complete application from this checkout.
+services:
+  new-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    image: blackrain-relay:local
+    env_file:
+      - "${WECHAT_PAY_ENV_FILE:-D:/blackrain-secrets/wechatpay/wechatpay.env}"
+    volumes:
+      - "${WECHAT_PAY_SECRET_DIR:-D:/blackrain-secrets/wechatpay}:/run/secrets/wechatpay:ro"
+    environment:
+      - CRYPTO_SECRET=${CRYPTO_SECRET}
+      - GIN_MODE=${GIN_MODE:-release}
