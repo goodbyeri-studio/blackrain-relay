@@ -7,6 +7,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func insertUserForPaymentGuardTest(t *testing.T, id int, quota int) {
@@ -85,6 +86,18 @@ func getUserQuotaForPaymentGuardTest(t *testing.T, userID int) int {
 	var user User
 	require.NoError(t, DB.Select("quota").Where("id = ?", userID).First(&user).Error)
 	return user.Quota
+}
+
+func TestCreditUserTopUpQuotaRejectsCumulativeOverflow(t *testing.T) {
+	truncateTables(t)
+	insertUserForPaymentGuardTest(t, 109, common.MaxQuota-1)
+
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		return creditUserTopUpQuota(tx, 109, 2)
+	})
+
+	require.Error(t, err)
+	assert.Equal(t, common.MaxQuota-1, getUserQuotaForPaymentGuardTest(t, 109))
 }
 
 func TestRechargeWaffoPancake_RejectsMismatchedPaymentMethod(t *testing.T) {
