@@ -3,7 +3,6 @@ package controller
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -40,6 +39,11 @@ type testResult struct {
 	localErr    error
 	newAPIError *types.NewAPIError
 }
+
+const (
+	channelTestPrompt         = "Reply with exactly the word OK."
+	defaultChannelTestTimeout = 120 * time.Second
+)
 
 func normalizeChannelTestEndpoint(channel *model.Channel, modelName, endpointType string) string {
 	normalized := strings.TrimSpace(endpointType)
@@ -693,7 +697,10 @@ func detectErrorMessageFromJSONBytes(jsonBytes []byte) string {
 }
 
 func buildTestRequest(model string, endpointType string, channel *model.Channel, isStream bool) dto.Request {
-	testResponsesInput := json.RawMessage(`[{"role":"user","content":"hi"}]`)
+	testResponsesInput, _ := common.Marshal([]map[string]string{{
+		"role":    "user",
+		"content": channelTestPrompt,
+	}})
 
 	// 根据端点类型构建不同的测试请求
 	if endpointType != "" {
@@ -724,7 +731,7 @@ func buildTestRequest(model string, endpointType string, channel *model.Channel,
 			// 返回 OpenAIResponsesRequest
 			return &dto.OpenAIResponsesRequest{
 				Model:  model,
-				Input:  json.RawMessage(`[{"role":"user","content":"hi"}]`),
+				Input:  testResponsesInput,
 				Stream: lo.ToPtr(isStream),
 			}
 		case constant.EndpointTypeOpenAIResponseCompact:
@@ -745,7 +752,7 @@ func buildTestRequest(model string, endpointType string, channel *model.Channel,
 				Messages: []dto.Message{
 					{
 						Role:    "user",
-						Content: "hi",
+						Content: channelTestPrompt,
 					},
 				},
 				MaxTokens: lo.ToPtr(maxTokens),
@@ -790,7 +797,7 @@ func buildTestRequest(model string, endpointType string, channel *model.Channel,
 	if strings.Contains(strings.ToLower(model), "codex") {
 		return &dto.OpenAIResponsesRequest{
 			Model:  model,
-			Input:  json.RawMessage(`[{"role":"user","content":"hi"}]`),
+			Input:  testResponsesInput,
 			Stream: lo.ToPtr(isStream),
 		}
 	}
@@ -802,7 +809,7 @@ func buildTestRequest(model string, endpointType string, channel *model.Channel,
 		Messages: []dto.Message{
 			{
 				Role:    "user",
-				Content: "hi",
+				Content: channelTestPrompt,
 			},
 		},
 	}
@@ -906,6 +913,10 @@ type channelTestSummary struct {
 // the system task can surface progress.
 func performChannelTests(ctx context.Context, channels []*model.Channel, testUserID int, allowDisable bool, report func(processed, total int)) channelTestSummary {
 	summary := channelTestSummary{}
+	testTimeout := time.Duration(common.GetEnvOrDefault("CHANNEL_TEST_TIMEOUT_SECONDS", int(defaultChannelTestTimeout/time.Second))) * time.Second
+	if testTimeout <= 0 {
+		testTimeout = defaultChannelTestTimeout
+	}
 	var disableThreshold = int64(common.ChannelDisableThreshold * 1000)
 	if disableThreshold == 0 {
 		disableThreshold = 10000000 // a impossible value
@@ -924,7 +935,13 @@ func performChannelTests(ctx context.Context, channels []*model.Channel, testUse
 		}
 		isChannelEnabled := channel.Status == common.ChannelStatusEnabled
 		tik := time.Now()
-		result := testChannel(ctx, channel, testUserID, "", "", shouldUseStreamForAutomaticChannelTest(channel))
+		testCtx := ctx
+		if testCtx == nil {
+			testCtx = context.Background()
+		}
+		testCtx, cancelTest := context.WithTimeout(testCtx, testTimeout)
+		result := testChannel(testCtx, channel, testUserID, "", "", shouldUseStreamForAutomaticChannelTest(channel))
+		cancelTest()
 		tok := time.Now()
 		milliseconds := tok.Sub(tik).Milliseconds()
 		if ctx != nil && ctx.Err() != nil {

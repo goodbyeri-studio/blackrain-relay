@@ -111,6 +111,29 @@ func TestSelectChannelsForAutomaticTestScheduledSkipsManualDisabled(t *testing.T
 	require.Equal(t, 2, selected[1].Id)
 }
 
+func TestBuildTestRequestUsesSubstantivePrompt(t *testing.T) {
+	t.Run("chat completions", func(t *testing.T) {
+		request := buildTestRequest("gpt-4o-mini", "", &model.Channel{}, false)
+		chatRequest, ok := request.(*dto.GeneralOpenAIRequest)
+		require.True(t, ok)
+		require.Len(t, chatRequest.Messages, 1)
+		require.Equal(t, channelTestPrompt, chatRequest.Messages[0].Content)
+	})
+
+	t.Run("responses", func(t *testing.T) {
+		request := buildTestRequest("gpt-5-codex", "", &model.Channel{}, false)
+		responsesRequest, ok := request.(*dto.OpenAIResponsesRequest)
+		require.True(t, ok)
+
+		var input []map[string]string
+		require.NoError(t, common.Unmarshal(responsesRequest.Input, &input))
+		require.Equal(t, []map[string]string{{
+			"role":    "user",
+			"content": channelTestPrompt,
+		}}, input)
+	})
+}
+
 func TestTestAllChannelsRejectsExistingActiveTask(t *testing.T) {
 	db := setupModelListControllerTestDB(t)
 	require.NoError(t, db.AutoMigrate(&model.SystemTask{}, &model.SystemTaskLock{}))

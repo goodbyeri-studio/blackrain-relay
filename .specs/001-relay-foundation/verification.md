@@ -17,6 +17,10 @@
 | 2026-07-12 | 本地 dev 环境 | `make dev-bootstrap`; `make dev-infra-up`; `make dev-backend`; `make dev-api-rebuild`; `make dev-frontend` | 通过 | 宿主机/容器后端均通过；PostgreSQL/Redis healthy，API 直连与 `3001` proxy 成功 |
 | 2026-07-12 | default 页面 smoke | Browser：`/setup` 首屏、console、下一步交互 | 通过 | 检测 PostgreSQL，进入管理员账户步骤，无 console error/warn |
 | 2026-07-13 | 直销 token 生命周期 | `go test ./controller -count=1` | 通过 | 覆盖签发、额度、过期、模型白名单、禁用和删除 |
+| 2026-07-23 | DeepKey 渠道与目录审计 | 42 把 Key 的 `/v1/models`、公开定价目录、渠道模型和 `abilities` 交叉核对 | 通过 | 42/42 Key 成功；230 个模型全部定价；模型清单和能力不匹配均为 0 |
+| 2026-07-23 | DeepKey 真实渠道调用 | Relay 全量渠道测试 + 失败分组多模型、双端点复测 | 部分通过 | 修正后 37 个分组已验证可调用；5 个分组仍由 DeepKey 返回 403/429/503/服务错误 |
+| 2026-07-23 | 渠道测试回归 | `go test ./controller -count=1` | 通过 | 覆盖测试提示词，并验证完整 controller 测试包 |
+| 2026-07-23 | 本地生产镜像 | `docker compose -p blackrain-relay --env-file .env.dev -f docker-compose.dev.yml -f docker-compose.local.yml up -d --build new-api` | 通过 | `http://127.0.0.1:3010/api/status` 返回成功 |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无 BlackRain 实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
 

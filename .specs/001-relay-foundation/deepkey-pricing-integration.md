@@ -59,3 +59,14 @@ DeepKey 的价格接口曾返回过 JSON 字符串封装的 JSON 文档。同步
 - 后端定向单元测试通过。
 - 前端 TypeScript 类型检查、变更文件 lint、生产构建通过。
 - 全仓 lint 存在与本次改动无关的既有错误，不作为本功能验收项。
+
+## 2026-07-23 渠道实测快照
+
+- 42 个 DeepKey 渠道全部配置独立 Key，42/42 请求 `/v1/models` 成功。
+- DeepKey 公开目录与 42 把 Key 的授权模型并集均为 230 个，授权模型未定价数为 0。
+- DeepKey 公开分组为 44 个，本地 42 个渠道分组均存在于上游目录。
+- 清理 11 个渠道的旧模型残留后，渠道模型与对应 Key 的授权模型不匹配数为 0；560 条 `abilities` 与渠道模型清单不一致数为 0。
+- 首轮 42 渠道真实调用为 34 成功、8 失败。为 `gpt-openai`、`claude-kiro-discount`、`claude-aws-bedrock` 设置经 DeepKey 实测成功的测试模型后，本地复测分别在 1.64 秒、5.08 秒、1.94 秒内成功。
+- `claude-max-sale` 的多个模型通过 OpenAI 与 Anthropic 端点均返回 403 客户端限制；`claude-aws-platform`、`claude-ai` 返回 503；`claude-vertex` 返回 429 暂时不可用；`gemini-image` 的两个授权模型均返回服务错误。这 5 个分组属于 DeepKey 实际调用不可用，不得仅凭 `/v1/models` 成功将其判定为生产可用。
+- 渠道测试提示词已从会被 DeepKey 拦截的简单问候改为明确的短指令；批量测试为每个渠道设置 120 秒默认超时，可通过 `CHANNEL_TEST_TIMEOUT_SECONDS` 调整。
+- 上线前必须由 DeepKey 恢复上述 5 个分组，或由管理员将其从客户可选范围移除；不得用其他分组 Key 代替后继续宣称原分组可用。
