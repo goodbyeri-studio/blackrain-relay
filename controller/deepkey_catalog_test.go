@@ -54,22 +54,32 @@ func TestGetDeepKeyPricingCatalogServesStaleWhileRefreshing(t *testing.T) {
 	}, time.Second, 10*time.Millisecond)
 }
 
-func TestApplyDeepKeyCatalogMarkup(t *testing.T) {
+func TestApplyDeepKeyCatalogPolicyMovesMarkupToGroups(t *testing.T) {
 	items := []model.Pricing{
 		{ModelName: "token-model", QuotaType: 0, ModelRatio: 0.25, CompletionRatio: 4},
 		{ModelName: "request-model", QuotaType: 1, ModelPrice: 0.08},
 	}
+	groupRatio := map[string]float64{"default": 1, "codex-k12": 0.06}
 
-	applyDeepKeyCatalogMarkup(items, 30)
+	err := applyDeepKeyCatalogPolicy(items, groupRatio)
 
+	require.NoError(t, err)
 	require.Len(t, items, 2)
-	assert.Equal(t, 0.325, items[0].ModelRatio)
+	assert.Equal(t, 0.25, items[0].ModelRatio)
 	assert.Equal(t, 4.0, items[0].CompletionRatio)
-	assert.Equal(t, 0.104, items[1].ModelPrice)
+	assert.Equal(t, 0.08, items[1].ModelPrice)
+	assert.Equal(t, map[string]float64{"default": 1.3, "codex-k12": 0.078}, groupRatio)
 	for _, item := range items {
 		assert.True(t, item.CatalogOnly)
 		assert.Equal(t, "DeepKey", item.CatalogSource)
 	}
+}
+
+func TestApplyDeepKeyCatalogPolicyRejectsUnsafeMarkedUpRatio(t *testing.T) {
+	err := applyDeepKeyCatalogPolicy(nil, map[string]float64{"broken": deepKeyMaxGroupRatio})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "after markup")
 }
 
 func TestMergePricingCatalogKeepsLocalModel(t *testing.T) {

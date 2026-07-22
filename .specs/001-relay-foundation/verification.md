@@ -21,6 +21,7 @@
 | 2026-07-23 | DeepKey 真实渠道调用 | Relay 全量渠道测试 + 失败分组多模型、双端点复测 | 部分通过 | 修正后 37 个分组已验证可调用；5 个分组仍由 DeepKey 返回 403/429/503/服务错误 |
 | 2026-07-23 | 渠道测试回归 | `go test ./controller -count=1` | 通过 | 覆盖测试提示词，并验证完整 controller 测试包 |
 | 2026-07-23 | 本地生产镜像 | `docker compose -p blackrain-relay --env-file .env.dev -f docker-compose.dev.yml -f docker-compose.local.yml up -d --build new-api` | 通过 | `http://127.0.0.1:3010/api/status` 返回成功 |
+| 2026-07-23 | DeepKey 30% 分组加价 | `go test ./controller -count=1`; `bun run typecheck`; 变更文件 oxlint/oxfmt；`bun run build`; 本地/上游 `/api/pricing` 对比 | 通过 | 230 个模型恢复上游基础价；43 个本地分组提高 30%；样例最终倍率为上游 `1.3` 倍 |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无 BlackRain 实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
 

@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckSquare, RefreshCcw } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -100,6 +100,21 @@ function getDefaultEndpointForChannel(channel: UpstreamChannel): string {
   return DEFAULT_ENDPOINT
 }
 
+function isDeepKeyPricingChannel(
+  channel: UpstreamChannel,
+  endpoint: string
+): boolean {
+  try {
+    const url = new URL(endpoint, `${channel.base_url.replace(/\/$/, '')}/`)
+    return (
+      url.hostname.toLowerCase() === 'deepkey.top' &&
+      url.pathname.replace(/\/$/, '') === DEEPKEY_PRESET_ENDPOINT
+    )
+  } catch {
+    return false
+  }
+}
+
 function optionKeyBySyncField(ratioType: string): string {
   const explicit: Record<string, string> = {
     billing_mode: 'billing_setting.billing_mode',
@@ -139,6 +154,8 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
   const [conflictItems, setConflictItems] = useState<ConflictItem[]>([])
   const [confirmLoading, setConfirmLoading] = useState(false)
   const [markupPercent, setMarkupPercent] = useState('30')
+  const regularMarkupPercentRef = useRef(markupPercent)
+  const deepKeyMarkupIsAutomaticRef = useRef(false)
 
   const { data: channelsData } = useQuery({
     queryKey: ['upstream-channels'],
@@ -244,7 +261,17 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
       return
     }
 
-    const parsedMarkupPercent = Number(markupPercent)
+    const onlyDeepKeyPricing = selectedChannels.every((channel) =>
+      isDeepKeyPricingChannel(
+        channel,
+        channelEndpoints[channel.id] || DEFAULT_ENDPOINT
+      )
+    )
+    const requestedMarkupPercent =
+      !onlyDeepKeyPricing && deepKeyMarkupIsAutomaticRef.current
+        ? regularMarkupPercentRef.current
+        : markupPercent
+    const parsedMarkupPercent = Number(requestedMarkupPercent)
     if (
       !Number.isFinite(parsedMarkupPercent) ||
       parsedMarkupPercent < 0 ||
@@ -252,6 +279,18 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
     ) {
       toast.error(t('Price markup must be between 0 and 1000'))
       return
+    }
+
+    const effectiveMarkupPercent = onlyDeepKeyPricing ? 0 : parsedMarkupPercent
+    if (onlyDeepKeyPricing) {
+      if (!deepKeyMarkupIsAutomaticRef.current) {
+        regularMarkupPercentRef.current = markupPercent
+        deepKeyMarkupIsAutomaticRef.current = true
+        setMarkupPercent('0')
+      }
+    } else if (deepKeyMarkupIsAutomaticRef.current) {
+      deepKeyMarkupIsAutomaticRef.current = false
+      setMarkupPercent(regularMarkupPercentRef.current)
     }
 
     const upstreams: UpstreamConfig[] = selectedChannels.map((ch) => ({
@@ -264,7 +303,7 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
     fetchMutation.mutate({
       upstreams,
       timeout: 10,
-      markup_percent: parsedMarkupPercent,
+      markup_percent: effectiveMarkupPercent,
     })
   }
 
@@ -512,7 +551,10 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
               max={1000}
               step='0.1'
               value={markupPercent}
-              onChange={(event) => setMarkupPercent(event.target.value)}
+              onChange={(event) => {
+                deepKeyMarkupIsAutomaticRef.current = false
+                setMarkupPercent(event.target.value)
+              }}
               disabled={isLoading}
             />
           </div>

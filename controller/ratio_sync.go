@@ -89,9 +89,10 @@ var numericPricingSyncFields = map[string]bool{
 }
 
 type upstreamResult struct {
-	Name string         `json:"name"`
-	Data map[string]any `json:"data,omitempty"`
-	Err  string         `json:"err,omitempty"`
+	Name      string         `json:"name"`
+	SourceURL string         `json:"-"`
+	Data      map[string]any `json:"data,omitempty"`
+	Err       string         `json:"err,omitempty"`
 }
 
 func valueMap(value any) map[string]any {
@@ -364,7 +365,7 @@ func FetchUpstreamRatios(c *gin.Context) {
 					ch <- upstreamResult{Name: uniqueName, Err: err.Error()}
 					return
 				}
-				ch <- upstreamResult{Name: uniqueName, Data: converted}
+				ch <- upstreamResult{Name: uniqueName, SourceURL: fullURL, Data: converted}
 				return
 			}
 
@@ -376,7 +377,7 @@ func FetchUpstreamRatios(c *gin.Context) {
 					ch <- upstreamResult{Name: uniqueName, Err: err.Error()}
 					return
 				}
-				ch <- upstreamResult{Name: uniqueName, Data: converted}
+				ch <- upstreamResult{Name: uniqueName, SourceURL: fullURL, Data: converted}
 				return
 			}
 
@@ -415,7 +416,7 @@ func FetchUpstreamRatios(c *gin.Context) {
 					}
 				}
 				if isType1 {
-					ch <- upstreamResult{Name: uniqueName, Data: type1Data}
+					ch <- upstreamResult{Name: uniqueName, SourceURL: fullURL, Data: type1Data}
 					return
 				}
 			}
@@ -531,7 +532,7 @@ func FetchUpstreamRatios(c *gin.Context) {
 				converted[billing_setting.BillingExprField] = valueMap(billingExprMap)
 			}
 
-			ch <- upstreamResult{Name: uniqueName, Data: converted}
+			ch <- upstreamResult{Name: uniqueName, SourceURL: fullURL, Data: converted}
 		}(chn)
 	}
 
@@ -554,7 +555,7 @@ func FetchUpstreamRatios(c *gin.Context) {
 				Error:  r.Err,
 			})
 		} else {
-			applyPricingMarkup(r.Data, req.MarkupPercent)
+			applyPricingMarkup(r.Data, effectivePricingMarkupPercent(r.SourceURL, req.MarkupPercent))
 			testResults = append(testResults, dto.TestResult{
 				Name:   r.Name,
 				Status: "success",
@@ -756,6 +757,21 @@ func isModelsDevAPIEndpoint(rawURL string) bool {
 		path = "/"
 	}
 	return path == modelsDevPath
+}
+
+func isDeepKeyPricingAPIEndpoint(rawURL string) bool {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil || strings.ToLower(parsedURL.Hostname()) != "deepkey.top" {
+		return false
+	}
+	return strings.TrimSuffix(parsedURL.Path, "/") == "/api/pricing"
+}
+
+func effectivePricingMarkupPercent(rawURL string, requested float64) float64 {
+	if isDeepKeyPricingAPIEndpoint(rawURL) {
+		return 0
+	}
+	return requested
 }
 
 // convertOpenRouterToRatioData parses OpenRouter's /v1/models response and converts

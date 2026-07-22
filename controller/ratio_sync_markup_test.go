@@ -32,3 +32,27 @@ func TestNormalizePricingResponseJSONSupportsEncodedDocument(t *testing.T) {
 	assert.Equal(t, document, normalizePricingResponseJSON(encoded))
 	assert.Equal(t, document, normalizePricingResponseJSON(document))
 }
+
+func TestIsDeepKeyPricingAPIEndpoint(t *testing.T) {
+	testCases := []struct {
+		name     string
+		rawURL   string
+		expected bool
+	}{
+		{name: "pricing endpoint", rawURL: "https://deepkey.top/api/pricing", expected: true},
+		{name: "trailing slash", rawURL: "https://deepkey.top/api/pricing/", expected: true},
+		{name: "other host", rawURL: "https://example.com/api/pricing", expected: false},
+		{name: "other path", rawURL: "https://deepkey.top/v1/models", expected: false},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			assert.Equal(t, testCase.expected, isDeepKeyPricingAPIEndpoint(testCase.rawURL))
+		})
+	}
+}
+
+func TestEffectivePricingMarkupPercentSkipsDeepKey(t *testing.T) {
+	assert.Equal(t, 0.0, effectivePricingMarkupPercent("https://deepkey.top/api/pricing", 30))
+	assert.Equal(t, 30.0, effectivePricingMarkupPercent("https://example.com/api/pricing", 30))
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"sync"
 	"time"
@@ -16,7 +17,7 @@ import (
 
 const (
 	deepKeyPricingCatalogURL     = "https://deepkey.top/api/pricing"
-	deepKeyPricingMarkupPercent  = 30.0
+	deepKeyGroupMarkupPercent    = 30.0
 	deepKeyCatalogCacheTTL       = 15 * time.Minute
 	deepKeyCatalogRequestTimeout = 8 * time.Second
 	deepKeyCatalogMaxBodyBytes   = 5 << 20
@@ -52,17 +53,21 @@ var (
 	deepKeyCatalogFetcher = fetchDeepKeyPricingCatalog
 )
 
-func applyDeepKeyCatalogMarkup(items []model.Pricing, markupPercent float64) {
-	multiplier := 1 + markupPercent/100
+func applyDeepKeyCatalogPolicy(items []model.Pricing, groupRatio map[string]float64) error {
 	for i := range items {
 		items[i].CatalogOnly = true
 		items[i].CatalogSource = "DeepKey"
-		if items[i].QuotaType == 1 {
-			items[i].ModelPrice = roundRatioValue(items[i].ModelPrice * multiplier)
-			continue
-		}
-		items[i].ModelRatio = roundRatioValue(items[i].ModelRatio * multiplier)
 	}
+
+	multiplier := 1 + deepKeyGroupMarkupPercent/100
+	for name, ratio := range groupRatio {
+		markedUp := roundRatioValue(ratio * multiplier)
+		if ratio <= 0 || math.IsNaN(ratio) || math.IsInf(ratio, 0) || markedUp > deepKeyMaxGroupRatio {
+			return fmt.Errorf("DeepKey group %q ratio must be within (0, %d] after markup", name, deepKeyMaxGroupRatio)
+		}
+		groupRatio[name] = markedUp
+	}
+	return nil
 }
 
 func fetchDeepKeyPricingCatalog() (*deepKeyPricingCatalog, error) {
@@ -101,7 +106,9 @@ func fetchDeepKeyPricingCatalog() (*deepKeyPricingCatalog, error) {
 		return nil, fmt.Errorf("DeepKey pricing returned no models")
 	}
 
-	applyDeepKeyCatalogMarkup(upstream.Data, deepKeyPricingMarkupPercent)
+	if err := applyDeepKeyCatalogPolicy(upstream.Data, upstream.GroupRatio); err != nil {
+		return nil, err
+	}
 	return &deepKeyPricingCatalog{
 		Models:            upstream.Data,
 		Vendors:           upstream.Vendors,
