@@ -39,6 +39,17 @@ export type UpdateOptionResponse = {
   message: string
 }
 
+export type DeepKeyGroupSyncResponse = {
+  success: boolean
+  message: string
+  data?: {
+    group_ratio: Record<string, number>
+    user_usable_groups: Record<string, string>
+    auto_groups: string[]
+    count: number
+  }
+}
+
 export type ConfirmPaymentComplianceResponse = {
   success: boolean
   message: string
