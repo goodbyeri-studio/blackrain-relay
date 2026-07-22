@@ -54,6 +54,34 @@ func TestGetDeepKeyPricingCatalogServesStaleWhileRefreshing(t *testing.T) {
 	}, time.Second, 10*time.Millisecond)
 }
 
+func TestRefreshDeepKeyPricingCatalogWaitsForFreshCatalog(t *testing.T) {
+	originalFetcher := deepKeyCatalogFetcher
+	defer func() {
+		deepKeyCatalogFetcher = originalFetcher
+		deepKeyCatalogCache.Lock()
+		deepKeyCatalogCache.catalog = nil
+		deepKeyCatalogCache.fetchedAt = time.Time{}
+		deepKeyCatalogCache.Unlock()
+	}()
+
+	stale := &deepKeyPricingCatalog{Models: []model.Pricing{{ModelName: "stale"}}}
+	fresh := &deepKeyPricingCatalog{Models: []model.Pricing{{ModelName: "fresh"}}}
+	deepKeyCatalogFetcher = func() (*deepKeyPricingCatalog, error) {
+		return fresh, nil
+	}
+	deepKeyCatalogCache.Lock()
+	deepKeyCatalogCache.catalog = stale
+	deepKeyCatalogCache.fetchedAt = time.Now()
+	deepKeyCatalogCache.Unlock()
+
+	catalog, err := refreshDeepKeyPricingCatalog()
+	require.NoError(t, err)
+	assert.Same(t, fresh, catalog)
+	deepKeyCatalogCache.RLock()
+	defer deepKeyCatalogCache.RUnlock()
+	assert.Same(t, fresh, deepKeyCatalogCache.catalog)
+}
+
 func TestApplyDeepKeyCatalogMarkup(t *testing.T) {
 	items := []model.Pricing{
 		{ModelName: "token-model", QuotaType: 0, ModelRatio: 0.25, CompletionRatio: 4},

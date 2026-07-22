@@ -86,6 +86,25 @@ func GetAlipayOrderForUser(userID int, tradeNo string) (*AlipayOrder, error) {
 	return &order, nil
 }
 
+// ReleaseAlipayClientRequestForRetry retires a failed or closed order's
+// idempotency key so a later request can create a fresh payment order with the
+// same client request ID.
+func ReleaseAlipayClientRequestForRetry(userID int, clientRequestID string) error {
+	return DB.Transaction(func(tx *gorm.DB) error {
+		order := &AlipayOrder{}
+		if err := lockForUpdate(tx).
+			Where("user_id = ? AND client_request_id = ?", userID, clientRequestID).
+			First(order).Error; err != nil {
+			return err
+		}
+		if order.Status != AlipayOrderStatusFailed && order.Status != AlipayOrderStatusClosed {
+			return nil
+		}
+
+		return tx.Model(order).Update("client_request_id", fmt.Sprintf("retired-alipay-%d", order.Id)).Error
+	})
+}
+
 func UpdateAlipayPrecreateResult(tradeNo string, qrCode string) error {
 	return DB.Model(&AlipayOrder{}).
 		Where("out_trade_no = ? AND status = ?", tradeNo, AlipayOrderStatusPending).

@@ -121,29 +121,31 @@ func getDeepKeyPricingCatalog() (*deepKeyPricingCatalog, error) {
 		return catalog, nil
 	}
 
-	refresh := func() (any, error) {
-		freshCatalog, err := deepKeyCatalogFetcher()
-		if err != nil {
-			return nil, err
+	// Keep serving a stale catalog while one request refreshes it. The
+	// singleflight call deduplicates concurrent refreshes without holding the
+	// cache lock during the remote request.
+	if catalog != nil {
+		go func() {
+			_, _ = refreshDeepKeyPricingCatalog()
+		}()
+		return catalog, nil
+	}
+
+	return refreshDeepKeyPricingCatalog()
+}
+
+func refreshDeepKeyPricingCatalog() (*deepKeyPricingCatalog, error) {
+	value, err, _ := deepKeyCatalogRefresh.Do("pricing", func() (any, error) {
+		freshCatalog, fetchErr := deepKeyCatalogFetcher()
+		if fetchErr != nil {
+			return nil, fetchErr
 		}
 		deepKeyCatalogCache.Lock()
 		deepKeyCatalogCache.catalog = freshCatalog
 		deepKeyCatalogCache.fetchedAt = time.Now()
 		deepKeyCatalogCache.Unlock()
 		return freshCatalog, nil
-	}
-
-	// Keep serving a stale catalog while one request refreshes it. The
-	// singleflight call deduplicates concurrent refreshes without holding the
-	// cache lock during the remote request.
-	if catalog != nil {
-		go func() {
-			_, _, _ = deepKeyCatalogRefresh.Do("pricing", refresh)
-		}()
-		return catalog, nil
-	}
-
-	value, err, _ := deepKeyCatalogRefresh.Do("pricing", refresh)
+	})
 	if err != nil {
 		return nil, err
 	}

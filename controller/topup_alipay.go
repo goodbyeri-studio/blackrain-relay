@@ -516,8 +516,14 @@ func RequestAlipayPrecreate(c *gin.Context) {
 	userID := c.GetInt("id")
 	existingOrder, err := model.GetAlipayOrderByClientRequest(userID, req.ClientRequestID)
 	if err == nil {
-		writeAlipayPrecreateResponse(c, existingOrder)
-		return
+		if existingOrder.Status != model.AlipayOrderStatusFailed && existingOrder.Status != model.AlipayOrderStatusClosed {
+			writeAlipayPrecreateResponse(c, existingOrder)
+			return
+		}
+		if err = model.ReleaseAlipayClientRequestForRetry(userID, req.ClientRequestID); err != nil {
+			common.ApiErrorMsg(c, "重置支付宝订单失败")
+			return
+		}
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		common.ApiErrorMsg(c, "创建支付宝订单失败")

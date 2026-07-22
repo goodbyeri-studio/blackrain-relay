@@ -74,7 +74,9 @@ func buildDeepKeyGroupSyncData(catalog *deepKeyPricingCatalog, enabledChannelGro
 }
 
 func SyncDeepKeyGroups(c *gin.Context) {
-	catalog, err := getDeepKeyPricingCatalog()
+	// Explicit administrator synchronization must use the current upstream
+	// catalog instead of the stale-while-revalidate view used by public pricing.
+	catalog, err := refreshDeepKeyPricingCatalog()
 	if err != nil {
 		common.ApiErrorMsg(c, "获取 DeepKey 分组失败: "+err.Error())
 		return
