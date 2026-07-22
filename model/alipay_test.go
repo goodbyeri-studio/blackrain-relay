@@ -95,6 +95,30 @@ func TestCompleteAlipayTopUp_RejectsAmountMismatch(t *testing.T) {
 	assert.Zero(t, notificationCount)
 }
 
+func TestCompleteAlipayTopUp_RejectsCumulativeQuotaOverflow(t *testing.T) {
+	truncateTables(t)
+	insertAlipayOrderForTest(t, 705, "alipay-quota-overflow", 299, 2)
+	require.NoError(t, DB.Model(&User{}).Where("id = ?", 705).Update("quota", common.MaxQuota-1).Error)
+
+	credited, err := CompleteAlipayTopUp(AlipayCompletion{
+		EventID:     "notify-quota-overflow",
+		OutTradeNo:  "alipay-quota-overflow",
+		TradeNo:     "trade-quota-overflow",
+		AmountFen:   299,
+		Currency:    "CNY",
+		SuccessTime: time.Now(),
+		BodyDigest:  "digest-quota-overflow",
+	})
+	require.Error(t, err)
+	assert.False(t, credited)
+	assert.Equal(t, common.MaxQuota-1, getUserQuotaForPaymentGuardTest(t, 705))
+	assert.Equal(t, common.TopUpStatusPending, getTopUpStatusForPaymentGuardTest(t, "alipay-quota-overflow"))
+
+	var notificationCount int64
+	require.NoError(t, DB.Model(&AlipayNotification{}).Count(&notificationCount).Error)
+	assert.Zero(t, notificationCount)
+}
+
 func TestCompleteAlipayTopUp_CreditsThreePercentToInviterOnce(t *testing.T) {
 	truncateTables(t)
 	inviter := &User{

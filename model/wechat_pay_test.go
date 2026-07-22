@@ -94,3 +94,27 @@ func TestCompleteWechatPayTopUp_RejectsAmountMismatch(t *testing.T) {
 	require.NoError(t, DB.Model(&WechatPayNotification{}).Count(&notificationCount).Error)
 	assert.Zero(t, notificationCount)
 }
+
+func TestCompleteWechatPayTopUp_RejectsCumulativeQuotaOverflow(t *testing.T) {
+	truncateTables(t)
+	insertWechatPayOrderForTest(t, 603, "wechat-quota-overflow", 299)
+	require.NoError(t, DB.Model(&User{}).Where("id = ?", 603).Update("quota", common.MaxQuota-1).Error)
+
+	credited, err := CompleteWechatPayTopUp(WechatPayCompletion{
+		EventID:       "event-quota-overflow",
+		OutTradeNo:    "wechat-quota-overflow",
+		TransactionID: "transaction-quota-overflow",
+		AmountFen:     299,
+		Currency:      "CNY",
+		SuccessTime:   time.Now(),
+		BodyDigest:    "digest-quota-overflow",
+	})
+	require.Error(t, err)
+	assert.False(t, credited)
+	assert.Equal(t, common.MaxQuota-1, getUserQuotaForPaymentGuardTest(t, 603))
+	assert.Equal(t, common.TopUpStatusPending, getTopUpStatusForPaymentGuardTest(t, "wechat-quota-overflow"))
+
+	var notificationCount int64
+	require.NoError(t, DB.Model(&WechatPayNotification{}).Count(&notificationCount).Error)
+	assert.Zero(t, notificationCount)
+}

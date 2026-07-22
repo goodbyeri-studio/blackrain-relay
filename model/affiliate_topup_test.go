@@ -82,3 +82,38 @@ func TestInsertWithTxPersistsInviterForTopUpRewards(t *testing.T) {
 	require.NoError(t, DB.Where("id = ?", invitee.Id).First(&savedInvitee).Error)
 	assert.Equal(t, inviter.Id, savedInvitee.InviterId)
 }
+
+func TestCreditAffiliateTopUpRewardKeepsBalanceAndHistoryConsistentAtLimit(t *testing.T) {
+	truncateTables(t)
+	inviter := &User{
+		Id:              821,
+		Username:        "limited_affiliate_inviter",
+		Status:          common.UserStatusEnabled,
+		AffCode:         "limited-inviter",
+		AffQuota:        common.MaxQuota - 1,
+		AffHistoryQuota: 0,
+	}
+	invitee := &User{
+		Id:        822,
+		Username:  "limited_affiliate_invitee",
+		Status:    common.UserStatusEnabled,
+		InviterId: inviter.Id,
+		AffCode:   "limited-invitee",
+	}
+	require.NoError(t, DB.Create(inviter).Error)
+	require.NoError(t, DB.Create(invitee).Error)
+
+	var reward *affiliateTopUpReward
+	require.NoError(t, DB.Transaction(func(tx *gorm.DB) error {
+		var err error
+		reward, err = creditAffiliateTopUpReward(tx, invitee.Id, 100)
+		return err
+	}))
+	require.NotNil(t, reward)
+	assert.Equal(t, 1, reward.Quota)
+
+	var creditedInviter User
+	require.NoError(t, DB.Where("id = ?", inviter.Id).First(&creditedInviter).Error)
+	assert.Equal(t, common.MaxQuota, creditedInviter.AffQuota)
+	assert.Equal(t, 1, creditedInviter.AffHistoryQuota)
+}

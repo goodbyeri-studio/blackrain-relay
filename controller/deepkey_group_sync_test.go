@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,11 +34,26 @@ func TestBuildDeepKeyGroupSyncData(t *testing.T) {
 	assert.Equal(t, 2, data.Count)
 }
 
-func TestBuildDeepKeyGroupSyncDataRejectsNegativeRatio(t *testing.T) {
-	_, err := buildDeepKeyGroupSyncData(&deepKeyPricingCatalog{
-		GroupRatio: map[string]float64{"broken": -1},
-	})
+func TestBuildDeepKeyGroupSyncDataRejectsUnsafeRatios(t *testing.T) {
+	testCases := []struct {
+		name  string
+		ratio float64
+	}{
+		{name: "negative", ratio: -1},
+		{name: "zero", ratio: 0},
+		{name: "above maximum", ratio: deepKeyMaxGroupRatio + 1},
+		{name: "nan", ratio: math.NaN()},
+		{name: "positive infinity", ratio: math.Inf(1)},
+	}
 
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "negative ratio")
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := buildDeepKeyGroupSyncData(&deepKeyPricingCatalog{
+				GroupRatio: map[string]float64{"broken": testCase.ratio},
+			})
+
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "ratio must be within")
+		})
+	}
 }

@@ -90,15 +90,19 @@ func creditAffiliateTopUpReward(tx *gorm.DB, inviteeID int, creditedQuota int) (
 		return nil, err
 	}
 
-	newAffQuota, _ := common.QuotaFromDecimalChecked(
+	newAffQuota, quotaClamp := common.QuotaFromDecimalChecked(
 		decimal.NewFromInt(int64(inviter.AffQuota)).Add(decimal.NewFromInt(int64(rewardQuota))),
 	)
-	newAffHistoryQuota, _ := common.QuotaFromDecimalChecked(
+	newAffHistoryQuota, historyClamp := common.QuotaFromDecimalChecked(
 		decimal.NewFromInt(int64(inviter.AffHistoryQuota)).Add(decimal.NewFromInt(int64(rewardQuota))),
 	)
-	creditedReward := newAffQuota - inviter.AffQuota
+	creditedReward := min(newAffQuota-inviter.AffQuota, newAffHistoryQuota-inviter.AffHistoryQuota)
 	if creditedReward <= 0 {
 		return nil, nil
+	}
+	if quotaClamp != nil || historyClamp != nil {
+		newAffQuota = inviter.AffQuota + creditedReward
+		newAffHistoryQuota = inviter.AffHistoryQuota + creditedReward
 	}
 	if err := tx.Model(&inviter).Updates(map[string]interface{}{
 		"aff_quota":   newAffQuota,
@@ -108,6 +112,23 @@ func creditAffiliateTopUpReward(tx *gorm.DB, inviteeID int, creditedQuota int) (
 	}
 
 	return &affiliateTopUpReward{InviterID: inviter.Id, Quota: creditedReward}, nil
+}
+
+func creditUserTopUpQuota(tx *gorm.DB, userID int, quotaToAdd int) error {
+	if quotaToAdd <= 0 || quotaToAdd > common.MaxQuota {
+		return errors.New("充值额度无效")
+	}
+	user := User{}
+	if err := lockForUpdate(tx).Select("id", "quota").Where("id = ?", userID).First(&user).Error; err != nil {
+		return err
+	}
+	newQuota, clamp := common.QuotaFromDecimalChecked(
+		decimal.NewFromInt(int64(user.Quota)).Add(decimal.NewFromInt(int64(quotaToAdd))),
+	)
+	if clamp != nil || newQuota < user.Quota {
+		return errors.New("充值后用户额度超出允许范围")
+	}
+	return tx.Model(&user).Update("quota", newQuota).Error
 }
 
 func recordAffiliateTopUpReward(reward *affiliateTopUpReward) {

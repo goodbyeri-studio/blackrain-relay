@@ -1,6 +1,12 @@
 package controller
 
 import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,6 +37,23 @@ func TestAlipayAmountFenRoundsToNearestFen(t *testing.T) {
 			assert.Equal(t, testCase.expected, actual)
 		})
 	}
+}
+
+func TestAlipayGatewayResponseVerificationUsesOriginalResponseNode(t *testing.T) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	runtime := &alipayRuntime{publicKey: &privateKey.PublicKey}
+	response := json.RawMessage("{\"code\":\"10000\",\"trade_status\":\"TRADE_SUCCESS\",\"total_amount\":\"50.00\"}")
+	digest := sha256.Sum256(response)
+	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, digest[:])
+	require.NoError(t, err)
+	signatureText := base64.StdEncoding.EncodeToString(signature)
+
+	require.NoError(t, runtime.verifyGatewayResponse(response, signatureText))
+
+	tamperedResponse := json.RawMessage("{\"code\":\"10000\",\"trade_status\":\"TRADE_SUCCESS\",\"total_amount\":\"500.00\"}")
+	require.Error(t, runtime.verifyGatewayResponse(tamperedResponse, signatureText))
+	require.Error(t, runtime.verifyGatewayResponse(response, ""))
 }
 
 func TestAlipaySignContentSortsAndSkipsSignatureFields(t *testing.T) {

@@ -56,7 +56,14 @@ export function useAlipayPrecreatePayment() {
     retry: 2,
   })
 
-  const order = statusQuery.data || createdOrder
+  const order =
+    createdOrder && statusQuery.data
+      ? {
+          ...createdOrder,
+          ...statusQuery.data,
+          qr_code: statusQuery.data.qr_code || createdOrder.qr_code,
+        }
+      : createdOrder
 
   const processAlipayPrecreatePayment = useCallback(async (amount: number) => {
     setOpen(false)

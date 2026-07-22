@@ -208,8 +208,7 @@ func CompleteAlipayTopUp(completion AlipayCompletion) (bool, error) {
 		}).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&User{}).Where("id = ?", topUp.UserId).
-			Update("quota", gorm.Expr("quota + ?", quotaToAdd)).Error; err != nil {
+		if err := creditUserTopUpQuota(tx, topUp.UserId, quotaToAdd); err != nil {
 			return err
 		}
 		reward, rewardErr := creditAffiliateTopUpReward(tx, topUp.UserId, quotaToAdd)

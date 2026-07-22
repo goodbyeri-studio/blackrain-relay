@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 
@@ -10,6 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+const deepKeyMaxGroupRatio = 1000
 
 type deepKeyGroupSyncData struct {
 	GroupRatio       map[string]float64 `json:"group_ratio"`
@@ -30,8 +33,8 @@ func buildDeepKeyGroupSyncData(catalog *deepKeyPricingCatalog) (*deepKeyGroupSyn
 		if name == "" {
 			continue
 		}
-		if ratio < 0 {
-			return nil, fmt.Errorf("DeepKey group %q has a negative ratio", name)
+		if ratio <= 0 || math.IsNaN(ratio) || math.IsInf(ratio, 0) || ratio > deepKeyMaxGroupRatio {
+			return nil, fmt.Errorf("DeepKey group %q ratio must be within (0, %d]", name, deepKeyMaxGroupRatio)
 		}
 
 		description := strings.TrimSpace(catalog.UsableGroup[rawName])
