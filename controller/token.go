@@ -9,7 +9,9 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,6 +31,30 @@ func buildMaskedTokenResponses(tokens []*model.Token) []*model.Token {
 		maskedTokens = append(maskedTokens, buildMaskedTokenResponse(token))
 	}
 	return maskedTokens
+}
+
+func validateTokenGroupSelection(c *gin.Context, tokenGroup string) bool {
+	if tokenGroup == "" {
+		return true
+	}
+	userGroup := c.GetString("group")
+	if userGroup == "" {
+		var err error
+		userGroup, err = model.GetUserGroup(c.GetInt("id"), false)
+		if err != nil {
+			common.ApiError(c, err)
+			return false
+		}
+	}
+	if _, ok := service.GetUserUsableGroups(userGroup)[tokenGroup]; !ok {
+		common.ApiErrorMsg(c, fmt.Sprintf("无权访问 %s 分组", tokenGroup))
+		return false
+	}
+	if tokenGroup != "auto" && !ratio_setting.ContainsGroupRatio(tokenGroup) {
+		common.ApiErrorMsg(c, fmt.Sprintf("分组 %s 已被弃用", tokenGroup))
+		return false
+	}
+	return true
 }
 
 func GetAllTokens(c *gin.Context) {
@@ -175,6 +201,9 @@ func AddToken(c *gin.Context) {
 		common.ApiErrorI18n(c, i18n.MsgTokenNameTooLong)
 		return
 	}
+	if !validateTokenGroupSelection(c, token.Group) {
+		return
+	}
 	// 非无限额度时，检查额度值是否超出有效范围
 	if !token.UnlimitedQuota {
 		if token.RemainQuota < 0 {
@@ -258,6 +287,9 @@ func UpdateToken(c *gin.Context) {
 	}
 	if len(token.Name) > 50 {
 		common.ApiErrorI18n(c, i18n.MsgTokenNameTooLong)
+		return
+	}
+	if statusOnly == "" && !validateTokenGroupSelection(c, token.Group) {
 		return
 	}
 	if !token.UnlimitedQuota {

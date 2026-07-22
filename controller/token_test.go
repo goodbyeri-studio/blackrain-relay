@@ -204,6 +204,8 @@ func newAuthenticatedContext(t *testing.T, method string, target string, body an
 		ctx.Request.Header.Set("Content-Type", "application/json")
 	}
 	ctx.Set("id", userID)
+	ctx.Set("group", "default")
+	ctx.Set("user_group", "default")
 	return ctx, recorder
 }
 
@@ -577,4 +579,49 @@ func TestDirectSaleTokenLifecycle(t *testing.T) {
 	DeleteToken(deleteCtx)
 	require.True(t, decodeAPIResponse(t, deleteRecorder).Success)
 	assert.ErrorIs(t, db.First(&model.Token{}, token.Id).Error, gorm.ErrRecordNotFound)
+}
+
+func TestAddTokenRejectsUnavailableGroup(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	body := map[string]any{
+		"name":            "unavailable-group-token",
+		"expired_time":    -1,
+		"remain_quota":    1000,
+		"unlimited_quota": false,
+		"group":           "removed-deepkey-group",
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/", body, 42)
+	AddToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	assert.False(t, response.Success)
+	var count int64
+	require.NoError(t, db.Model(&model.Token{}).Where("user_id = ?", 42).Count(&count).Error)
+	assert.Zero(t, count)
+}
+
+func TestUpdateTokenRejectsUnavailableGroup(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	token := seedToken(t, db, 42, "existing-token", "existing-token-key")
+	body := map[string]any{
+		"id":                   token.Id,
+		"name":                 token.Name,
+		"status":               common.TokenStatusEnabled,
+		"expired_time":         -1,
+		"remain_quota":         100,
+		"unlimited_quota":      true,
+		"model_limits_enabled": false,
+		"model_limits":         "",
+		"group":                "removed-deepkey-group",
+		"cross_group_retry":    false,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPut, "/api/token/", body, 42)
+	UpdateToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	assert.False(t, response.Success)
+	require.NoError(t, db.First(token, token.Id).Error)
+	assert.Equal(t, "default", token.Group)
 }
