@@ -37,6 +37,14 @@ const STATUS_RELATED_KEYS = [
   'general_setting.quota_display_type',
   'general_setting.custom_currency_symbol',
   'general_setting.custom_currency_exchange_rate',
+  'DefaultUseAutoGroup',
+]
+
+const USER_GROUP_RELATED_KEYS = [
+  'GroupRatio',
+  'UserUsableGroups',
+  'GroupGroupRatio',
+  'group_ratio_setting.group_special_usable_group',
 ]
 
 export function useUpdateOption() {
@@ -57,6 +65,10 @@ export function useUpdateOption() {
           } catch {
             /* empty */
           }
+        }
+
+        if (USER_GROUP_RELATED_KEYS.includes(variables.key)) {
+          queryClient.invalidateQueries({ queryKey: ['user-groups'] })
         }
 
         toast.success(i18next.t('Setting updated successfully'))
