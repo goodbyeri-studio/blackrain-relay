@@ -67,6 +67,7 @@ export const LOG_TYPE_ENUM = {
  * Row rendering still displays records with type=0 as "Unknown".
  */
 export const LOG_TYPE_ALL_VALUE = '0' as const
+export const COMMON_LOG_DISPLAY_LIMIT = 500
 
 // ============================================================================
 // Time Range Presets

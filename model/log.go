@@ -92,6 +92,11 @@ const (
 	LogTypeLogin   = 7
 )
 
+const (
+	UserLogDisplayLimit     = 500
+	ConsumeLogRetentionDays = 7
+)
+
 func ensureLogRequestId(log *Log) {
 	if log != nil && log.RequestId == "" {
 		log.RequestId = common.NewRequestId()
@@ -595,6 +600,15 @@ func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int
 		common.SysError("failed to count user logs: " + err.Error())
 		return nil, 0, errors.New("查询日志失败")
 	}
+	if total > UserLogDisplayLimit {
+		total = UserLogDisplayLimit
+	}
+	if startIdx >= UserLogDisplayLimit {
+		return []*Log{}, total, nil
+	}
+	if startIdx+num > UserLogDisplayLimit {
+		num = UserLogDisplayLimit - startIdx
+	}
 	order := "logs.id desc"
 	if common.UsingLogDatabase(common.DatabaseTypeClickHouse) {
 		order = clickHouseLogOrder("logs.")
@@ -690,6 +704,50 @@ func SumUsedToken(logType int, startTimestamp int64, endTimestamp int64, modelNa
 	}
 	tx.Where("type = ?", LogTypeConsume).Scan(&token)
 	return token
+}
+
+func DeleteExpiredConsumeLogs(ctx context.Context, targetTimestamp int64, limit int) (int64, error) {
+	if targetTimestamp <= 0 {
+		return 0, nil
+	}
+	if limit <= 0 {
+		limit = 1000
+	}
+	if err := ctx.Err(); err != nil {
+		return 0, err
+	}
+
+	tx := LOG_DB.WithContext(ctx).Model(&Log{}).
+		Where("type = ? AND user_id > 0 AND created_at < ?", LogTypeConsume, targetTimestamp)
+
+	if common.UsingLogDatabase(common.DatabaseTypeClickHouse) {
+		var total int64
+		if err := tx.Count(&total).Error; err != nil {
+			return 0, err
+		}
+		if total == 0 {
+			return 0, nil
+		}
+		if err := LOG_DB.WithContext(ctx).Exec(
+			"ALTER TABLE logs DELETE WHERE type = ? AND user_id > 0 AND created_at < ? SETTINGS mutations_sync = 1",
+			LogTypeConsume,
+			targetTimestamp,
+		).Error; err != nil {
+			return 0, err
+		}
+		return total, nil
+	}
+
+	var ids []int
+	if err := tx.Select("id").Order("id asc").Limit(limit).Pluck("id", &ids).Error; err != nil {
+		return 0, err
+	}
+	if len(ids) == 0 {
+		return 0, nil
+	}
+
+	result := LOG_DB.WithContext(ctx).Where("id IN ?", ids).Delete(&Log{})
+	return result.RowsAffected, result.Error
 }
 
 func CountOldLog(ctx context.Context, targetTimestamp int64) (int64, error) {
