@@ -34,3 +34,10 @@
 - 原因：减少环境维护成本，同时保留真实生产链路验证。
 - 替代方案：长期 staging；直接全量开放 production。
 - 发布门槛：独立 Secret、TLS、迁移前备份、健康检查、监控告警、快速回滚以及计费/限流/流式/对账 smoke 全部通过。
+
+## 2026-07-13：企业控制面使用独立凭据域
+
+- 决策：企业自动化接口固定在 `/api/enterprise/v1`，使用独立 service credential；每个 tenant 绑定一个内部执行用户，external subject 关联现有 scoped token。
+- 原因：复用成熟的 quota、group、token 和请求级计费，同时阻止 Cloud credential 获得 Relay 管理员或模型数据面权限。
+- 替代方案：复用 `User.AccessToken`；为每个 Cloud 用户创建 Relay 登录账户；单独重写企业计费路径。
+- 后续复查条件：企业需要多成员后台、企业 RBAC 或独立终端用户账本时，再扩展 tenant 模型。

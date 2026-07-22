@@ -14,8 +14,8 @@
 
 - [x] 冻结直销客户复用 New API `User`/`Group`/`Token` 的边界
 - [x] 验证 token 签发、模型白名单、额度、过期、禁用和删除生命周期
-- [ ] 冻结 Cloud service account 与管理 API 权限
-- [ ] 冻结 enterprise tenant、external subject 和 token 数据模型
+- [x] 冻结 Cloud service account 与管理 API 权限
+- [x] 冻结 enterprise tenant、external subject 和 token 数据模型
 - [ ] 实现/验证 enterprise token 的客户/subject 归属与速率策略
 - [ ] 禁止 Desktop token 访问管理 API
 

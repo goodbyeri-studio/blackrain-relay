@@ -46,6 +46,7 @@ Relay usage/API --idempotent records--> BlackRain Cloud reconciliation
 - 普通直销客户直接使用 New API 现有 `User`、`Group` 和 `Token`，不增加平行账户体系。
 - 需要自动签发下游 token、外部 subject 映射和批发结算的客户才进入 enterprise tenant 控制面。
 - BlackRain Cloud 按上述企业合同接入，不获得 Relay 管理员权限，也不形成专用业务分支。
+- 企业 v1 数据与权限合同见 `enterprise-contract.md`；实现不得把 `User.AccessToken` 当作 service credential。
 
 ## 失败原则
 
