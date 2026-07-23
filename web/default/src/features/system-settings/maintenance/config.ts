@@ -25,8 +25,8 @@ export type HeaderNavModulesConfig = {
   home: boolean
   console: boolean
   pricing: HeaderNavAccessConfig
-  rankings: HeaderNavAccessConfig
   docs: boolean
+  monitor: boolean
   about: boolean
   [key: string]: boolean | HeaderNavAccessConfig
 }
@@ -45,11 +45,8 @@ export const HEADER_NAV_DEFAULT: HeaderNavModulesConfig = {
     enabled: true,
     requireAuth: false,
   },
-  rankings: {
-    enabled: true,
-    requireAuth: false,
-  },
   docs: true,
+  monitor: true,
   about: true,
 }
 
@@ -97,7 +94,6 @@ const toBoolean = (value: unknown, fallback: boolean): boolean => {
 const cloneHeaderNavDefault = (): HeaderNavModulesConfig => ({
   ...HEADER_NAV_DEFAULT,
   pricing: { ...HEADER_NAV_DEFAULT.pricing },
-  rankings: { ...HEADER_NAV_DEFAULT.rankings },
 })
 
 const parseAccessModule = (
@@ -145,7 +141,6 @@ export function parseHeaderNavModules(
     const result: HeaderNavModulesConfig = {
       ...base,
       pricing: { ...base.pricing },
-      rankings: { ...base.rankings },
     }
 
     Object.entries(parsed).forEach(([key, raw]) => {
@@ -153,11 +148,6 @@ export function parseHeaderNavModules(
         result.pricing = parseAccessModule(raw, base.pricing)
         return
       }
-      if (key === 'rankings') {
-        result.rankings = parseAccessModule(raw, base.rankings)
-        return
-      }
-
       if (typeof raw === 'boolean') {
         result[key] = raw
         return
@@ -177,7 +167,9 @@ export function parseHeaderNavModules(
 export function serializeHeaderNavModules(
   config: HeaderNavModulesConfig
 ): string {
-  return JSON.stringify(config)
+  const sanitized = { ...config }
+  delete sanitized.rankings
+  return JSON.stringify(sanitized)
 }
 
 export function parseSidebarModulesAdmin(

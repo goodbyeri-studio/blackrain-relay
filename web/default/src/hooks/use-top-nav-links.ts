@@ -38,8 +38,8 @@ export type TopNavLink = {
  *   home: true,
  *   console: true,
  *   pricing: { enabled: true, requireAuth: false },
- *   rankings: { enabled: true, requireAuth: false },
  *   docs: true,
+ *   monitor: true,
  *   about: true
  * }
  */
@@ -57,6 +57,9 @@ export function useTopNavLinks(): TopNavLink[] {
 
   // Documentation link (may be external)
   const docsLink: string | undefined = status?.docs_link as string | undefined
+  const monitorLink: string | undefined = status?.monitor_link as
+    | string
+    | undefined
 
   const isAuthed = !!auth?.user
 
@@ -79,13 +82,6 @@ export function useTopNavLinks(): TopNavLink[] {
     links.push({ title: t('Model Square'), href: '/pricing', requiresAuth })
   }
 
-  // Rankings
-  const rankings = modules?.rankings
-  if (rankings && typeof rankings === 'object' && rankings.enabled) {
-    const requiresAuth = rankings.requireAuth && !isAuthed
-    links.push({ title: t('Rankings'), href: '/rankings', requiresAuth })
-  }
-
   // Docs (supports external links)
   if (modules?.docs !== false) {
     if (docsLink) {
@@ -93,6 +89,14 @@ export function useTopNavLinks(): TopNavLink[] {
     } else {
       links.push({ title: t('Docs'), href: '/docs' })
     }
+  }
+
+  if (modules?.monitor !== false && monitorLink) {
+    links.push({
+      title: t('Group Monitor'),
+      href: monitorLink,
+      external: true,
+    })
   }
 
   // About
