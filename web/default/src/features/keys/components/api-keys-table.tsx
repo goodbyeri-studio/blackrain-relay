@@ -20,7 +20,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import type { Table as TanstackTable } from '@tanstack/react-table'
 import { Database } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -31,6 +31,7 @@ import {
   useDebouncedColumnFilter,
   useDataTable,
 } from '@/components/data-table'
+import { GroupBadge } from '@/components/group-badge'
 import { StatusBadge } from '@/components/status-badge'
 import {
   Empty,
@@ -42,7 +43,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import { formatQuota } from '@/lib/format'
+import { formatQuota, formatTimestampToDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 import { getApiKeys, searchApiKeys } from '../api'
@@ -53,8 +54,13 @@ import {
   ERROR_MESSAGES,
 } from '../constants'
 import type { ApiKey } from '../types'
-import { ApiKeyCell } from './api-keys-cells'
+import {
+  ApiKeyCell,
+  IpRestrictionsCell,
+  ModelLimitsCell,
+} from './api-keys-cells'
 import { useApiKeysColumns } from './api-keys-columns'
+import { ApiKeysPrimaryButtons } from './api-keys-primary-buttons'
 import { useApiKeys } from './api-keys-provider'
 import { DataTableBulkActions } from './data-table-bulk-actions'
 import { DataTableRowActions } from './data-table-row-actions'
@@ -131,6 +137,37 @@ function ApiKeysMobileList({
         const apiKey = row.original
         const statusConfig = API_KEY_STATUSES[apiKey.status]
         const total = apiKey.used_quota + apiKey.remain_quota
+        const mobileFields = [
+          {
+            label: t('Quota'),
+            value: apiKey.unlimited_quota
+              ? t('Unlimited')
+              : `${formatQuota(apiKey.remain_quota)} / ${formatQuota(total)}`,
+          },
+          {
+            label: t('Group'),
+            value: <GroupBadge group={apiKey.group || 'default'} />,
+          },
+          {
+            label: t('Available Models'),
+            value: <ModelLimitsCell apiKey={apiKey} />,
+          },
+          {
+            label: t('IP Restrictions'),
+            value: <IpRestrictionsCell apiKey={apiKey} />,
+          },
+          {
+            label: t('Created At'),
+            value: formatTimestampToDate(apiKey.created_time),
+          },
+          {
+            label: t('Expires At'),
+            value:
+              apiKey.expired_time === -1
+                ? t('Never Expires')
+                : formatTimestampToDate(apiKey.expired_time),
+          },
+        ]
 
         return (
           <div
@@ -158,26 +195,27 @@ function ApiKeysMobileList({
               )}
             </div>
 
-            <div className='flex min-w-0 items-center justify-between gap-2'>
-              <div className='min-w-0 flex-1 [&_button:first-child]:max-w-full [&_button:first-child]:truncate [&_button:first-child]:px-0'>
+            <div className='grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-0 border-y py-1 text-xs'>
+              <span className='text-muted-foreground py-1.5'>
+                {t('API Key')}
+              </span>
+              <div className='min-w-0 justify-self-end [&_button:first-child]:max-w-full [&_button:first-child]:truncate [&_button:first-child]:px-0'>
                 <ApiKeyCell apiKey={apiKey} />
               </div>
-              <DataTableRowActions row={row} />
+              {mobileFields.map((field) => (
+                <Fragment key={field.label}>
+                  <span className='text-muted-foreground border-t py-1.5'>
+                    {field.label}
+                  </span>
+                  <div className='min-w-0 justify-self-end border-t py-1.5 text-right font-medium tabular-nums'>
+                    {field.value}
+                  </div>
+                </Fragment>
+              ))}
             </div>
 
-            <div className='flex items-center justify-between gap-2 text-xs'>
-              <span className='text-muted-foreground'>{t('Quota')}</span>
-              {apiKey.unlimited_quota ? (
-                <span className='font-medium'>{t('Unlimited')}</span>
-              ) : (
-                <span className='font-medium tabular-nums'>
-                  {formatQuota(apiKey.remain_quota)}
-                  <span className='text-muted-foreground font-normal'>
-                    {' / '}
-                    {formatQuota(total)}
-                  </span>
-                </span>
-              )}
+            <div className='flex items-center justify-end'>
+              <DataTableRowActions row={row} />
             </div>
           </div>
         )
@@ -211,7 +249,7 @@ export function ApiKeysTable() {
   } = useTableUrlState({
     search: route.useSearch(),
     navigate: route.useNavigate(),
-    pagination: { defaultPage: 1, defaultPageSize: 20 },
+    pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: true, key: 'filter' },
     columnFilters: [
       { columnId: 'status', searchKey: 'status', type: 'array' },
@@ -307,6 +345,7 @@ export function ApiKeysTable() {
       applyHeaderSize
       toolbarProps={{
         searchPlaceholder: t('Filter by name...'),
+        leftActions: <ApiKeysPrimaryButtons />,
         additionalSearch: (
           <Input
             placeholder={t('Filter by API key...')}
