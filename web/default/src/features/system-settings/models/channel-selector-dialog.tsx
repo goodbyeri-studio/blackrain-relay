@@ -43,6 +43,7 @@ import {
 import type { UpstreamChannel } from '../types'
 import {
   CHANNEL_STATUS_CONFIG,
+  DEEPKEY_PRESET_ID,
   DEFAULT_ENDPOINT,
   ENDPOINT_OPTIONS,
   MODELS_DEV_PRESET_ID,
@@ -66,6 +67,10 @@ function isOfficialChannel(channel: UpstreamChannel): boolean {
   return (
     channel.id === OFFICIAL_CHANNEL_ID || channel.id === MODELS_DEV_PRESET_ID
   )
+}
+
+function isBuiltInPreset(channel: UpstreamChannel): boolean {
+  return isOfficialChannel(channel) || channel.id === DEEPKEY_PRESET_ID
 }
 
 export function ChannelSelectorDialog({
@@ -285,10 +290,10 @@ export function ChannelSelectorDialog({
 
   const sortedChannels = useMemo(() => {
     return [...filteredChannels].sort((a, b) => {
-      const aIsOfficial = isOfficialChannel(a)
-      const bIsOfficial = isOfficialChannel(b)
-      if (aIsOfficial && !bIsOfficial) return -1
-      if (!aIsOfficial && bIsOfficial) return 1
+      const aIsPreset = isBuiltInPreset(a)
+      const bIsPreset = isBuiltInPreset(b)
+      if (aIsPreset && !bIsPreset) return -1
+      if (!aIsPreset && bIsPreset) return 1
       return 0
     })
   }, [filteredChannels])

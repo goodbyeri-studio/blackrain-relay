@@ -23,6 +23,8 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 import {
   fetchUpstreamRatios,
@@ -42,6 +44,8 @@ import {
 } from './conflict-confirm-dialog'
 import {
   DEFAULT_ENDPOINT,
+  DEEPKEY_PRESET_ENDPOINT,
+  DEEPKEY_PRESET_ID,
   MODELS_DEV_PRESET_ENDPOINT,
   MODELS_DEV_PRESET_ID,
   OFFICIAL_CHANNEL_ENDPOINT,
@@ -89,6 +93,7 @@ type UpstreamRatioSyncProps = {
 // `controller/ratio_sync.go`; matching by ID alone is sufficient and avoids
 // fragile name/base_url comparisons.
 function getDefaultEndpointForChannel(channel: UpstreamChannel): string {
+  if (channel.id === DEEPKEY_PRESET_ID) return DEEPKEY_PRESET_ENDPOINT
   if (channel.id === MODELS_DEV_PRESET_ID) return MODELS_DEV_PRESET_ENDPOINT
   if (channel.id === OFFICIAL_CHANNEL_ID) return OFFICIAL_CHANNEL_ENDPOINT
   if (channel.type === OPENROUTER_CHANNEL_TYPE) return OPENROUTER_ENDPOINT
@@ -133,6 +138,7 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
   const [resolutions, setResolutions] = useState<ResolutionsMap>({})
   const [conflictItems, setConflictItems] = useState<ConflictItem[]>([])
   const [confirmLoading, setConfirmLoading] = useState(false)
+  const [markupPercent, setMarkupPercent] = useState('30')
 
   const { data: channelsData } = useQuery({
     queryKey: ['upstream-channels'],
@@ -238,6 +244,16 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
       return
     }
 
+    const parsedMarkupPercent = Number(markupPercent)
+    if (
+      !Number.isFinite(parsedMarkupPercent) ||
+      parsedMarkupPercent < 0 ||
+      parsedMarkupPercent > 1000
+    ) {
+      toast.error(t('Price markup must be between 0 and 1000'))
+      return
+    }
+
     const upstreams: UpstreamConfig[] = selectedChannels.map((ch) => ({
       id: ch.id,
       name: ch.name,
@@ -245,7 +261,11 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
       endpoint: channelEndpoints[ch.id] || DEFAULT_ENDPOINT,
     }))
 
-    fetchMutation.mutate({ upstreams, timeout: 10 })
+    fetchMutation.mutate({
+      upstreams,
+      timeout: 10,
+      markup_percent: parsedMarkupPercent,
+    })
   }
 
   const handleSelectValue = useCallback(
@@ -477,7 +497,25 @@ export function UpstreamRatioSync({ modelRatios }: UpstreamRatioSyncProps) {
   return (
     <div className='flex h-full min-h-0 flex-col gap-4'>
       <div className='flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-2 sm:flex-row'>
+        <div className='flex flex-col gap-2 sm:flex-row sm:items-end'>
+          <div className='w-full sm:w-40'>
+            <Label
+              htmlFor='upstream-price-markup'
+              className='mb-1.5 block text-xs'
+            >
+              {t('Price markup (%)')}
+            </Label>
+            <Input
+              id='upstream-price-markup'
+              type='number'
+              min={0}
+              max={1000}
+              step='0.1'
+              value={markupPercent}
+              onChange={(event) => setMarkupPercent(event.target.value)}
+              disabled={isLoading}
+            />
+          </div>
           <Button onClick={handleOpenChannelDialog} disabled={isLoading}>
             <RefreshCcw className='mr-2 h-4 w-4' />
             {t('Select Sync Channels')}

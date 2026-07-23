@@ -42,6 +42,11 @@ export const MODELS_DEV_PRESET_NAME = 'models.dev 价格预设'
 export const MODELS_DEV_PRESET_BASE_URL = 'https://models.dev'
 export const MODELS_DEV_PRESET_ENDPOINT = 'https://models.dev/api.json'
 
+export const DEEPKEY_PRESET_ID = -102
+export const DEEPKEY_PRESET_NAME = 'DeepKey 模型定价'
+export const DEEPKEY_PRESET_BASE_URL = 'https://deepkey.top'
+export const DEEPKEY_PRESET_ENDPOINT = '/api/pricing'
+
 export const OPENROUTER_ENDPOINT = 'openrouter'
 
 // Backend channel type for OpenRouter (see constant/channel.go: ChannelTypeOpenRouter = 20)
