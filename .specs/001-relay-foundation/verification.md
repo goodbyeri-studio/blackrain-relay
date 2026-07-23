@@ -17,14 +17,9 @@
 | 2026-07-12 | 本地 dev 环境 | `make dev-bootstrap`; `make dev-infra-up`; `make dev-backend`; `make dev-api-rebuild`; `make dev-frontend` | 通过 | 宿主机/容器后端均通过；PostgreSQL/Redis healthy，API 直连与 `3001` proxy 成功 |
 | 2026-07-12 | default 页面 smoke | Browser：`/setup` 首屏、console、下一步交互 | 通过 | 检测 PostgreSQL，进入管理员账户步骤，无 console error/warn |
 | 2026-07-13 | 直销 token 生命周期 | `go test ./controller -count=1` | 通过 | 覆盖签发、额度、过期、模型白名单、禁用和删除 |
-| 2026-07-23 | DeepKey 渠道与目录审计 | 使用 `.specs/001-relay-foundation/audit-deepkey-production.ps1` 对脱敏 JSON 生成计数和 SHA-256 摘要 | 待复验 | 不提交密钥；结果必须同时记录时间、目标 URL 摘要和 Relay commit |
-| 2026-07-23 | DeepKey 真实渠道调用 | Relay 全量渠道测试 + 失败分组多模型、双端点复测 | 部分通过 | 生产数字不作为合并门槛；复验结果须附脱敏摘要文件后再更新为通过 |
-| 2026-07-23 | 渠道测试回归 | `go test ./controller -count=1` | 通过 | 覆盖测试提示词，并验证完整 controller 测试包 |
 | 2026-07-23 | 支付事务 PostgreSQL 15 | `PAYMENT_TEST_DB=postgres PAYMENT_TEST_DSN=... go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUpQuota' -count=1` | 通过 | 独立 `payment_test` 数据库，容器端口 54329 |
 | 2026-07-23 | 支付事务 MySQL 8.0 | `PAYMENT_TEST_DB=mysql PAYMENT_TEST_DSN=... go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUpQuota' -count=1` | 通过 | 临时 MySQL 8 容器，端口 33306；测试后销毁 |
 | 2026-07-23 | 支付事务 SQLite | `go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUp' -count=1` | 通过 | 默认内存 SQLite |
-| 2026-07-23 | 本地生产镜像 | `docker compose -p blackrain-relay --env-file .env.dev -f docker-compose.dev.yml -f docker-compose.local.yml up -d --build new-api` | 通过 | `http://127.0.0.1:3010/api/status` 返回成功 |
-| 2026-07-23 | DeepKey 脱敏复核 | `.specs/001-relay-foundation/audit-deepkey-production.ps1` | 可重复执行 | 输出目录、渠道模型探测和差异摘要，不输出渠道 Key；历史调用数字仅作人工记录 |
 | 2026-07-23 | 支付三数据库事务 | `PAYMENT_TEST_DIALECT=... PAYMENT_TEST_DSN=... go test ./model -run TestPaymentTransactionDatabaseMatrix -count=1` | 自动化矩阵 | GitHub Actions 覆盖 SQLite、MySQL 8.0、PostgreSQL 15；保护并发通知、额度上限、邀请奖励和状态一致性 |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无 BlackRain 实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
