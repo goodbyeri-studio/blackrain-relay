@@ -9,7 +9,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -41,6 +43,44 @@ type fakeWechatNativeService struct {
 	queryErr       error
 	closeErr       error
 	closeCalls     int
+}
+
+func TestWechatPayRuntimeLoadsPEMSecretsFromEnvironment(t *testing.T) {
+	merchantKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	platformKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	merchantDER, err := x509.MarshalPKCS8PrivateKey(merchantKey)
+	require.NoError(t, err)
+	merchantPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: merchantDER})
+	platformDER, err := x509.MarshalPKIXPublicKey(&platformKey.PublicKey)
+	require.NoError(t, err)
+	platformPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: platformDER})
+	t.Setenv("WECHAT_PAY_APP_ID", "wx-pem-test")
+	t.Setenv("WECHAT_PAY_MCH_ID", "pem-mch")
+	t.Setenv("WECHAT_PAY_MERCHANT_SERIAL_NO", "pem-merchant-serial")
+	t.Setenv("WECHAT_PAY_MERCHANT_PRIVATE_KEY_PATH", "")
+	t.Setenv("WECHAT_PAY_MERCHANT_PRIVATE_KEY_PEM", string(merchantPEM))
+	t.Setenv("WECHAT_PAY_PUBLIC_KEY_ID", "pem-public-key")
+	t.Setenv("WECHAT_PAY_PUBLIC_KEY_PATH", "")
+	t.Setenv("WECHAT_PAY_PUBLIC_KEY_PEM", string(platformPEM))
+	t.Setenv("WECHAT_PAY_API_V3_KEY", "01234567890123456789012345678901")
+	t.Setenv("WECHAT_PAY_NOTIFY_URL", "https://relay.example.com/api/payment/wechat/notify")
+
+	wechatPayRuntimeCache.Lock()
+	previousRuntime := wechatPayRuntimeCache.runtime
+	wechatPayRuntimeCache.runtime = nil
+	wechatPayRuntimeCache.Unlock()
+	t.Cleanup(func() {
+		wechatPayRuntimeCache.Lock()
+		wechatPayRuntimeCache.runtime = previousRuntime
+		wechatPayRuntimeCache.Unlock()
+	})
+
+	runtime, err := getWechatPayRuntime(context.Background())
+	require.NoError(t, err)
+	require.NotNil(t, runtime)
+	assert.Equal(t, "wx-pem-test", runtime.config.AppID)
 }
 
 func (f *fakeWechatNativeService) Prepay(context.Context, native.PrepayRequest) (*native.PrepayResponse, *core.APIResult, error) {
@@ -240,7 +280,7 @@ func buildWechatNotifyRequest(t *testing.T, platformKey *rsa.PrivateKey, apiV3Ke
 
 func TestWechatPayNotifyVerifiesDecryptsAndRejectsTampering(t *testing.T) {
 	db := setupModelListControllerTestDB(t)
-	require.NoError(t, db.AutoMigrate(&model.Log{}, &model.User{}, &model.TopUp{}, &model.WechatPayOrder{}, &model.WechatPayNotification{}))
+	require.NoError(t, db.AutoMigrate(&model.Log{}, &model.User{}, &model.TopUp{}, &model.WechatPayOrder{}, &model.SubscriptionWechatPayOrder{}, &model.WechatPayNotification{}))
 	topUp := &model.TopUp{
 		UserId:          901,
 		Amount:          2,

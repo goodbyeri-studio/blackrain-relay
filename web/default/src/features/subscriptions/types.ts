@@ -27,7 +27,7 @@ export const subscriptionPlanSchema = z.object({
   title: z.string(),
   subtitle: z.string().optional(),
   price_amount: z.number(),
-  currency: z.string().default('USD'),
+  currency: z.enum(['CNY', 'USD', 'EUR']).default('CNY'),
   duration_unit: z.enum(['year', 'month', 'day', 'hour', 'custom']),
   duration_value: z.number(),
   custom_seconds: z.number().optional(),
@@ -112,6 +112,22 @@ export interface SubscriptionPayResponse {
   }
   url?: string
 }
+
+export interface SubscriptionWechatPayRequest {
+  plan_id: number
+  client_request_id: string
+}
+
+export interface SubscriptionWechatPayOrder {
+  trade_no: string
+  code_url?: string
+  amount_fen: number
+  expires_at: number
+  status: 'pending' | 'credited' | 'failed' | 'closed'
+}
+
+export type SubscriptionWechatPayResponse =
+  ApiResponse<SubscriptionWechatPayOrder>
 
 export interface CreateUserSubscriptionRequest {
   plan_id: number

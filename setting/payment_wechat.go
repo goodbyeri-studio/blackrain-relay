@@ -13,8 +13,10 @@ type WechatPayConfig struct {
 	MchID                  string
 	MerchantSerialNo       string
 	MerchantPrivateKeyPath string
+	MerchantPrivateKeyPEM  string
 	PublicKeyID            string
 	PublicKeyPath          string
+	PublicKeyPEM           string
 	APIv3Key               string
 	NotifyURL              string
 }
@@ -25,8 +27,10 @@ func GetWechatPayConfig() WechatPayConfig {
 		MchID:                  strings.TrimSpace(os.Getenv("WECHAT_PAY_MCH_ID")),
 		MerchantSerialNo:       strings.TrimSpace(os.Getenv("WECHAT_PAY_MERCHANT_SERIAL_NO")),
 		MerchantPrivateKeyPath: strings.TrimSpace(os.Getenv("WECHAT_PAY_MERCHANT_PRIVATE_KEY_PATH")),
+		MerchantPrivateKeyPEM:  strings.TrimSpace(os.Getenv("WECHAT_PAY_MERCHANT_PRIVATE_KEY_PEM")),
 		PublicKeyID:            strings.TrimSpace(os.Getenv("WECHAT_PAY_PUBLIC_KEY_ID")),
 		PublicKeyPath:          strings.TrimSpace(os.Getenv("WECHAT_PAY_PUBLIC_KEY_PATH")),
+		PublicKeyPEM:           strings.TrimSpace(os.Getenv("WECHAT_PAY_PUBLIC_KEY_PEM")),
 		APIv3Key:               strings.TrimSpace(os.Getenv("WECHAT_PAY_API_V3_KEY")),
 		NotifyURL:              strings.TrimSpace(os.Getenv("WECHAT_PAY_NOTIFY_URL")),
 	}
@@ -34,8 +38,8 @@ func GetWechatPayConfig() WechatPayConfig {
 
 func (config WechatPayConfig) Validate() error {
 	if config.AppID == "" || config.MchID == "" || config.MerchantSerialNo == "" ||
-		config.MerchantPrivateKeyPath == "" || config.PublicKeyID == "" ||
-		config.PublicKeyPath == "" || config.APIv3Key == "" || config.NotifyURL == "" {
+		(config.MerchantPrivateKeyPath == "" && config.MerchantPrivateKeyPEM == "") || config.PublicKeyID == "" ||
+		(config.PublicKeyPath == "" && config.PublicKeyPEM == "") || config.APIv3Key == "" || config.NotifyURL == "" {
 		return errors.New("微信支付配置不完整")
 	}
 	if len(config.APIv3Key) != 32 {
@@ -52,11 +56,15 @@ func (config WechatPayConfig) Validate() error {
 	if ip := net.ParseIP(hostname); ip != nil && (ip.IsLoopback() || ip.IsPrivate() || ip.IsUnspecified()) {
 		return errors.New("微信支付回调地址不能使用内网 IP")
 	}
-	if _, err = os.Stat(config.MerchantPrivateKeyPath); err != nil {
-		return errors.New("微信支付商户私钥文件不可用")
+	if config.MerchantPrivateKeyPEM == "" {
+		if _, err = os.Stat(config.MerchantPrivateKeyPath); err != nil {
+			return errors.New("微信支付商户私钥文件不可用")
+		}
 	}
-	if _, err = os.Stat(config.PublicKeyPath); err != nil {
-		return errors.New("微信支付公钥文件不可用")
+	if config.PublicKeyPEM == "" {
+		if _, err = os.Stat(config.PublicKeyPath); err != nil {
+			return errors.New("微信支付公钥文件不可用")
+		}
 	}
 	return nil
 }

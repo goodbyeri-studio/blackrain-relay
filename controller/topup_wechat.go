@@ -3,6 +3,7 @@ package controller
 import (
 	"bytes"
 	"context"
+	"crypto/rsa"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -78,11 +79,22 @@ func getWechatPayRuntime(ctx context.Context) (*wechatPayRuntime, error) {
 		return wechatPayRuntimeCache.runtime, nil
 	}
 
-	merchantPrivateKey, err := utils.LoadPrivateKeyWithPath(config.MerchantPrivateKeyPath)
+	var merchantPrivateKey *rsa.PrivateKey
+	var err error
+	if config.MerchantPrivateKeyPEM != "" {
+		merchantPrivateKey, err = utils.LoadPrivateKey(config.MerchantPrivateKeyPEM)
+	} else {
+		merchantPrivateKey, err = utils.LoadPrivateKeyWithPath(config.MerchantPrivateKeyPath)
+	}
 	if err != nil {
 		return nil, errors.New("微信支付商户私钥加载失败")
 	}
-	wechatPayPublicKey, err := utils.LoadPublicKeyWithPath(config.PublicKeyPath)
+	var wechatPayPublicKey *rsa.PublicKey
+	if config.PublicKeyPEM != "" {
+		wechatPayPublicKey, err = utils.LoadPublicKey(config.PublicKeyPEM)
+	} else {
+		wechatPayPublicKey, err = utils.LoadPublicKeyWithPath(config.PublicKeyPath)
+	}
 	if err != nil {
 		return nil, errors.New("微信支付公钥加载失败")
 	}
@@ -420,7 +432,7 @@ func WechatPayNotify(c *gin.Context) {
 		return
 	}
 
-	_, err = model.CompleteWechatPayTopUp(model.WechatPayCompletion{
+	err = completeWechatPayBusinessOrder(model.WechatPayCompletion{
 		EventID:       notifyRequest.ID,
 		OutTradeNo:    *transaction.OutTradeNo,
 		TransactionID: *transaction.TransactionId,

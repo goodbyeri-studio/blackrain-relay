@@ -51,7 +51,11 @@ import {
   updateBillingPreference,
 } from '@/features/subscriptions/api'
 import { SubscriptionPurchaseDialog } from '@/features/subscriptions/components/dialogs/subscription-purchase-dialog'
-import { formatDuration, formatResetPeriod } from '@/features/subscriptions/lib'
+import {
+  formatDuration,
+  formatPlanPrice,
+  formatResetPeriod,
+} from '@/features/subscriptions/lib'
 import type {
   PlanRecord,
   UserSubscriptionRecord,
@@ -119,6 +123,7 @@ export function SubscriptionPlansCard({
   const enableCreem = !!topupInfo?.enable_creem_topup
   const enableWaffoPancake = !!topupInfo?.enable_waffo_pancake_topup
   const enableOnlineTopUp = !!topupInfo?.enable_online_topup
+  const enableWechatPay = !!topupInfo?.enable_wechat_pay
   const epayMethods = useMemo(
     () => getEpayMethods(topupInfo?.pay_methods),
     [topupInfo?.pay_methods]
@@ -265,10 +270,12 @@ export function SubscriptionPlansCard({
         icon={<Crown className='h-4 w-4' />}
         iconTone='warning'
         disableHoverEffect
+        className='rounded-lg border-emerald-500/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(236,253,245,0.48))] shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_18px_45px_rgba(16,185,129,0.08)] backdrop-blur-xl dark:bg-[linear-gradient(145deg,rgba(24,24,27,0.88),rgba(6,78,59,0.16))]'
+        headerClassName='border-emerald-500/10 bg-white/25 dark:bg-white/[0.02]'
         contentClassName='space-y-4 sm:space-y-5'
       >
         {/* My subscriptions & billing preference */}
-        <div className='rounded-xl border p-3 sm:p-4'>
+        <div className='rounded-lg border border-white/55 bg-white/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-md sm:p-4 dark:border-white/10 dark:bg-black/10'>
           <div className='flex flex-wrap items-center justify-between gap-2.5 sm:gap-3'>
             <div className='flex min-w-0 flex-wrap items-center gap-2'>
               <span className='text-sm font-medium'>
@@ -523,13 +530,13 @@ export function SubscriptionPlansCard({
 
         {/* Available plans grid */}
         {plans.length > 0 ? (
-          <div className='grid grid-cols-1 gap-3 2xl:grid-cols-2 2xl:gap-4'>
-            {plans.map((p, index) => {
+          <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'>
+            {plans.map((p) => {
               const plan = p?.plan
               if (!plan) return null
               const totalAmount = Number(plan.total_amount || 0)
-              const price = Number(plan.price_amount || 0).toFixed(2)
-              const isPopular = index === 0 && plans.length > 1
+              const price = formatPlanPrice(plan)
+              const isPopular = Number(plan.price_amount || 0) === 100
               const limit = Number(plan.max_purchase_per_user || 0)
               const count = planPurchaseCountMap.get(plan.id) || 0
               const reached = limit > 0 && count >= limit
@@ -549,12 +556,15 @@ export function SubscriptionPlansCard({
               ].filter(Boolean) as string[]
 
               return (
-                <Card
+                <div
                   key={plan.id}
-                  data-card-hover='false'
-                  className={cn(isPopular && 'border-primary/70 shadow-sm')}
+                  className={cn(
+                    'flex min-h-64 flex-col rounded-lg border border-white/70 bg-white/52 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82),0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur-lg transition-colors sm:p-4 dark:border-white/10 dark:bg-white/[0.035]',
+                    isPopular &&
+                      'border-emerald-500/45 bg-emerald-50/45 dark:border-emerald-400/30 dark:bg-emerald-950/20'
+                  )}
                 >
-                  <CardContent className='flex h-full flex-col p-3.5 sm:p-4'>
+                  <div className='flex h-full flex-col'>
                     <div className='mb-2 flex items-start justify-between gap-3'>
                       <div className='min-w-0'>
                         <h4 className='truncate font-semibold'>
@@ -579,8 +589,8 @@ export function SubscriptionPlansCard({
                     </div>
 
                     <div className='py-2'>
-                      <span className='text-primary text-2xl font-bold'>
-                        ${price}
+                      <span className='text-2xl font-bold text-emerald-700 dark:text-emerald-300'>
+                        {price}
                       </span>
                     </div>
 
@@ -612,7 +622,7 @@ export function SubscriptionPlansCard({
                     ) : (
                       <Button
                         variant='outline'
-                        className='w-full'
+                        className='w-full border-emerald-600/30 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white dark:bg-emerald-500 dark:hover:bg-emerald-600'
                         onClick={() => {
                           setSelectedPlan(p)
                           setPurchaseOpen(true)
@@ -621,8 +631,8 @@ export function SubscriptionPlansCard({
                         {t('Subscribe Now')}
                       </Button>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               )
             })}
           </div>
@@ -645,6 +655,7 @@ export function SubscriptionPlansCard({
         enableStripe={enableStripe}
         enableCreem={enableCreem}
         enableWaffoPancake={enableWaffoPancake}
+        enableWechatPay={enableWechatPay}
         enableOnlineTopUp={enableOnlineTopUp}
         epayMethods={epayMethods}
         userQuota={userQuota}

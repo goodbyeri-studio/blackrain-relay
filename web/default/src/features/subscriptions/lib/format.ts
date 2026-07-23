@@ -66,3 +66,10 @@ export function formatTimestamp(ts: number): string {
   if (!ts) return '-'
   return dayjs(ts * 1000).format('YYYY-MM-DD HH:mm:ss')
 }
+
+export function formatPlanPrice(plan: Partial<SubscriptionPlan>): string {
+  let symbol = '$'
+  if (plan.currency === 'CNY') symbol = '¥'
+  if (plan.currency === 'EUR') symbol = '€'
+  return `${symbol}${Number(plan.price_amount || 0).toFixed(2)}`
+}
