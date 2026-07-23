@@ -35,6 +35,14 @@
 - 替代方案：长期 staging；直接全量开放 production。
 - 发布门槛：独立 Secret、TLS、迁移前备份、健康检查、监控告警、快速回滚以及计费/限流/流式/对账 smoke 全部通过。
 
+## 2026-07-23：首期采用单 App 生产架构
+
+- 决策：首期使用单台 `s-4vcpu-8gb` App、Reserved IP、Caddy HTTPS、托管 PostgreSQL 和托管 Valkey；不使用长期 staging、Load Balancer 或双 App。
+- 原因：首月目标是约 500 人同时在线，DeepKey 上游可用性不属于 Relay 容量边界。单 App 更容易控制连接池、后台任务、日志、发布和回滚；垂直容量比双 App 更符合小团队效率和成本优先。
+- 运行边界：先通过 500 在线连接与 100/250/500 并发流式请求压测验证 Relay 自身的 CPU、内存、数据库、缓存、计费和连接稳定性。
+- 替代方案：双 App + Load Balancer；仅在单 App 压测无法达标、需要无中断发布或出现明确生产 SLA 时启用。
+- 后续复查条件：App CPU 持续超过 70%、内存超过 75%、Relay 错误率/P95 不达标，或需要应用级自动故障切换时，重新评估第二 App；启用前必须为所有 master 后台任务增加数据库租约或单主提升机制。
+
 ## 2026-07-13：企业控制面使用独立凭据域
 
 - 决策：企业自动化接口固定在 `/api/enterprise/v1`，使用独立 service credential；每个 tenant 绑定一个内部执行用户，external subject 关联现有 scoped token。

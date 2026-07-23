@@ -17,7 +17,7 @@
 | 2026-07-12 | 本地 dev 环境 | `make dev-bootstrap`; `make dev-infra-up`; `make dev-backend`; `make dev-api-rebuild`; `make dev-frontend` | 通过 | 宿主机/容器后端均通过；PostgreSQL/Redis healthy，API 直连与 `3001` proxy 成功 |
 | 2026-07-12 | default 页面 smoke | Browser：`/setup` 首屏、console、下一步交互 | 通过 | 检测 PostgreSQL，进入管理员账户步骤，无 console error/warn |
 | 2026-07-13 | 直销 token 生命周期 | `go test ./controller -count=1` | 通过 | 覆盖签发、额度、过期、模型白名单、禁用和删除 |
-| 2026-07-23 | Relay production infrastructure | `doctl` resource, VPC, database, load balancer, firewall and Cloudflare DNS read-only checks | 通过 | `BlackRain Relay` Project；独立 `10.200.0.0/20` VPC；双 App + Load Balancer；PostgreSQL/Valkey 单节点成本方案；未记录 Secret |
+| 2026-07-23 | Relay production infrastructure | `doctl` Project、Droplet、Reserved IP、VPC、database、firewall 只读检查 | 通过 | `BlackRain Relay` Project；独立 `10.200.0.0/20` VPC；单台 4 vCPU/8 GB App + Reserved IP；PostgreSQL/Valkey 单节点；无 Load Balancer；未记录 Secret |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无 BlackRain 实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
 
@@ -32,6 +32,6 @@
 ## 未验证风险
 
 - 尚未测试最低支持版本 PostgreSQL 9.6 与 MySQL 5.7.8，也未执行 migration rollback/backup restore。
-- 生产基础设施已建立，但尚未完成生产 Secret、TLS 监听、模型渠道、应用部署、restore 演练和真实流量压测。
+- 生产基础设施已按单 App 方案收敛，但尚未完成 production Secret、Caddy/TLS、模型渠道、应用部署、独立健康检查、restore 演练和真实流量压测。
 - Cloud 企业客户、scoped token、usage 对账和 BlackRain 双引擎 E2E 尚未实现。
 - AGPL、模型厂商转售条款、支付、税务、备案、内容安全和日志留存尚未正式审查。

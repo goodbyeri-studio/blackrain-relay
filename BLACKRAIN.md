@@ -31,7 +31,7 @@ BlackRain Desktop
 ## 当前状态
 
 - New API 上游 release 源码、License、NOTICE 和历史已导入。
-- 已建立 BlackRain Relay 独立生产基础设施：专用 DigitalOcean Project、VPC、双 App 节点、Load Balancer、托管 PostgreSQL、托管 Valkey、Firewall、Container Registry，以及 `relay.goodbyeri.cc` DNS。
+- 已建立 BlackRain Relay 独立生产基础设施：专用 DigitalOcean Project、VPC、单台 4 vCPU/8 GB App、Reserved IP、托管 PostgreSQL、托管 Valkey、Firewall、Container Registry，以及 `relay.goodbyeri.cc` DNS；首期不使用 Load Balancer。
 - 当前尚未发布 Relay 应用镜像，也尚未配置 production Secret、TLS 监听、模型渠道、Cloud 企业客户和真实流量压测；基础设施存在不等于中转服务已经上线或可以商业运营。
 - Relay 与 `2049-agent` 完全独立，不共享其 Droplet、数据库、Valkey、Spaces、Secret 或部署节点。
 - 仓库存在和上游代码可构建，不等于中转服务已部署或可商业运营。
