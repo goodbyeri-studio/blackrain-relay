@@ -26,6 +26,7 @@ import {
   isApiSuccess,
   requestAlipayPrecreatePayment,
 } from '../api'
+import { mergeAlipayPrecreateOrder } from '../lib'
 import type { AlipayPrecreateOrder } from '../types'
 
 export function useAlipayPrecreatePayment() {
@@ -56,7 +57,7 @@ export function useAlipayPrecreatePayment() {
     retry: 2,
   })
 
-  const order = statusQuery.data || createdOrder
+  const order = mergeAlipayPrecreateOrder(createdOrder, statusQuery.data)
 
   const processAlipayPrecreatePayment = useCallback(async (amount: number) => {
     setOpen(false)

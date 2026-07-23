@@ -22,7 +22,12 @@ import {
   DEFAULT_PAYMENT_TYPE,
   DEFAULT_MIN_TOPUP,
 } from '../constants'
-import type { PresetAmount, TopupInfo } from '../types'
+import type {
+  AlipayPrecreateOrder,
+  PresetAmount,
+  TopupInfo,
+  WechatNativeOrder,
+} from '../types'
 
 // ============================================================================
 // Payment Processing Functions
@@ -92,6 +97,32 @@ export function isWechatNativePayment(paymentType: string): boolean {
 
 export function isAlipayPrecreatePayment(paymentType: string): boolean {
   return paymentType === PAYMENT_TYPES.ALIPAY_PRECREATE
+}
+
+export function mergeAlipayPrecreateOrder(
+  createdOrder: AlipayPrecreateOrder | null,
+  statusOrder: AlipayPrecreateOrder | undefined
+): AlipayPrecreateOrder | null {
+  if (!createdOrder || !statusOrder) return createdOrder
+
+  return {
+    ...createdOrder,
+    ...statusOrder,
+    qr_code: statusOrder.qr_code || createdOrder.qr_code,
+  }
+}
+
+export function mergeWechatNativeOrder(
+  createdOrder: WechatNativeOrder | null,
+  statusOrder: WechatNativeOrder | undefined
+): WechatNativeOrder | null {
+  if (!createdOrder || !statusOrder) return createdOrder
+
+  return {
+    ...createdOrder,
+    ...statusOrder,
+    code_url: statusOrder.code_url || createdOrder.code_url,
+  }
 }
 
 /**

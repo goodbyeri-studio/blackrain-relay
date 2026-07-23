@@ -26,6 +26,7 @@ import {
   isApiSuccess,
   requestWechatNativePayment,
 } from '../api'
+import { mergeWechatNativeOrder } from '../lib'
 import type { WechatNativeOrder } from '../types'
 
 export function useWechatNativePayment() {
@@ -56,14 +57,7 @@ export function useWechatNativePayment() {
     retry: 2,
   })
 
-  const order =
-    createdOrder && statusQuery.data
-      ? {
-          ...createdOrder,
-          ...statusQuery.data,
-          code_url: statusQuery.data.code_url || createdOrder.code_url,
-        }
-      : createdOrder
+  const order = mergeWechatNativeOrder(createdOrder, statusQuery.data)
 
   const processWechatNativePayment = useCallback(async (amount: number) => {
     setOpen(false)

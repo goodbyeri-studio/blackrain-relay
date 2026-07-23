@@ -5206,6 +5206,16 @@
     "Zero retention": "零数据保留",
     "Zhipu": "智谱",
     "Zhipu V4": "智谱 V4",
-    "Zoom": "缩放"
+    "Zoom": "缩放",
+    "Payment completed": "支付已完成",
+    "This QR code has expired": "此二维码已过期",
+    "Alipay QR code": "支付宝二维码",
+    "Waiting for payment": "等待支付",
+    "Scan with Alipay": "使用支付宝扫码",
+    "Use Alipay to scan the QR code and complete payment.": "使用支付宝扫描二维码并完成支付。",
+    "Refresh payment status": "刷新支付状态",
+    "WeChat Pay QR code": "微信支付二维码",
+    "Scan with WeChat": "微信扫码支付",
+    "Use WeChat to scan the QR code and complete payment.": "请使用微信扫描二维码完成支付。"
   }
 }
