@@ -82,7 +82,10 @@ require (
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 )
 
-require github.com/Azure/go-ntlmssp v0.1.1
+require (
+	github.com/Azure/go-ntlmssp v0.1.1
+	github.com/wechatpay-apiv3/wechatpay-go v0.2.21
+)
 
 require (
 	github.com/DmitriyVTitov/size v1.5.0 // indirect

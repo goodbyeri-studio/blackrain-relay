@@ -17,6 +17,10 @@
 | 2026-07-12 | 本地 dev 环境 | `make dev-bootstrap`; `make dev-infra-up`; `make dev-backend`; `make dev-api-rebuild`; `make dev-frontend` | 通过 | 宿主机/容器后端均通过；PostgreSQL/Redis healthy，API 直连与 `3001` proxy 成功 |
 | 2026-07-12 | default 页面 smoke | Browser：`/setup` 首屏、console、下一步交互 | 通过 | 检测 PostgreSQL，进入管理员账户步骤，无 console error/warn |
 | 2026-07-13 | 直销 token 生命周期 | `go test ./controller -count=1` | 通过 | 覆盖签发、额度、过期、模型白名单、禁用和删除 |
+| 2026-07-23 | 支付事务 PostgreSQL 15 | `PAYMENT_TEST_DB=postgres PAYMENT_TEST_DSN=... go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUpQuota' -count=1` | 通过 | 独立 `payment_test` 数据库，容器端口 54329 |
+| 2026-07-23 | 支付事务 MySQL 8.0 | `PAYMENT_TEST_DB=mysql PAYMENT_TEST_DSN=... go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUpQuota' -count=1` | 通过 | 临时 MySQL 8 容器，端口 33306；测试后销毁 |
+| 2026-07-23 | 支付事务 SQLite | `go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUp' -count=1` | 通过 | 默认内存 SQLite |
+| 2026-07-23 | 支付三数据库事务 | `PAYMENT_TEST_DIALECT=... PAYMENT_TEST_DSN=... go test ./model -run TestPaymentTransactionDatabaseMatrix -count=1` | 自动化矩阵 | GitHub Actions 覆盖 SQLite、MySQL 8.0、PostgreSQL 15；保护并发通知、额度上限、邀请奖励和状态一致性 |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无 BlackRain 实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
 

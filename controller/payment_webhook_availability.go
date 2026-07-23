@@ -108,3 +108,25 @@ func isEpayWebhookConfigured() bool {
 func isEpayWebhookEnabled() bool {
 	return isEpayTopUpEnabled()
 }
+
+func isWechatPayTopUpEnabled() bool {
+	if !isPaymentComplianceConfirmed() {
+		return false
+	}
+	return isWechatPayWebhookEnabled()
+}
+
+func isWechatPayWebhookEnabled() bool {
+	return setting.GetWechatPayConfig().Validate() == nil
+}
+
+func isAlipayTopUpEnabled() bool {
+	if !isPaymentComplianceConfirmed() {
+		return false
+	}
+	return isAlipayWebhookEnabled()
+}
+
+func isAlipayWebhookEnabled() bool {
+	return setting.GetAlipayConfig().Validate() == nil
+}

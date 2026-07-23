@@ -1,0 +1,87 @@
+name: Payment Database Matrix
+
+on:
+  pull_request:
+    paths:
+      - "controller/topup*.go"
+      - "model/topup.go"
+      - "model/alipay*.go"
+      - "model/wechat_pay*.go"
+      - "setting/payment_*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/payment-database-matrix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.1"
+          cache: true
+      - name: Run payment transaction tests
+        env:
+          PAYMENT_TEST_DIALECT: sqlite
+          PAYMENT_TEST_DSN: file:payment-matrix?mode=memory&cache=shared
+        run: go test ./model -run TestPaymentTransactionDatabaseMatrix -count=1
+
+  mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: blackrain_payment_test
+          MYSQL_ROOT_PASSWORD: test-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ptest-password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.1"
+          cache: true
+      - name: Run payment transaction tests
+        env:
+          PAYMENT_TEST_DIALECT: mysql
+          PAYMENT_TEST_DSN: root:test-password@tcp(127.0.0.1:3306)/blackrain_payment_test?charset=utf8mb4&parseTime=True&loc=Local
+        run: go test ./model -run TestPaymentTransactionDatabaseMatrix -count=1
+
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: blackrain_payment_test
+          POSTGRES_PASSWORD: test-password
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d blackrain_payment_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.1"
+          cache: true
+      - name: Run payment transaction tests
+        env:
+          PAYMENT_TEST_DIALECT: postgres
+          PAYMENT_TEST_DSN: postgres://postgres:test-password@127.0.0.1:5432/blackrain_payment_test?sslmode=disable
+        run: go test ./model -run TestPaymentTransactionDatabaseMatrix -count=1
