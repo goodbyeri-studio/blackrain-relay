@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https: data:; font-src 'self' https: data:; frame-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <button id="menu-toggle" aria-label="菜单">☰</button>
+    <span class="topbar-brand">goodbyeri.cc 文档</span>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <a href="#guide-intro">goodbyeri.cc<small>使用文档</small></a>
+    </div>
+    <div class="sidebar-search">
+      <input id="nav-search" type="search" placeholder="搜索文档标题…" autocomplete="off">
+    </div>
+    <nav id="nav">
+        <div class="nav-group">
+          <div class="nav-group-title">🚀 goodbyeri.cc 接入</div>
+          <ul>
+          <li class="nav-item"><a class="nav-link" data-slug="guide-intro" href="#guide-intro">欢迎 / 接入总览</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="guide-claude-code" href="#guide-claude-code">Claude Code 安装</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="guide-codex" href="#guide-codex">Codex 安装</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="guide-pricing" href="#guide-pricing">计费规则</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="guide-cc-switch" href="#guide-cc-switch">CC-SWITCH 导入</a></li>
+          </ul>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">🛠️ 安装 &amp; 配置 · 9 篇</div>
+          <ul>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-setup-ctok" href="#claude-code-setup-ctok">Claude Code 安装配置</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="windows-claude-code-installation-guide" href="#windows-claude-code-installation-guide">Windows 安装保姆级教程</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-windows-env-setup" href="#claude-code-windows-env-setup">Windows 设置环境变量</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="npm-china-acceleration-config" href="#npm-china-acceleration-config">NPM 中国加速配置</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="how-to-modify-hosts-file" href="#how-to-modify-hosts-file">修改 hosts 文件指南</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="fix-vscode-cursor-third-party-endpoint" href="#fix-vscode-cursor-third-party-endpoint">解决 Cursor / VSCode 第三方连接点问题</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="upgrade-ai-cli-tools" href="#upgrade-ai-cli-tools">升级 Claude Code / Codex / Gemini CLI</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-cleanup" href="#claude-code-cleanup">清理本地缓存和数据</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-uninstall" href="#claude-code-uninstall">如何卸载 Claude Code</a></li>
+          </ul>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">📝 Claude Code · 24 篇</div>
+          <ul>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-new-era-advantage" href="#claude-code-new-era-advantage">Claude Code:拉开新时代的差距</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-complete-guide" href="#claude-code-complete-guide">完整使用指南</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-commands-guide" href="#claude-code-commands-guide">10 分钟掌握所有命令</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-cheatsheet" href="#claude-code-cheatsheet">全网最全速查手册</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-common-workflows" href="#claude-code-common-workflows">常见工作流程指南</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-best-practices" href="#claude-code-best-practices">最佳实践</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-best-practices-tips" href="#claude-code-best-practices-tips">最佳实践和使用技巧</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-deep-dive-guide" href="#claude-code-deep-dive-guide">深度实战指南:精通每一个功能</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-usage-patterns" href="#claude-code-usage-patterns">使用规律深度解析</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-big-brother" href="#claude-code-big-brother">国外大佬如何使用 Claude Code</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-34-tips" href="#claude-code-34-tips">34 条使用技巧</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-23-practical-tips-goodbye-cursor" href="#claude-code-23-practical-tips-goodbye-cursor">23 个实用小技巧</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-16-practical-tips" href="#claude-code-16-practical-tips">16 个实用小技巧</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-prompts-guide" href="#claude-code-prompts-guide">推荐提示词大全</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-md-constraints-guide" href="#claude-md-constraints-guide">CLAUDE.md 约束提示词</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-subagents-evolution" href="#claude-code-subagents-evolution">Subagents 子智能体详解</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-vibe-coding-workflow" href="#claude-code-vibe-coding-workflow">Vibe Coding 终极工作流</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-mcp-server-guide" href="#claude-code-mcp-server-guide">添加 MCP 服务器完整指南</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-popular-mcp-servers" href="#claude-code-popular-mcp-servers">常用 MCP 服务器推荐</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="serena_mcp_integration" href="#serena_mcp_integration">Serena MCP 集成指南</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-code-templates-guide" href="#claude-code-templates-guide">Claude-Code-Templates 组件库</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="ccusage-guide" href="#ccusage-guide">ccusage 用量统计神器</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="claude-monitor-usage-guide" href="#claude-monitor-usage-guide">claude-monitor 用量监控</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="opcode-guide" href="#opcode-guide">Opcode 桌面客户端指南</a></li>
+          </ul>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">🤖 OpenAI Codex · 1 篇</div>
+          <ul>
+          <li class="nav-item"><a class="nav-link" data-slug="openai-codex-installation" href="#openai-codex-installation">OpenAI Codex 安装配置指南</a></li>
+          </ul>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">🌟 Google Gemini · 3 篇</div>
+          <ul>
+          <li class="nav-item"><a class="nav-link" data-slug="google-gemini-3-complete-guide" href="#google-gemini-3-complete-guide">有关 Google Gemini 3 的一切</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="gemini-3-official-usage-guide" href="#gemini-3-official-usage-guide">Gemini 3 官方使用姿势</a></li>
+          <li class="nav-item"><a class="nav-link" data-slug="gemini-cli-commands-cheatsheet" href="#gemini-cli-commands-cheatsheet">Gemini CLI 全指令速查手册</a></li>
+          </ul>
+        </div>
+    </nav>
+  </aside>
+
+  <div class="scrim" id="scrim"></div>
+
+  <main class="content">
+    <iframe id="viewer" title="文档内容" src="articles/guide-intro.html" sandbox="allow-popups allow-popups-to-escape-sandbox"></iframe>
+  </main>
+
+
+
+  <script src="app.js" defer></script>
+</body>
+</html>
