@@ -36,6 +36,8 @@ type Pricing struct {
 	BillingMode            string                  `json:"billing_mode,omitempty"`
 	BillingExpr            string                  `json:"billing_expr,omitempty"`
 	PricingVersion         string                  `json:"pricing_version,omitempty"`
+	CatalogOnly            bool                    `json:"catalog_only,omitempty"`
+	CatalogSource          string                  `json:"catalog_source,omitempty"`
 }
 
 type PricingVendor struct {
