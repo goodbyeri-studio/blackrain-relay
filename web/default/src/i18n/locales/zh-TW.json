@@ -5178,6 +5178,16 @@
     "Zero retention": "零數據保留",
     "Zhipu": "智譜",
     "Zhipu V4": "智譜 V4",
-    "Zoom": "縮放"
+    "Zoom": "縮放",
+    "Payment completed": "付款已完成",
+    "This QR code has expired": "此 QR Code 已過期",
+    "Alipay QR code": "支付寶 QR 碼",
+    "Waiting for payment": "等待付款",
+    "Scan with Alipay": "使用支付寶掃碼",
+    "Use Alipay to scan the QR code and complete payment.": "使用支付寶掃描 QR 碼並完成付款。",
+    "Refresh payment status": "重新整理付款狀態",
+    "WeChat Pay QR code": "WeChat Pay QR Code",
+    "Scan with WeChat": "使用 WeChat 掃碼",
+    "Use WeChat to scan the QR code and complete payment.": "請使用 WeChat 掃描 QR Code 完成付款。"
   }
 }

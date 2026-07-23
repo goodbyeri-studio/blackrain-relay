@@ -22,7 +22,12 @@ import {
   DEFAULT_PAYMENT_TYPE,
   DEFAULT_MIN_TOPUP,
 } from '../constants'
-import type { PresetAmount, TopupInfo } from '../types'
+import type {
+  AlipayPrecreateOrder,
+  PresetAmount,
+  TopupInfo,
+  WechatNativeOrder,
+} from '../types'
 
 // ============================================================================
 // Payment Processing Functions
@@ -86,6 +91,40 @@ export function isWaffoPancakePayment(paymentType: string): boolean {
   return paymentType === PAYMENT_TYPES.WAFFO_PANCAKE
 }
 
+export function isWechatNativePayment(paymentType: string): boolean {
+  return paymentType === PAYMENT_TYPES.WECHAT_NATIVE
+}
+
+export function isAlipayPrecreatePayment(paymentType: string): boolean {
+  return paymentType === PAYMENT_TYPES.ALIPAY_PRECREATE
+}
+
+export function mergeAlipayPrecreateOrder(
+  createdOrder: AlipayPrecreateOrder | null,
+  statusOrder: AlipayPrecreateOrder | undefined
+): AlipayPrecreateOrder | null {
+  if (!createdOrder || !statusOrder) return createdOrder
+
+  return {
+    ...createdOrder,
+    ...statusOrder,
+    qr_code: statusOrder.qr_code || createdOrder.qr_code,
+  }
+}
+
+export function mergeWechatNativeOrder(
+  createdOrder: WechatNativeOrder | null,
+  statusOrder: WechatNativeOrder | undefined
+): WechatNativeOrder | null {
+  if (!createdOrder || !statusOrder) return createdOrder
+
+  return {
+    ...createdOrder,
+    ...statusOrder,
+    code_url: statusOrder.code_url || createdOrder.code_url,
+  }
+}
+
 /**
  * Get default payment type from topup info
  */
@@ -109,6 +148,14 @@ export function getDefaultPaymentType(topupInfo: TopupInfo | null): string {
 
   if (topupInfo.enable_waffo_pancake_topup) {
     return PAYMENT_TYPES.WAFFO_PANCAKE
+  }
+
+  if (topupInfo.enable_wechat_pay) {
+    return PAYMENT_TYPES.WECHAT_NATIVE
+  }
+
+  if (topupInfo.enable_alipay) {
+    return PAYMENT_TYPES.ALIPAY_PRECREATE
   }
 
   return DEFAULT_PAYMENT_TYPE
@@ -136,6 +183,10 @@ export function getMinTopupAmount(topupInfo: TopupInfo | null): number {
 
   if (topupInfo.enable_waffo_pancake_topup) {
     return topupInfo.waffo_pancake_min_topup || DEFAULT_MIN_TOPUP
+  }
+
+  if (topupInfo.enable_alipay || topupInfo.enable_wechat_pay) {
+    return topupInfo.min_topup || DEFAULT_MIN_TOPUP
   }
 
   return DEFAULT_MIN_TOPUP
