@@ -4,7 +4,7 @@
 
 2026-07-23 已在 DigitalOcean 和 Cloudflare 建立 Relay 的第一版生产基础设施。资源只属于 `blackrain-relay`，与 `2049-agent` 没有资源、数据库、缓存、网络或部署依赖关系。
 
-当前是“基础设施已按单 App 方案收敛、应用尚未发布”状态：App Droplet 仍未运行 Relay，production Secret、Caddy/TLS、模型渠道和真实流量压测尚未完成。因此不能把当前资源状态描述为 Relay 已经上线。
+当前是“基础设施已按单 App 方案收敛、应用尚未发布”状态：Reserved IP、DNS、Docker、Caddy 和 Let's Encrypt TLS 已完成，但 App Droplet 仍未运行 Relay，production Secret、固定 SHA 镜像、模型渠道和真实流量压测尚未完成。因此不能把当前资源状态描述为 Relay 已经上线。
 
 ## 命名和所有权
 
@@ -29,7 +29,7 @@
 
 数据库和 Valkey 均使用 Relay VPC 的私网 TLS endpoint。PostgreSQL 已建立 `blackrain_relay` 和普通用户 `blackrain_relay_app`；密码不记录在仓库或本文档中。
 
-首期不使用 Load Balancer。Caddy 在 App 上终止 HTTPS 并反向代理到 `127.0.0.1:3000`；`relay.goodbyeri.cc` 保持 DNS-only，避免 Cloudflare proxy 给长时间 AI 请求引入额外超时。未来引入第二 App 时再创建 Load Balancer，并先补齐真正的 readiness endpoint。
+首期不使用 Load Balancer。Caddy 使用 [`deploy/production/Caddyfile`](../../deploy/production/Caddyfile) 在 App 上终止 HTTPS 并反向代理到 `127.0.0.1:3000`；Docker 使用 [`deploy/production/docker-daemon.json`](../../deploy/production/docker-daemon.json) 开启 `live-restore` 和日志轮转。`relay.goodbyeri.cc` 保持 DNS-only，避免 Cloudflare proxy 给长时间 AI 请求引入额外超时。未来引入第二 App 时再创建 Load Balancer，并先补齐真正的 readiness endpoint。
 
 Firewall 当前只允许管理出口访问 SSH `22`，公网开放 `80/443`，不开放 App `3000`。管理出口变化后必须更新 Firewall，不能为了临时登录重新开放全网 SSH。
 
