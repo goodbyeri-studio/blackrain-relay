@@ -13,8 +13,9 @@ DEV_API_SERVICE = new-api
 DEV_POSTGRES_DB = newapi
 DEV_POSTGRES_USER = relay
 DEV_SQLITE_PATH ?= one-api.db
+PERSONAL_DEV_SCRIPT = node scripts/personal-dev.mjs
 
-.PHONY: all build-web build-web-classic build-all-web start-api dev dev-init dev-bootstrap dev-api dev-api-rebuild dev-infra-up dev-infra-status dev-backend dev-web dev-frontend dev-web-classic dev-down dev-reset reset-setup
+.PHONY: all build-web build-web-classic build-all-web start-api dev dev-init dev-bootstrap dev-api dev-api-rebuild dev-infra-up dev-infra-status dev-backend dev-web dev-frontend dev-web-classic dev-down dev-reset reset-setup personal-dev-init personal-dev-up personal-dev-sync personal-dev-rebuild personal-dev-status personal-dev-logs personal-dev-doctor personal-dev-down personal-dev-tunnel-up personal-dev-tunnel-down personal-dev-web-up personal-dev-web-status personal-dev-web-logs personal-dev-web-down
 
 all: build-all-web start-api
 
@@ -84,6 +85,50 @@ dev-down: dev-init
 
 dev-reset: dev-init
 	@$(DEV_COMPOSE) down --volumes --remove-orphans
+
+# Optional developer-owned VPS mode. The standard local Compose workflow above
+# remains the default for contributors without a personal VPS.
+personal-dev-init:
+	@$(PERSONAL_DEV_SCRIPT) init
+
+personal-dev-up:
+	@$(PERSONAL_DEV_SCRIPT) start
+
+personal-dev-sync:
+	@$(PERSONAL_DEV_SCRIPT) sync
+
+personal-dev-rebuild:
+	@$(PERSONAL_DEV_SCRIPT) rebuild
+
+personal-dev-status:
+	@$(PERSONAL_DEV_SCRIPT) status
+
+personal-dev-logs:
+	@$(PERSONAL_DEV_SCRIPT) logs
+
+personal-dev-doctor:
+	@$(PERSONAL_DEV_SCRIPT) doctor
+
+personal-dev-down:
+	@$(PERSONAL_DEV_SCRIPT) down
+
+personal-dev-tunnel-up:
+	@$(PERSONAL_DEV_SCRIPT) tunnel-up
+
+personal-dev-tunnel-down:
+	@$(PERSONAL_DEV_SCRIPT) tunnel-down
+
+personal-dev-web-up:
+	@$(PERSONAL_DEV_SCRIPT) web-up
+
+personal-dev-web-status:
+	@$(PERSONAL_DEV_SCRIPT) web-status
+
+personal-dev-web-logs:
+	@$(PERSONAL_DEV_SCRIPT) web-logs
+
+personal-dev-web-down:
+	@$(PERSONAL_DEV_SCRIPT) web-down
 
 reset-setup: dev-init
 	@echo "Resetting local setup wizard state..."

@@ -17,6 +17,7 @@ web/node_modules
 web/dist
 .env
 .env.dev
+.env.personal-dev
 one-api
 new-api
 /__debug_bin*
