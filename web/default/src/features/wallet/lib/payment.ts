@@ -38,8 +38,8 @@ import type {
  */
 function isSafariBrowser(): boolean {
   return (
-    navigator.userAgent.indexOf('Safari') > -1 &&
-    navigator.userAgent.indexOf('Chrome') < 1
+    navigator.userAgent.includes('Safari') &&
+    !navigator.userAgent.includes('Chrome')
   )
 }
 
