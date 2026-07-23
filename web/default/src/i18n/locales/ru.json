@@ -5178,6 +5178,16 @@
     "Zero retention": "Без хранения данных",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Payment completed": "Оплата завершена",
+    "This QR code has expired": "Срок действия QR-кода истёк",
+    "Alipay QR code": "QR-код Alipay",
+    "Waiting for payment": "Ожидание оплаты",
+    "Scan with Alipay": "Сканировать в Alipay",
+    "Use Alipay to scan the QR code and complete payment.": "Отсканируйте QR-код в Alipay и завершите оплату.",
+    "Refresh payment status": "Обновить статус оплаты",
+    "WeChat Pay QR code": "QR-код WeChat Pay",
+    "Scan with WeChat": "Сканировать в WeChat",
+    "Use WeChat to scan the QR code and complete payment.": "Отсканируйте QR-код в WeChat, чтобы завершить оплату."
   }
 }

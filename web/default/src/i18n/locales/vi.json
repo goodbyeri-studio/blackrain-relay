@@ -5178,6 +5178,16 @@
     "Zero retention": "Không lưu dữ liệu",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Payment completed": "Thanh toán hoàn tất",
+    "This QR code has expired": "Mã QR này đã hết hạn",
+    "Alipay QR code": "Mã QR Alipay",
+    "Waiting for payment": "Đang chờ thanh toán",
+    "Scan with Alipay": "Quét bằng Alipay",
+    "Use Alipay to scan the QR code and complete payment.": "Dùng Alipay quét mã QR và hoàn tất thanh toán.",
+    "Refresh payment status": "Làm mới trạng thái thanh toán",
+    "WeChat Pay QR code": "Mã QR WeChat Pay",
+    "Scan with WeChat": "Quét bằng WeChat",
+    "Use WeChat to scan the QR code and complete payment.": "Dùng WeChat quét mã QR để hoàn tất thanh toán."
   }
 }
