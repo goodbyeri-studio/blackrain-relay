@@ -2,16 +2,16 @@
 
 DO NOT send optional commentary
 
-## BlackRain Relay Overlay
+## MeiMei API Overlay
 
-This public repository operates BlackRain Relay on top of New API. The New API project identity, QuantumNous attribution, AGPLv3 license, Section 7 notices, original links, NOTICE, and protected metadata MUST remain intact.
+This public repository operates MeiMei API on top of New API. The New API project identity, QuantumNous attribution, AGPLv3 license, Section 7 notices, original links, NOTICE, and protected metadata MUST remain intact.
 
-- Default communication, BlackRain-owned documentation, and commit summaries use Simplified Chinese. Code, commands, paths, config keys, API names, and upstream identifiers remain unchanged.
-- `origin` is `goodbyeri-studio/blackrain-relay`; `upstream` is `QuantumNous/new-api`.
+- Default communication, MeiMei-owned documentation, and commit summaries use Simplified Chinese. Code, commands, paths, config keys, API names, and upstream identifiers remain unchanged.
+- `origin` is `goodbyeri-studio/meimei-api`; `upstream` is `QuantumNous/new-api`.
 - Release code must follow an evaluated, exact upstream tag/commit. Do not merge or rebase arbitrary `upstream/main` into `main`.
-- Record BlackRain-specific requirements, decisions, tasks, and verification in `.specs/`. Current entrypoint: `.specs/001-relay-foundation/`.
-- BlackRain Cloud is an enterprise customer of Relay. Do not couple Relay to Supabase tables or import Cloud private business logic.
-- Relay owns model channels, routing, scoped tokens, raw usage, rate limits, channel cost, and wholesale settlement. Cloud owns BlackRain identity, plans, commercial credit ledger, payment, and reconciliation.
+- Record MeiMei API requirements, decisions, tasks, and verification in `.specs/`. Current entrypoint: `.specs/001-relay-foundation/`.
+- BlackRain Cloud is an external enterprise customer of MeiMei API. Do not couple MeiMei API to Supabase tables or import Cloud private business logic.
+- MeiMei API owns model channels, routing, scoped tokens, raw usage, rate limits, channel cost, and wholesale settlement. Cloud owns BlackRain identity, plans, commercial credit ledger, payment, and reconciliation.
 - Cross-project contracts use versioned HTTP APIs/OpenAPI/Webhooks. Never share databases, service credentials, or private source between Relay and Cloud/Desktop.
 - Do not install, enable, invoke, or recommend the `superpowers` plugin or any of its skills.
 - After the bootstrap commit, changes use short-lived branches and PRs; commits use `<type>: <中文说明>` and preserve the upstream PR template requirements.

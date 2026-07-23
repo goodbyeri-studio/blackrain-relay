@@ -2,13 +2,13 @@
 
 ## 结论
 
-锁定基线已经具备直销所需的数据面、用户、充值、token、usage 日志和基础计费能力。BlackRain 不应重写模型中转或普通客户账户核心；下一阶段只为企业自动化场景增加薄的 control plane，补齐 tenant/subject、service credential、受控发 token 和可重放 usage export。
+锁定基线已经具备直销所需的数据面、用户、充值、token、usage 日志和基础计费能力。MeiMei API 不应重写模型中转或普通客户账户核心；下一阶段只为企业自动化场景增加薄的 control plane，补齐 tenant/subject、service credential、受控发 token 和可重放 usage export。
 
 ## 能力矩阵
 
-| BlackRain 需求 | New API 现有能力 | 差距 | 处理建议 |
+| MeiMei API 需求 | New API 现有能力 | 差距 | 处理建议 |
 |---|---|---|---|
-| 模型数据面 | `/v1/chat/completions`、`/v1/responses`、Claude、Gemini、Realtime 等路由统一经过 `TokenAuth`、分发和计费 | 尚未用 BlackRain 真实授权渠道完成 E2E | 直接复用数据面，先做协议与计费矩阵 |
+| 模型数据面 | `/v1/chat/completions`、`/v1/responses`、Claude、Gemini、Realtime 等路由统一经过 `TokenAuth`、分发和计费 | 尚未用 MeiMei API 真实授权渠道完成 E2E | 直接复用数据面，先做协议与计费矩阵 |
 | Scoped model token | `Token` 已有过期时间、剩余额度、已用额度、模型白名单、IP 白名单、分组、状态和撤销 | 没有 enterprise tenant、external subject、用途/audience、每 token 速率策略 | 保留现有 token 执行路径，增加企业归属与 scope 元数据 |
 | 管理身份 | `User.AccessToken` 可用于系统管理，管理员路由已有 RBAC | 不是独立的企业 service credential；现有 token 创建 API 只能给当前登录用户创建 token | 增加独立 service credential 与最小权限发行 API，不把 Cloud 设为 Relay 管理员 |
 | 管理面/数据面隔离 | 模型请求使用 `TokenAuth`，后台管理使用 `UserAuth`/`AdminAuth`/`RootAuth` | 尚无自动化测试证明 Cloud credential 不能访问数据面、Desktop token 不能访问管理面 | 将负向鉴权测试作为合同冻结门槛 |

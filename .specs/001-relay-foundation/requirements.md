@@ -2,7 +2,7 @@
 
 ## 背景
 
-莓莓 API 是基于 New API 的独立公开模型中转产品，直接向个人和企业客户销售。`blackrain-relay` 仅作为仓库和基础设施技术标识。BlackRain Cloud 只是其中一个企业客户，不拥有 Relay 的身份、计费或运营边界。
+MeiMei API（莓莓 API）是基于 New API 的独立公开模型中转产品，直接向个人和企业客户销售。`meimei-api` 是公开仓库和基础设施 slug。BlackRain Cloud 只是其中一个外部企业客户，不拥有 MeiMei API 的身份、计费或运营边界。
 
 ## 目标
 

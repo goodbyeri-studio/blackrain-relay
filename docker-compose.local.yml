@@ -5,6 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.local
-    image: blackrain-relay:local
+    image: meimei-api:local
     environment:
       - GIN_MODE=${GIN_MODE:-release}

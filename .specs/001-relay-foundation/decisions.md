@@ -5,7 +5,7 @@
 - 决策：初始 `main` 基于 New API `v1.0.0-rc.21`，commit `bde9b2f44887d34ec54799ae191d50f97914359e`；保留 `upstream` remote，只按评估过的 tag/commit 升级。
 - 原因：直接获得渠道、协议、token、计量和运营能力，同时避免跟随每日 HEAD 导致不可复现发布。
 - 替代方案：只引用官方 Docker 镜像；从零自研；跟随上游 main。
-- 后续复查条件：每次升级必须重跑 License、migration、billing、protocol 和 BlackRain 三方 E2E。
+- 后续复查条件：每次升级必须重跑 License、migration、billing、protocol 和 MeiMei API 企业客户 E2E。
 
 ## 2026-07-12：接受并履行 AGPL 与 Section 7
 
@@ -17,7 +17,7 @@
 ## 2026-07-12：Cloud 是 Relay 企业客户
 
 - 决策：Cloud 使用管理面企业凭据申请 scoped model token；Desktop 使用数据面 token；Relay 不直接依赖 Supabase 或 Cloud 私有表。
-- 原因：三个产品独立运营、独立故障域和独立账本，避免把 BlackRain 身份模型写死在公开中转站。
+- 原因：MeiMei API 与客户产品独立运营、独立故障域和独立账本，避免把 BlackRain 身份模型写死在公开中转站。
 - 替代方案：Relay 直接验证 Supabase JWT；共享数据库；Cloud 代理模型正文。
 - 后续复查条件：实现前冻结管理 API、token、usage 和撤销合同。
 
@@ -43,12 +43,12 @@
 - 替代方案：双 App + Load Balancer；仅在单 App 压测无法达标、需要无中断发布或出现明确生产 SLA 时启用。
 - 后续复查条件：App CPU 持续超过 70%、内存超过 75%、Relay 错误率/P95 不达标，或需要应用级自动故障切换时，重新评估第二 App；启用前必须为所有 master 后台任务增加数据库租约或单主提升机制。
 
-## 2026-07-23：公开产品使用莓莓 API 品牌和独立域名
+## 2026-07-23：公开产品使用 MeiMei API 品牌和独立域名
 
 - 决策：面向客户的产品名称改为“莓莓 API”；官网使用 `https://meimeiapi.com`，API 客户端统一使用 `https://api.meimeiapi.com`，`www.meimeiapi.com` 永久重定向到官网。
-- 技术边界：仓库、镜像、DigitalOcean Project、VPC、Droplet、数据库和日志中的 `blackrain-relay` 保持为内部技术标识，不进行破坏性重命名。New API、QuantumNous、AGPL、NOTICE、Section 7 和上游链接保持不变。
-- 迁移策略：`relay.goodbyeri.cc` 暂时继续提供同一服务，完成新域名应用部署、客户端迁移和访问日志观察后再单独下线。
-- 原因：`meimeiapi.com` 与“莓莓 API”一致，用户更容易记忆；同时把品牌迁移与底层资源迁移解耦，降低小团队上线风险。
+- 技术边界：仓库、镜像、DigitalOcean Project、VPC、Droplet、数据库和日志统一采用 `meimei-api` slug；New API、QuantumNous、AGPL、NOTICE、Section 7 和上游链接保持不变。
+- 迁移策略：应用尚未部署且 PostgreSQL/Valkey 无业务数据，因此先完成资源重建和旧 `relay.goodbyeri.cc` DNS/Caddy 入口清理，再部署生产镜像。
+- 原因：`meimeiapi.com` 与 MeiMei API（莓莓 API）一致，用户更容易记忆；技术 slug 与公开品牌保持同一词根，降低小团队长期运维认知成本。
 
 ## 2026-07-13：企业控制面使用独立凭据域
 

@@ -1,4 +1,4 @@
-# BlackRain Relay local development
+# MeiMei API local development
 #
 # Usage:
 #   1. make dev-bootstrap
@@ -20,8 +20,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    image: blackrain-relay-dev:local
-    container_name: blackrain-relay-dev
+    image: meimei-api-dev:local
+    container_name: meimei-api-dev
     restart: unless-stopped
     ports:
       - "127.0.0.1:${PORT}:3000"
@@ -46,7 +46,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: blackrain-relay-dev-redis
+    container_name: meimei-api-dev-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${DEV_REDIS_PASSWORD}"]
     ports:
@@ -63,7 +63,7 @@ services:
 
   postgres:
     image: postgres:15-alpine
-    container_name: blackrain-relay-dev-pg
+    container_name: meimei-api-dev-pg
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DEV_POSTGRES_USER}

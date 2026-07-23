@@ -2,7 +2,7 @@
 	admin 127.0.0.1:2019
 }
 
-meimeiapi.com, api.meimeiapi.com, relay.goodbyeri.cc {
+meimeiapi.com, api.meimeiapi.com {
 	# Keep edge compression disabled until text/event-stream delivery is covered
 	# by a streaming regression test. This avoids buffering AI tokens at the proxy.
 
@@ -14,7 +14,7 @@ meimeiapi.com, api.meimeiapi.com, relay.goodbyeri.cc {
 	}
 
 	log {
-		output file /var/log/caddy/blackrain-relay-access.log {
+		output file /var/log/caddy/meimei-api-access.log {
 			roll_size 100MiB
 			roll_keep 5
 			roll_keep_for 168h

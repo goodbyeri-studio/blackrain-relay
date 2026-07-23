@@ -1,6 +1,6 @@
 # Design
 
-> 本文描述 BlackRain 自有目标边界；New API 实际实现以锁定上游源码为准。目标图不能替代验证。
+> 本文描述 MeiMei API 自有目标边界；New API 实际实现以锁定上游源码为准。目标图不能替代验证。
 
 ## 总体拓扑
 
@@ -38,7 +38,7 @@ Relay usage/API --idempotent records--> BlackRain Cloud reconciliation
 ## 上游策略
 
 - `main` 基于评估过的 exact tag/commit，不跟随上游 HEAD。
-- 上游源码尽量保持原状；BlackRain 自有文档、合同和适配优先放独立文件/模块，降低升级冲突。
+- 上游源码尽量保持原状；MeiMei API 自有文档、合同和适配优先放独立文件/模块，降低升级冲突。
 - 任何 UI 修改继续保留 New API 指定署名和原项目链接。
 
 ## 客户模型

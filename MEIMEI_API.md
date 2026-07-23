@@ -2,21 +2,21 @@
 
 莓莓 API 是独立运营的公开模型中转产品，官网使用 `https://meimeiapi.com`，API 客户端统一接入 `https://api.meimeiapi.com`。当前以 [QuantumNous/New API](https://github.com/QuantumNous/new-api) 为底座，完整遵守 AGPLv3、Section 7、署名和原项目链接义务。
 
-`blackrain-relay` 继续作为仓库、镜像、云资源和部署组件的内部技术标识，不再作为面向客户的产品名称。技术标识暂不迁移，避免为品牌切换引入无收益的基础设施重命名风险。
+`meimei-api` 是仓库、镜像、云资源和部署组件的技术 slug；面向客户的产品名称统一为 `MeiMei API`（莓莓 API）。
 
 ## 产品关系
 
 ```text
 BlackRain Desktop
-  -> BlackRain Cloud：身份、套餐、权益、商业 credit ledger
+  -> BlackRain Cloud（外部客户）：身份、套餐、权益、商业 credit ledger
   -> 莓莓 API：model token、模型路由、usage、限流和中转
   -> DeepSeek / GLM / Qwen / Kimi / 其他授权模型渠道
 ```
 
-- Relay 是独立产品，可以服务 BlackRain Cloud 和其他合法客户。
-- BlackRain Cloud 是 Relay 的企业客户，不与 Relay 共享数据库。
-- Desktop 只持可撤销、可限额、可过期的 model token，不持 Relay 管理凭据或模型厂商 key。
-- Relay 不复制 BlackRain Cloud 的私有账号、支付、工作台市场或商业账本逻辑。
+- MeiMei API 是独立产品，可以服务 BlackRain Cloud 和其他合法客户。
+- BlackRain Cloud 是 MeiMei API 的外部企业客户，不与 MeiMei API 共享数据库。
+- Desktop 只持可撤销、可限额、可过期的 model token，不持 MeiMei API 管理凭据或模型厂商 key。
+- MeiMei API 不复制 BlackRain Cloud 的私有账号、支付、工作台市场或商业账本逻辑。
 
 ## 当前基线
 
@@ -28,15 +28,15 @@ BlackRain Desktop
 | License | AGPLv3 + README 中的 Section 7 additional terms |
 | 初始化日期 | 2026-07-12 |
 
-仓库保留 `upstream` remote。升级纪律见 [UPSTREAM.md](UPSTREAM.md)，BlackRain 自有工作计划见 [.specs/001-relay-foundation/](.specs/001-relay-foundation/)。
+仓库保留 `upstream` remote。升级纪律见 [UPSTREAM.md](UPSTREAM.md)，MeiMei API 工作计划见 [.specs/001-relay-foundation/](.specs/001-relay-foundation/)。
 
 ## 当前状态
 
 - New API 上游 release 源码、License、NOTICE 和历史已导入。
 - 已建立莓莓 API 独立生产基础设施：专用 DigitalOcean Project、VPC、单台 4 vCPU/8 GB App、Reserved IP、托管 PostgreSQL、托管 Valkey、Firewall、Container Registry，以及 `meimeiapi.com`、`api.meimeiapi.com`、`www.meimeiapi.com` DNS；首期不使用 Load Balancer。
-- `relay.goodbyeri.cc` 暂时保留为兼容入口，待新域名应用部署、客户端迁移和访问日志观察完成后再下线。
-- Caddy/TLS、Reserved IP 和 DNS 已完成；当前尚未发布 Relay 应用镜像，也尚未配置 production Secret、模型渠道、Cloud 企业客户和真实流量压测。基础设施存在不等于中转服务已经上线或可以商业运营。
-- Relay 与 `2049-agent` 完全独立，不共享其 Droplet、数据库、Valkey、Spaces、Secret 或部署节点。
+- `relay.goodbyeri.cc` 已从生产入口移除；唯一公开入口是 `meimeiapi.com` 和 `api.meimeiapi.com`。
+- Caddy/TLS、Reserved IP 和 DNS 已完成；当前尚未发布 MeiMei API 应用镜像，也尚未配置 production Secret、模型渠道、Cloud 企业客户和真实流量压测。基础设施存在不等于中转服务已经上线或可以商业运营。
+- MeiMei API 与 `2049-agent` 完全独立，不共享其 Droplet、数据库、Valkey、Spaces、Secret 或部署节点。
 - 仓库存在和上游代码可构建，不等于中转服务已部署或可商业运营。
 
 ## 下一步
