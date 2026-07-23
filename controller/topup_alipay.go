@@ -594,7 +594,7 @@ func RequestAlipayPrecreate(c *gin.Context) {
 		return
 	}
 
-	description := fmt.Sprintf("BlackRain Relay 额度充值（%s元）", alipayAmountYuan(amountFen))
+	description := fmt.Sprintf("莓莓 API 额度充值（%s元）", alipayAmountYuan(amountFen))
 	response, err := runtime.precreate(c.Request.Context(), alipayPrecreateBizContent{
 		OutTradeNo:     tradeNo,
 		TotalAmount:    alipayAmountYuan(amountFen),

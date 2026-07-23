@@ -1,13 +1,15 @@
-# BlackRain Relay
+# 莓莓 API
 
-BlackRain Relay 是独立运营的公开模型中转产品，当前以 [QuantumNous/New API](https://github.com/QuantumNous/new-api) 为底座，完整遵守 AGPLv3、Section 7、署名和原项目链接义务。
+莓莓 API 是独立运营的公开模型中转产品，官网使用 `https://meimeiapi.com`，API 客户端统一接入 `https://api.meimeiapi.com`。当前以 [QuantumNous/New API](https://github.com/QuantumNous/new-api) 为底座，完整遵守 AGPLv3、Section 7、署名和原项目链接义务。
+
+`blackrain-relay` 继续作为仓库、镜像、云资源和部署组件的内部技术标识，不再作为面向客户的产品名称。技术标识暂不迁移，避免为品牌切换引入无收益的基础设施重命名风险。
 
 ## 产品关系
 
 ```text
 BlackRain Desktop
   -> BlackRain Cloud：身份、套餐、权益、商业 credit ledger
-  -> BlackRain Relay：model token、模型路由、usage、限流和中转
+  -> 莓莓 API：model token、模型路由、usage、限流和中转
   -> DeepSeek / GLM / Qwen / Kimi / 其他授权模型渠道
 ```
 
@@ -31,7 +33,8 @@ BlackRain Desktop
 ## 当前状态
 
 - New API 上游 release 源码、License、NOTICE 和历史已导入。
-- 已建立 BlackRain Relay 独立生产基础设施：专用 DigitalOcean Project、VPC、单台 4 vCPU/8 GB App、Reserved IP、托管 PostgreSQL、托管 Valkey、Firewall、Container Registry，以及 `relay.goodbyeri.cc` DNS；首期不使用 Load Balancer。
+- 已建立莓莓 API 独立生产基础设施：专用 DigitalOcean Project、VPC、单台 4 vCPU/8 GB App、Reserved IP、托管 PostgreSQL、托管 Valkey、Firewall、Container Registry，以及 `meimeiapi.com`、`api.meimeiapi.com`、`www.meimeiapi.com` DNS；首期不使用 Load Balancer。
+- `relay.goodbyeri.cc` 暂时保留为兼容入口，待新域名应用部署、客户端迁移和访问日志观察完成后再下线。
 - Caddy/TLS、Reserved IP 和 DNS 已完成；当前尚未发布 Relay 应用镜像，也尚未配置 production Secret、模型渠道、Cloud 企业客户和真实流量压测。基础设施存在不等于中转服务已经上线或可以商业运营。
 - Relay 与 `2049-agent` 完全独立，不共享其 Droplet、数据库、Valkey、Spaces、Secret 或部署节点。
 - 仓库存在和上游代码可构建，不等于中转服务已部署或可商业运营。

@@ -266,7 +266,7 @@ func RequestWechatNativePay(c *gin.Context) {
 		return
 	}
 
-	description := fmt.Sprintf("BlackRain Relay 额度充值（%.2f元）", topUp.Money)
+	description := fmt.Sprintf("莓莓 API 额度充值（%.2f元）", topUp.Money)
 	codeURL, err := prepayWechatNativeOrder(c.Request.Context(), runtime, tradeNo, amountFen, description, expiresAt)
 	if err != nil {
 		_ = model.MarkWechatPayOrderFailed(tradeNo)

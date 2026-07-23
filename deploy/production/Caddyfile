@@ -2,7 +2,7 @@
 	admin 127.0.0.1:2019
 }
 
-relay.goodbyeri.cc {
+meimeiapi.com, api.meimeiapi.com, relay.goodbyeri.cc {
 	# Keep edge compression disabled until text/event-stream delivery is covered
 	# by a streaming regression test. This avoids buffering AI tokens at the proxy.
 
@@ -28,4 +28,8 @@ relay.goodbyeri.cc {
 			dial_timeout 5s
 		}
 	}
+}
+
+www.meimeiapi.com {
+	redir https://meimeiapi.com{uri} permanent
 }

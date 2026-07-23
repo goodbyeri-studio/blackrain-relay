@@ -37,6 +37,7 @@
 - [x] 本地开发环境和仅限开发的 Secret 模板
 - [x] 建立 BlackRain Relay 独立 DigitalOcean 生产基础设施（VPC、单 App、Reserved IP、托管 PostgreSQL/Valkey、Firewall、Registry）
 - [x] 配置 Caddy/TLS 与固定入口；Admin API 仅监听 localhost；固定 SHA 镜像、production Secret、独立健康检查和 SSE 压缩回归仍待完成
+- [x] 建立莓莓 API 公开品牌与 `meimeiapi.com`、`api.meimeiapi.com`、`www.meimeiapi.com` DNS/TLS；保留 `relay.goodbyeri.cc` 兼容入口
 - [ ] 完成 500 在线连接与 100/250/500 并发流式请求分级压测
 - [ ] production 环境和独立 Secret 管理
 - [ ] 内部账户与 BlackRain Cloud 测试租户小流量发布
