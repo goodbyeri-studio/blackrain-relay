@@ -57,6 +57,21 @@ func TestApplyDeepKeyPricingMigrationIsAtomicAndIdempotent(t *testing.T) {
 	unchanged, err := GetDeepKeyPricingMigrationSnapshot()
 	require.NoError(t, err)
 	assert.Equal(t, desiredRatio, unchanged.ModelRatio)
+
+	token := &Token{UserId: 1, Key: "sk-deepkey-migration-token", Group: "deepkey"}
+	require.NoError(t, DB.Create(token).Error)
+	t.Cleanup(func() { DB.Unscoped().Where("key = ?", token.Key).Delete(&Token{}) })
+	beforeBlocked, err := GetDeepKeyPricingMigrationSnapshot()
+	require.NoError(t, err)
+	blockedHash, err := beforeBlocked.Hash()
+	require.NoError(t, err)
+	err = ApplyDeepKeyPricingMigration(blockedHash, map[string]float64{"gpt": 88}, desiredPrice, map[string]float64{}, "blocked")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "deepkey")
+	unchanged, err = GetDeepKeyPricingMigrationSnapshot()
+	require.NoError(t, err)
+	assert.Equal(t, desiredRatio, unchanged.ModelRatio)
+	assert.Equal(t, desiredGroups, unchanged.GroupRatio)
 }
 
 func TestGetEnabledDeepKeyModelNamesIgnoresDisabledAndOtherChannels(t *testing.T) {

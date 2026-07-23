@@ -23,7 +23,7 @@
 | 2026-07-23 | 支付事务 SQLite | `go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUp' -count=1` | 通过 | 默认内存 SQLite |
 | 2026-07-23 | 支付三数据库事务 | `PAYMENT_TEST_DIALECT=... PAYMENT_TEST_DSN=... go test ./model -run TestPaymentTransactionDatabaseMatrix -count=1` | 自动化矩阵 | GitHub Actions 覆盖 SQLite、MySQL 8.0、PostgreSQL 15；保护并发通知、额度上限、邀请奖励和状态一致性 |
 | 2026-07-23 | DeepKey 闭环修复 | `go test ./model ./controller ./relay/helper`；`pwsh .specs/001-relay-foundation/audit-deepkey-customer-flow.ps1 -OutputPath ...` | 未跑 | 本次分支新增 DeepKey 渠道隔离、固定价渠道倍率、分组配置原子保存和全分组客户审计；当前环境未启动 Relay/PostgreSQL，未伪称真实调用通过 |
-| 2026-07-23 | DeepKey 管理员分组闭环 | `go test ./model -count=1`; `go test ./controller -count=1`; default `typecheck`; 变更文件 `oxlint`/`oxfmt`; default production build | 通过 | 增加分组健康状态、上游 Key 脱敏指纹、渠道/模型/客户 Token 统计、倍率漂移提示，以及仍有未删除客户 Token 时的删除保护；全仓前端 lint 仍有既存错误，本次变更文件为 0 error/0 warning |
+| 2026-07-23 | DeepKey 管理员分组闭环 | Docker Go 1.25 `go test ./model ./controller -count=1`; default `tsgo -b`; 变更文件 `oxlint`/`oxfmt`; `bun run i18n:sync` | 通过 | 增加分组健康状态、上游 Key 脱敏指纹、准确的配置/渠道/客户 Token 统计、目录不可用降级展示；GroupRatio 通用/批量/同步/迁移写入统一事务保护，Token 新建和改组与配置行锁串行化；全仓前端 lint 未执行，本次变更文件为 0 error/0 warning |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无 BlackRain 实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
 
@@ -43,7 +43,9 @@
 - 普通倍率和固定价格模型会应用渠道模型倍率；`tiered_expr` 的表达式仍是唯一计费真相，配置渠道倍率会被明确拒绝，避免重复计费。
 - 分组倍率、充值倍率、可用分组、自动分组和特殊分组配置通过一个事务接口保存：`PUT /api/option/group_ratios`。
 - 管理员可通过 `GET /api/ratio_sync/deepkey/groups/status` 查看目录倍率、本地倍率、启用/禁用渠道数、模型数、有效客户 Token 数、最后测试结果和上游 Key 的 SHA-256 指纹前缀；接口不返回明文上游 Key。
+- DeepKey 目录暂时不可用时，健康接口仍返回本地配置、渠道和 Token 状态，并通过 `catalog_available=false` 标记降级结果；不能把暂时未知误报成目录缺失。
 - 删除分组配置前会检查仍然指向该分组的未删除客户 Token；只要存在引用就拒绝删除，管理员需先迁移或删除相应 Token，避免客户调用静默失效。
+- 所有 `GroupRatio` 写入路径都在 model 层锁定同一配置行并在事务内检查 Token 引用；Token 新建和改组也在同一锁协议下确认分组存在，避免多实例并发下产生悬空分组。
 
 ## 客户全分组审计脚本
 

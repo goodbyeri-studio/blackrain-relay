@@ -1260,6 +1260,7 @@
     "decides which channels are used and which base ratio applies.": "使用するチャネルと適用される基本倍率を決めます。",
     "Decreased user quota by {{quota}}": "ユーザーのクォータを {{quota}} 減らしました",
     "Deducted by subscription": "サブスクリプションで控除",
+    "DeepKey catalog unavailable; showing local status only": "DeepKey カタログを利用できないため、ローカル状態のみ表示しています",
     "DeepKey group health": "DeepKey グループの状態",
     "DeepSeek": "DeepSeek",
     "default": "デフォルト",

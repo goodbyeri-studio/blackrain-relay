@@ -1,6 +1,9 @@
 package model
 
 import (
+	"errors"
+	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -213,19 +216,7 @@ func SyncOptions(frequency int) {
 }
 
 func UpdateOption(key string, value string) error {
-	// Save to database first
-	option := Option{
-		Key: key,
-	}
-	// https://gorm.io/docs/update.html#Save-All-Fields
-	DB.FirstOrCreate(&option, Option{Key: key})
-	option.Value = value
-	// Save is a combination function.
-	// If save value does not contain primary key, it will execute Create,
-	// otherwise it will execute Update (with all fields).
-	DB.Save(&option)
-	// Update OptionMap
-	return updateOptionMap(key, value)
+	return UpdateOptionsBulk(map[string]string{key: value})
 }
 
 // UpdateOptionsBulk persists multiple key/value pairs in a single database
@@ -238,23 +229,98 @@ func UpdateOptionsBulk(values map[string]string) error {
 		return nil
 	}
 	err := DB.Transaction(func(tx *gorm.DB) error {
-		for k, v := range values {
-			option := Option{Key: k}
-			if err := tx.FirstOrCreate(&option, Option{Key: k}).Error; err != nil {
-				return err
-			}
-			option.Value = v
-			if err := tx.Save(&option).Error; err != nil {
-				return err
-			}
-		}
-		return nil
+		return updateOptionsBulkTx(tx, values)
 	})
 	if err != nil {
 		return err
 	}
 	for k, v := range values {
 		if err := updateOptionMap(k, v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func lockGroupRatioOption(tx *gorm.DB) (*Option, error) {
+	var option Option
+	err := lockForUpdate(tx).Where(&Option{Key: "GroupRatio"}).First(&option).Error
+	if err == nil {
+		return &option, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	option = Option{Key: "GroupRatio", Value: ratio_setting.GroupRatio2JSONString()}
+	if err := tx.Create(&option).Error; err != nil {
+		return nil, err
+	}
+	return &option, nil
+}
+
+func validateGroupRatioTransition(tx *gorm.DB, currentValue, nextValue string) error {
+	current := make(map[string]float64)
+	next := make(map[string]float64)
+	if strings.TrimSpace(currentValue) != "" {
+		if err := common.UnmarshalJsonStr(currentValue, &current); err != nil {
+			return fmt.Errorf("decode current GroupRatio: %w", err)
+		}
+	}
+	if err := common.UnmarshalJsonStr(nextValue, &next); err != nil {
+		return fmt.Errorf("decode next GroupRatio: %w", err)
+	}
+	if next == nil {
+		return fmt.Errorf("GroupRatio must be a JSON object")
+	}
+	if err := ratio_setting.CheckGroupRatio(nextValue); err != nil {
+		return err
+	}
+
+	removedGroups := make([]string, 0)
+	for group := range current {
+		if _, exists := next[group]; !exists {
+			removedGroups = append(removedGroups, group)
+		}
+	}
+	if len(removedGroups) == 0 {
+		return nil
+	}
+	sort.Strings(removedGroups)
+	counts, err := countTokensByGroups(tx, removedGroups)
+	if err != nil {
+		return err
+	}
+	groupsInUse := make([]string, 0, len(counts))
+	for group, count := range counts {
+		if count > 0 {
+			groupsInUse = append(groupsInUse, group)
+		}
+	}
+	if len(groupsInUse) == 0 {
+		return nil
+	}
+	sort.Strings(groupsInUse)
+	return fmt.Errorf("以下分组仍被客户 Token 使用，不能删除: %s", strings.Join(groupsInUse, ", "))
+}
+
+func updateOptionsBulkTx(tx *gorm.DB, values map[string]string) error {
+	if nextValue, ok := values["GroupRatio"]; ok {
+		option, err := lockGroupRatioOption(tx)
+		if err != nil {
+			return err
+		}
+		if err := validateGroupRatioTransition(tx, option.Value, nextValue); err != nil {
+			return err
+		}
+	}
+	for key, value := range values {
+		option := Option{Key: key}
+		if err := tx.Where(&Option{Key: key}).FirstOrCreate(&option).Error; err != nil {
+			return err
+		}
+		option.Value = value
+		if err := tx.Save(&option).Error; err != nil {
 			return err
 		}
 	}

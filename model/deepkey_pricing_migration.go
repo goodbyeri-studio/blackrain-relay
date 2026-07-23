@@ -11,6 +11,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const DeepKeyPricingMigrationOption = "DeepKeyPricingMigration"
@@ -70,15 +71,15 @@ func decodePricingMap(value string) (map[string]float64, error) {
 }
 
 func loadDeepKeyPricingMigrationSnapshot(tx *gorm.DB) (DeepKeyPricingMigrationSnapshot, error) {
+	groupRatioJSON, err := readPricingOption(tx, "GroupRatio")
+	if err != nil {
+		return DeepKeyPricingMigrationSnapshot{}, err
+	}
 	modelRatioJSON, err := readPricingOption(tx, "ModelRatio")
 	if err != nil {
 		return DeepKeyPricingMigrationSnapshot{}, err
 	}
 	modelPriceJSON, err := readPricingOption(tx, "ModelPrice")
-	if err != nil {
-		return DeepKeyPricingMigrationSnapshot{}, err
-	}
-	groupRatioJSON, err := readPricingOption(tx, "GroupRatio")
 	if err != nil {
 		return DeepKeyPricingMigrationSnapshot{}, err
 	}
@@ -253,18 +254,23 @@ func GetDeepKeyChannelGroupStatuses() (map[string]DeepKeyChannelGroupStatus, err
 }
 
 func CountTokensByGroups(groups []string) (map[string]int64, error) {
+	return countTokensByGroups(DB, groups)
+}
+
+func countTokensByGroups(tx *gorm.DB, groups []string) (map[string]int64, error) {
 	type tokenGroupCount struct {
 		Group string `gorm:"column:group_name"`
 		Count int64  `gorm:"column:token_count"`
 	}
 	var counts []tokenGroupCount
-	query := DB.Model(&Token{}).
+	query := tx.Model(&Token{}).
 		Select(commonGroupCol + " AS group_name, COUNT(*) AS token_count").
 		Where(commonGroupCol + " <> ''")
 	if len(groups) > 0 {
 		query = query.Where(commonGroupCol+" IN ?", groups)
 	}
-	if err := query.Group("group").Find(&counts).Error; err != nil {
+	query = query.Clauses(clause.GroupBy{Columns: []clause.Column{{Name: "group"}}})
+	if err := query.Find(&counts).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[string]int64, len(counts))
@@ -337,15 +343,6 @@ func GetEnabledDeepKeyModelNames() ([]string, error) {
 	return models, nil
 }
 
-func writePricingOption(tx *gorm.DB, key, value string) error {
-	option := Option{Key: key}
-	if err := tx.Where(&Option{Key: key}).FirstOrCreate(&option).Error; err != nil {
-		return err
-	}
-	option.Value = value
-	return tx.Save(&option).Error
-}
-
 func ApplyDeepKeyPricingMigration(expectedHash string, modelRatio, modelPrice, groupRatio map[string]float64, sourceMarker string) error {
 	modelRatioJSON, err := common.Marshal(modelRatio)
 	if err != nil {
@@ -386,12 +383,7 @@ func ApplyDeepKeyPricingMigration(expectedHash string, modelRatio, modelPrice, g
 		if currentHash != expectedHash {
 			return ErrDeepKeyPricingMigrationStale
 		}
-		for key, value := range values {
-			if err := writePricingOption(tx, key, value); err != nil {
-				return err
-			}
-		}
-		return nil
+		return updateOptionsBulkTx(tx, values)
 	}); err != nil {
 		return err
 	}

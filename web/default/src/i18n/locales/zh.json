@@ -1260,6 +1260,7 @@
     "decides which channels are used and which base ratio applies.": "决定走哪些渠道、用哪个基础倍率。",
     "Decreased user quota by {{quota}}": "减少用户额度 {{quota}}",
     "Deducted by subscription": "由订阅抵扣",
+    "DeepKey catalog unavailable; showing local status only": "DeepKey 分组目录暂不可用，当前仅显示本地状态",
     "DeepKey group health": "DeepKey 分组状态",
     "DeepSeek": "DeepSeek",
     "default": "默认",

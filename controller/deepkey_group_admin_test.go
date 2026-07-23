@@ -33,8 +33,13 @@ func TestBuildDeepKeyGroupAdminStatusesReportsLifecycleGaps(t *testing.T) {
 		"local-only":      1,
 		"invalid-key":     1,
 	}
+	tokenCounts := map[string]int64{
+		"healthy":         4,
+		"missing-channel": 2,
+		"local-only":      3,
+	}
 
-	statuses := buildDeepKeyGroupAdminStatuses(catalog, channelStatuses, configuredRatios)
+	statuses := buildDeepKeyGroupAdminStatuses(catalog, channelStatuses, configuredRatios, tokenCounts)
 	require.Len(t, statuses, 5)
 	byGroup := make(map[string]deepKeyGroupAdminStatus, len(statuses))
 	for _, status := range statuses {
@@ -46,4 +51,20 @@ func TestBuildDeepKeyGroupAdminStatusesReportsLifecycleGaps(t *testing.T) {
 	assert.ElementsMatch(t, []string{"missing_configuration", "missing_channel"}, byGroup["missing-config"].Issues)
 	assert.ElementsMatch(t, []string{"not_in_catalog", "no_enabled_channel"}, byGroup["local-only"].Issues)
 	assert.ElementsMatch(t, []string{"not_in_catalog", "invalid_key_configuration"}, byGroup["invalid-key"].Issues)
+	assert.Equal(t, int64(3), byGroup["local-only"].TokenCount)
+}
+
+func TestBuildDeepKeyGroupAdminStatusesKeepsLocalDataWithoutCatalog(t *testing.T) {
+	statuses := buildDeepKeyGroupAdminStatuses(
+		nil,
+		map[string]model.DeepKeyChannelGroupStatus{},
+		map[string]float64{"configured-only": 1.3},
+		map[string]int64{"configured-only": 2},
+	)
+
+	require.Len(t, statuses, 1)
+	assert.Equal(t, "configured-only", statuses[0].Group)
+	assert.True(t, statuses[0].Configured)
+	assert.Equal(t, int64(2), statuses[0].TokenCount)
+	assert.Equal(t, []string{"missing_channel"}, statuses[0].Issues)
 }

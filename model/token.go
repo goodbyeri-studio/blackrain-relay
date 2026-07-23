@@ -26,9 +26,9 @@ type Token struct {
 	ModelLimits        string         `json:"model_limits" gorm:"type:text"`
 	AllowIps           *string        `json:"allow_ips" gorm:"default:''"`
 	UsedQuota          int            `json:"used_quota" gorm:"default:0"` // used quota
-	Group              string         `json:"group" gorm:"default:''"`
+	Group              string         `json:"group" gorm:"default:'';index:idx_tokens_deleted_at_group,priority:2"`
 	CrossGroupRetry    bool           `json:"cross_group_retry"` // 跨分组重试，仅auto分组有效
-	DeletedAt          gorm.DeletedAt `gorm:"index"`
+	DeletedAt          gorm.DeletedAt `gorm:"index;index:idx_tokens_deleted_at_group,priority:1"`
 }
 
 func (token *Token) Clean() {
@@ -284,9 +284,30 @@ func GetTokenByKey(key string, fromDB bool) (token *Token, err error) {
 }
 
 func (token *Token) Insert() error {
-	var err error
-	err = DB.Create(token).Error
-	return err
+	return DB.Transaction(func(tx *gorm.DB) error {
+		if err := validateTokenGroupInTransaction(tx, token.Group); err != nil {
+			return err
+		}
+		return tx.Create(token).Error
+	})
+}
+
+func validateTokenGroupInTransaction(tx *gorm.DB, group string) error {
+	if group == "" || group == "auto" {
+		return nil
+	}
+	option, err := lockGroupRatioOption(tx)
+	if err != nil {
+		return err
+	}
+	ratios := make(map[string]float64)
+	if err := common.UnmarshalJsonStr(option.Value, &ratios); err != nil {
+		return fmt.Errorf("decode GroupRatio: %w", err)
+	}
+	if _, exists := ratios[group]; !exists {
+		return fmt.Errorf("分组 %s 已被弃用", group)
+	}
+	return nil
 }
 
 // Update Make sure your token's fields is completed, because this will update non-zero values
@@ -301,9 +322,33 @@ func (token *Token) Update() (err error) {
 			})
 		}
 	}()
-	err = DB.Model(token).Select("name", "status", "expired_time", "remain_quota", "unlimited_quota",
-		"model_limits_enabled", "model_limits", "allow_ips", "group", "cross_group_retry").Updates(token).Error
+	err = updateTokenFields(DB, token)
 	return err
+}
+
+func updateTokenFields(tx *gorm.DB, token *Token) error {
+	return tx.Model(token).Select("name", "status", "expired_time", "remain_quota", "unlimited_quota",
+		"model_limits_enabled", "model_limits", "allow_ips", "group", "cross_group_retry").Updates(token).Error
+}
+
+// UpdateWithGroupValidation updates editable token fields while serializing the
+// group check with GroupRatio changes in the same database transaction.
+func (token *Token) UpdateWithGroupValidation() (err error) {
+	defer func() {
+		if shouldUpdateRedis(true, err) {
+			gopool.Go(func() {
+				if cacheErr := cacheSetToken(*token); cacheErr != nil {
+					common.SysLog("failed to update token cache: " + cacheErr.Error())
+				}
+			})
+		}
+	}()
+	return DB.Transaction(func(tx *gorm.DB) error {
+		if err := validateTokenGroupInTransaction(tx, token.Group); err != nil {
+			return err
+		}
+		return updateTokenFields(tx, token)
+	})
 }
 
 func (token *Token) SelectUpdate() (err error) {

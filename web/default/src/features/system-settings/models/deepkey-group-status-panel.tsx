@@ -72,6 +72,7 @@ export function DeepKeyGroupStatusPanel() {
   })
   const rows = statusQuery.data?.data ?? []
   const hasError = statusQuery.isError || statusQuery.data?.success === false
+  const catalogUnavailable = statusQuery.data?.catalog_available === false
   let statusContent: ReactNode
   if (hasError) {
     statusContent = (
@@ -200,8 +201,8 @@ export function DeepKeyGroupStatusPanel() {
   }
 
   return (
-    <Card className='relative shadow-sm ring-0 before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:border before:border-border/90'>
-      <CardHeader className='border-b bg-muted/20'>
+    <Card className='before:border-border/90 relative shadow-sm ring-0 before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:border'>
+      <CardHeader className='bg-muted/20 border-b'>
         <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
           <div>
             <CardTitle>{t('DeepKey group health')}</CardTitle>
@@ -228,7 +229,15 @@ export function DeepKeyGroupStatusPanel() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className='pt-4'>{statusContent}</CardContent>
+      <CardContent className='space-y-4 pt-4'>
+        {catalogUnavailable && (
+          <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+            <AlertTriangle className='h-4 w-4' aria-hidden='true' />
+            {t('DeepKey catalog unavailable; showing local status only')}
+          </div>
+        )}
+        {statusContent}
+      </CardContent>
     </Card>
   )
 }

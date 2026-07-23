@@ -1260,6 +1260,7 @@
     "decides which channels are used and which base ratio applies.": "определяет используемые каналы и применяемый базовый коэффициент.",
     "Decreased user quota by {{quota}}": "Квота пользователя уменьшена на {{quota}}",
     "Deducted by subscription": "Списано по подписке",
+    "DeepKey catalog unavailable; showing local status only": "Каталог DeepKey недоступен; отображается только локальное состояние",
     "DeepKey group health": "Состояние групп DeepKey",
     "DeepSeek": "DeepSeek",
     "default": "по умолчанию",

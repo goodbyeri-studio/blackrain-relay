@@ -1260,6 +1260,7 @@
     "decides which channels are used and which base ratio applies.": "quyết định dùng kênh nào và áp dụng hệ số cơ bản nào.",
     "Decreased user quota by {{quota}}": "Đã giảm hạn mức người dùng {{quota}}",
     "Deducted by subscription": "Khấu trừ bởi gói đăng ký",
+    "DeepKey catalog unavailable; showing local status only": "Danh mục DeepKey không khả dụng; chỉ hiển thị trạng thái cục bộ",
     "DeepKey group health": "Trạng thái nhóm DeepKey",
     "DeepSeek": "DeepSeek",
     "default": "mặc định",

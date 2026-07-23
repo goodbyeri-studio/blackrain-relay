@@ -34,6 +34,7 @@ func buildDeepKeyGroupAdminStatuses(
 	catalog *deepKeyPricingCatalog,
 	channelStatuses map[string]model.DeepKeyChannelGroupStatus,
 	configuredRatios map[string]float64,
+	tokenCounts map[string]int64,
 ) []deepKeyGroupAdminStatus {
 	names := make(map[string]struct{}, len(channelStatuses)+len(configuredRatios))
 	if catalog != nil {
@@ -42,6 +43,9 @@ func buildDeepKeyGroupAdminStatuses(
 		}
 	}
 	for name := range channelStatuses {
+		names[name] = struct{}{}
+	}
+	for name := range configuredRatios {
 		names[name] = struct{}{}
 	}
 	result := make([]deepKeyGroupAdminStatus, 0, len(names))
@@ -58,6 +62,9 @@ func buildDeepKeyGroupAdminStatuses(
 			status.LastTestTime = channelStatus.LastTestTime
 			status.ResponseTime = channelStatus.ResponseTime
 		}
+		if count, ok := tokenCounts[name]; ok {
+			status.TokenCount = count
+		}
 		if ratio, ok := configuredRatios[name]; ok {
 			ratioCopy := ratio
 			status.Configured = true
@@ -71,11 +78,13 @@ func buildDeepKeyGroupAdminStatuses(
 			}
 		}
 
-		if !status.CatalogPresent && status.Configured {
-			status.Issues = append(status.Issues, "not_in_catalog")
-		}
-		if status.CatalogPresent && !status.Configured {
-			status.Issues = append(status.Issues, "missing_configuration")
+		if catalog != nil {
+			if !status.CatalogPresent && status.Configured {
+				status.Issues = append(status.Issues, "not_in_catalog")
+			}
+			if status.CatalogPresent && !status.Configured {
+				status.Issues = append(status.Issues, "missing_configuration")
+			}
 		}
 		if status.ChannelCount == 0 {
 			status.Issues = append(status.Issues, "missing_channel")
@@ -85,7 +94,7 @@ func buildDeepKeyGroupAdminStatuses(
 		if status.ChannelCount > 0 && !status.KeyConfigurationValid {
 			status.Issues = append(status.Issues, "invalid_key_configuration")
 		}
-		if status.CatalogRatio != nil && status.ConfiguredRatio != nil &&
+		if catalog != nil && status.CatalogRatio != nil && status.ConfiguredRatio != nil &&
 			math.Abs(*status.CatalogRatio-*status.ConfiguredRatio) > 0.000001 {
 			status.Issues = append(status.Issues, "ratio_drift")
 		}
@@ -97,19 +106,44 @@ func buildDeepKeyGroupAdminStatuses(
 
 func GetDeepKeyGroupAdminStatuses(c *gin.Context) {
 	catalog, err := getDeepKeyPricingCatalog()
+	catalogAvailable := err == nil
+	catalogError := ""
 	if err != nil {
-		common.ApiErrorMsg(c, "获取 DeepKey 分组目录失败: "+err.Error())
-		return
+		catalogError = err.Error()
 	}
 	channelStatuses, err := model.GetDeepKeyChannelGroupStatuses()
 	if err != nil {
 		common.ApiError(c, err)
 		return
 	}
-	statuses := buildDeepKeyGroupAdminStatuses(catalog, channelStatuses, ratio_setting.GetGroupRatioCopy())
+	configuredRatios := ratio_setting.GetGroupRatioCopy()
+	groupNames := make(map[string]struct{}, len(channelStatuses)+len(configuredRatios))
+	for name := range channelStatuses {
+		groupNames[name] = struct{}{}
+	}
+	for name := range configuredRatios {
+		groupNames[name] = struct{}{}
+	}
+	if catalog != nil {
+		for name := range catalog.GroupRatio {
+			groupNames[name] = struct{}{}
+		}
+	}
+	groups := make([]string, 0, len(groupNames))
+	for name := range groupNames {
+		groups = append(groups, name)
+	}
+	tokenCounts, err := model.CountTokensByGroups(groups)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	statuses := buildDeepKeyGroupAdminStatuses(catalog, channelStatuses, configuredRatios, tokenCounts)
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    statuses,
+		"success":           true,
+		"message":           "",
+		"data":              statuses,
+		"catalog_available": catalogAvailable,
+		"catalog_error":     catalogError,
 	})
 }

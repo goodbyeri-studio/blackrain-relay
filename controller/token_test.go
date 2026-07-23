@@ -101,8 +101,11 @@ func openTokenControllerTestDB(t *testing.T) *gorm.DB {
 func migrateTokenControllerTestDB(t *testing.T, db *gorm.DB) {
 	t.Helper()
 
-	if err := db.AutoMigrate(&model.Token{}); err != nil {
+	if err := db.AutoMigrate(&model.Token{}, &model.Option{}); err != nil {
 		t.Fatalf("failed to migrate token table: %v", err)
+	}
+	if err := db.Create(&model.Option{Key: "GroupRatio", Value: `{"default":1,"vip":1,"svip":1}`}).Error; err != nil {
+		t.Fatalf("failed to seed group ratios: %v", err)
 	}
 }
 

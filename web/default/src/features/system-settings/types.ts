@@ -90,6 +90,8 @@ export type DeepKeyGroupAdminStatusResponse = {
   success: boolean
   message: string
   data?: DeepKeyGroupAdminStatus[]
+  catalog_available?: boolean
+  catalog_error?: string
 }
 
 export type ConfirmPaymentComplianceResponse = {
