@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/QuantumNous/new-api/setting"
@@ -19,6 +21,61 @@ func confirmPaymentComplianceForTest(t *testing.T) {
 	})
 	paymentSetting.ComplianceConfirmed = true
 	paymentSetting.ComplianceTermsVersion = operation_setting.CurrentComplianceTermsVersion
+}
+
+func TestWechatPayWebhookDoesNotDependOnNewTopUpAvailability(t *testing.T) {
+	secretDir := t.TempDir()
+	privateKeyPath := filepath.Join(secretDir, "merchant.pem")
+	publicKeyPath := filepath.Join(secretDir, "wechatpay.pem")
+	require.NoError(t, os.WriteFile(privateKeyPath, []byte("test"), 0o600))
+	require.NoError(t, os.WriteFile(publicKeyPath, []byte("test"), 0o600))
+	t.Setenv("WECHAT_PAY_APP_ID", "wx123")
+	t.Setenv("WECHAT_PAY_MCH_ID", "1900000001")
+	t.Setenv("WECHAT_PAY_MERCHANT_SERIAL_NO", "serial")
+	t.Setenv("WECHAT_PAY_MERCHANT_PRIVATE_KEY_PATH", privateKeyPath)
+	t.Setenv("WECHAT_PAY_PUBLIC_KEY_ID", "PUB_KEY_ID_123")
+	t.Setenv("WECHAT_PAY_PUBLIC_KEY_PATH", publicKeyPath)
+	t.Setenv("WECHAT_PAY_API_V3_KEY", "12345678901234567890123456789012")
+	t.Setenv("WECHAT_PAY_NOTIFY_URL", "https://relay.example.com/api/payment/wechat/notify")
+
+	paymentSetting := operation_setting.GetPaymentSetting()
+	originalConfirmed := paymentSetting.ComplianceConfirmed
+	originalTermsVersion := paymentSetting.ComplianceTermsVersion
+	t.Cleanup(func() {
+		paymentSetting.ComplianceConfirmed = originalConfirmed
+		paymentSetting.ComplianceTermsVersion = originalTermsVersion
+	})
+	paymentSetting.ComplianceConfirmed = false
+	paymentSetting.ComplianceTermsVersion = ""
+
+	require.False(t, isWechatPayTopUpEnabled())
+	require.True(t, isWechatPayWebhookEnabled())
+}
+
+func TestAlipayWebhookDoesNotDependOnNewTopUpAvailability(t *testing.T) {
+	secretDir := t.TempDir()
+	privateKeyPath := filepath.Join(secretDir, "app_private.pem")
+	publicKeyPath := filepath.Join(secretDir, "alipay_public.pem")
+	require.NoError(t, os.WriteFile(privateKeyPath, []byte("test"), 0o600))
+	require.NoError(t, os.WriteFile(publicKeyPath, []byte("test"), 0o600))
+	t.Setenv("ALIPAY_APP_ID", "2021000000000000")
+	t.Setenv("ALIPAY_APP_PRIVATE_KEY_PATH", privateKeyPath)
+	t.Setenv("ALIPAY_PUBLIC_KEY_PATH", publicKeyPath)
+	t.Setenv("ALIPAY_NOTIFY_URL", "https://relay.example.com/api/payment/alipay/notify")
+	t.Setenv("ALIPAY_GATEWAY_URL", "https://openapi.alipay.com/gateway.do")
+
+	paymentSetting := operation_setting.GetPaymentSetting()
+	originalConfirmed := paymentSetting.ComplianceConfirmed
+	originalTermsVersion := paymentSetting.ComplianceTermsVersion
+	t.Cleanup(func() {
+		paymentSetting.ComplianceConfirmed = originalConfirmed
+		paymentSetting.ComplianceTermsVersion = originalTermsVersion
+	})
+	paymentSetting.ComplianceConfirmed = false
+	paymentSetting.ComplianceTermsVersion = ""
+
+	require.False(t, isAlipayTopUpEnabled())
+	require.True(t, isAlipayWebhookEnabled())
 }
 
 func TestStripeWebhookEnabledRequiresTopUpAndWebhookConfig(t *testing.T) {

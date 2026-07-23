@@ -29,7 +29,7 @@
 
 数据库和 Valkey 均使用 Relay VPC 的私网 TLS endpoint。PostgreSQL 已建立 `blackrain_relay` 和普通用户 `blackrain_relay_app`；密码不记录在仓库或本文档中。
 
-Load Balancer 当前配置为 `HTTP:80 -> App:3000`，健康检查为 `/api/status`，HTTP idle timeout 为 600 秒。HTTPS `443` 监听和有效证书仍需在应用发布前完成。Cloudflare 的 `goodbyeri.cc` Zone 保持 SSL Strict、Always HTTPS 和最低 TLS 1.2；流式接口是否启用 Cloudflare proxy 需要先做长连接验证。
+Load Balancer 当前配置为 `HTTP:80 -> App:3000`，健康检查为 `/api/status`，HTTP idle timeout 为 600 秒。HTTPS `443` 监听和有效证书仍需在应用发布前完成。`relay.goodbyeri.cc` 当前为 DNS-only，因此 Cloudflare Zone 的 SSL Strict、Always HTTPS 和最低 TLS 1.2 不会保护该主机名；正式流量接入前必须由 Load Balancer 终止 TLS，并将 `80` 改为跳转 HTTPS 而不是继续转发到 App。后续若启用 Cloudflare proxy，需先验证 SSE、WebSocket 和长请求。
 
 Firewall 当前只允许创建时的管理出口访问 SSH `22`，App `3000` 仅允许 `10.200.0.0/20`。管理出口变化后必须更新 Firewall，不能为了临时登录重新开放全网 SSH。
 
@@ -47,13 +47,21 @@ Firewall 当前只允许创建时的管理出口访问 SSH `22`，App `3000` 仅
 
 500 个在线用户不等于 500 个数据库连接。发布前必须设置合理的连接池，例如每个 App 节点先从 `SQL_MAX_OPEN_CONNS=50`、`SQL_MAX_IDLE_CONNS=20` 开始，通过真实流式压测再调整，不能沿用默认的 1000 个数据库连接上限。
 
+## 多节点运行约束
+
+- 两台 App 使用相同的固定 Git SHA 镜像，但必须使用不同、稳定的 `NODE_NAME`。
+- 只能有一个节点设置 `NODE_TYPE=master`；另一个节点必须设置 `NODE_TYPE=slave`。主节点负责数据库 migration、订阅重置、日志保留和其它后台任务，不允许两台节点同时以默认 master 身份启动。
+- 首次部署和包含 migration 的升级必须先启动 master，确认 migration 完成且 `/api/status` 健康后再启动 slave。故障切换时先确认旧 master 已退出，再显式提升 slave，避免双主。
+- 两台节点必须共享相同的 `SQL_DSN`、`REDIS_CONN_STRING`、`SESSION_SECRET` 和 `CRYPTO_SECRET`；节点角色和 `NODE_NAME` 单独配置。
+
 ## 上线前检查
 
 - 构建并推送固定 Git SHA 镜像，禁止生产使用 `latest`。
-- 在两台 App 节点安装运行时并部署相同镜像。
-- 写入独立 production Secret：`SQL_DSN`、`REDIS_CONN_STRING`、`SESSION_SECRET`、`CRYPTO_SECRET`、模型渠道、支付和 webhook 凭据。
-- 通过 migration 前备份、健康检查和可回滚发布流程。
-- 为 Load Balancer 增加 HTTPS `443` 和证书，验证 SSE、WebSocket、支付回调和长请求。
+- 在两台 App 节点安装运行时、部署相同镜像，并按“一个 master、一个 slave”配置 `NODE_TYPE` 和稳定的 `NODE_NAME`。
+- 写入两台节点共享的 production Secret：`SQL_DSN`、`REDIS_CONN_STRING`、`SESSION_SECRET`、`CRYPTO_SECRET`、模型渠道、支付和 webhook 凭据。
+- 设置 `SESSION_COOKIE_SECURE=true`、`SESSION_COOKIE_TRUSTED_URL=https://relay.goodbyeri.cc`、`SQL_MAX_OPEN_CONNS=50` 和 `SQL_MAX_IDLE_CONNS=20`。
+- migration 前完成备份；先发布 master 并确认 migration 完成，再发布 slave，最后验证健康检查和回滚流程。
+- 为 Load Balancer 增加 HTTPS `443` 和有效证书，将 HTTP `80` 配置为跳转 HTTPS，并验证 SSE、WebSocket、支付回调和长请求。
 - 部署后创建 `https://relay.goodbyeri.cc/api/status` Uptime Check。
 - 使用 500 活跃流式请求做压测，观察 App CPU/内存、PostgreSQL 连接与 CPU、Valkey 内存、P95 延迟和中断率。
 - 完成 PostgreSQL restore、迁移回滚、支付回调、计费、限流、流式和 usage 对账 smoke。

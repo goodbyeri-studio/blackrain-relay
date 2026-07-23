@@ -5178,6 +5178,16 @@
     "Zero retention": "Zero retention",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Payment completed": "Payment completed",
+    "This QR code has expired": "This QR code has expired",
+    "Alipay QR code": "Alipay QR code",
+    "Waiting for payment": "Waiting for payment",
+    "Scan with Alipay": "Scan with Alipay",
+    "Use Alipay to scan the QR code and complete payment.": "Use Alipay to scan the QR code and complete payment.",
+    "Refresh payment status": "Refresh payment status",
+    "WeChat Pay QR code": "WeChat Pay QR code",
+    "Scan with WeChat": "Scan with WeChat",
+    "Use WeChat to scan the QR code and complete payment.": "Use WeChat to scan the QR code and complete payment."
   }
 }

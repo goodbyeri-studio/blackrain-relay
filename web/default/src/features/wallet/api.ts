@@ -39,6 +39,10 @@ import type {
   WaffoPaymentResponse,
   WaffoPancakePaymentRequest,
   WaffoPancakePaymentResponse,
+  WechatNativePaymentRequest,
+  WechatNativePaymentResponse,
+  AlipayPrecreatePaymentRequest,
+  AlipayPrecreatePaymentResponse,
 } from './types'
 
 // ============================================================================
@@ -166,6 +170,44 @@ export async function requestWaffoPancakePayment(
   const res = await api.post('/api/user/waffo-pancake/pay', request, {
     skipBusinessError: true,
   } as Record<string, unknown>)
+  return res.data
+}
+
+export async function requestWechatNativePayment(
+  request: WechatNativePaymentRequest
+): Promise<WechatNativePaymentResponse> {
+  const res = await api.post('/api/user/wechat/native/pay', request, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+export async function getWechatNativePaymentStatus(
+  tradeNo: string
+): Promise<WechatNativePaymentResponse> {
+  const res = await api.get(
+    `/api/user/wechat/native/order/${encodeURIComponent(tradeNo)}`,
+    { skipBusinessError: true } as Record<string, unknown>
+  )
+  return res.data
+}
+
+export async function requestAlipayPrecreatePayment(
+  request: AlipayPrecreatePaymentRequest
+): Promise<AlipayPrecreatePaymentResponse> {
+  const res = await api.post('/api/user/alipay/precreate/pay', request, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+export async function getAlipayPrecreatePaymentStatus(
+  tradeNo: string
+): Promise<AlipayPrecreatePaymentResponse> {
+  const res = await api.get(
+    `/api/user/alipay/precreate/order/${encodeURIComponent(tradeNo)}`,
+    { skipBusinessError: true } as Record<string, unknown>
+  )
   return res.data
 }
 

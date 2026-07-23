@@ -35,6 +35,7 @@ func filterPricingByUsableGroups(pricing []model.Pricing, usableGroup map[string
 
 func GetPricing(c *gin.Context) {
 	pricing := model.GetPricing()
+	vendors := model.GetVendors()
 	userId, exists := c.Get("id")
 	usableGroup := map[string]string{}
 	groupRatio := map[string]float64{}
@@ -64,14 +65,41 @@ func GetPricing(c *gin.Context) {
 		}
 	}
 
+	supportedEndpoint := make(map[string]common.EndpointInfo)
+	for endpoint, info := range model.GetSupportedEndpointMap() {
+		supportedEndpoint[endpoint] = info
+	}
+	autoGroups := service.GetUserAutoGroup(group)
+	if catalog, err := getDeepKeyPricingCatalog(); err != nil {
+		common.SysLog("load DeepKey pricing catalog failed: " + err.Error())
+	} else {
+		// The public catalog is descriptive data, not an authorization source.
+		// Only expose catalog models whose groups are already enabled locally.
+		pricing = mergePricingCatalog(pricing, filterPricingByUsableGroups(catalog.Models, usableGroup))
+		vendors = mergePricingVendors(vendors, catalog.Vendors)
+		for catalogGroup, ratio := range catalog.GroupRatio {
+			if _, allowed := usableGroup[catalogGroup]; !allowed {
+				continue
+			}
+			if _, exists := groupRatio[catalogGroup]; !exists {
+				groupRatio[catalogGroup] = ratio
+			}
+		}
+		for endpoint, info := range catalog.SupportedEndpoint {
+			if _, exists := supportedEndpoint[endpoint]; !exists {
+				supportedEndpoint[endpoint] = info
+			}
+		}
+	}
+
 	c.JSON(200, gin.H{
 		"success":            true,
 		"data":               pricing,
-		"vendors":            model.GetVendors(),
+		"vendors":            vendors,
 		"group_ratio":        groupRatio,
 		"usable_group":       usableGroup,
-		"supported_endpoint": model.GetSupportedEndpointMap(),
-		"auto_groups":        service.GetUserAutoGroup(group),
+		"supported_endpoint": supportedEndpoint,
+		"auto_groups":        autoGroups,
 		"pricing_version":    "a42d372ccf0b5dd13ecf71203521f9d2",
 	})
 }
