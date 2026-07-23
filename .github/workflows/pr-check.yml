@@ -6,8 +6,7 @@ permissions:
   pull-requests: read
 
 on:
-  pull_request_target:
-    types: [opened, reopened]
+  workflow_dispatch:
 
 jobs:
   pr-quality:
@@ -28,6 +27,6 @@ jobs:
           detect-spam-usernames: true
           min-account-age: 30
 
-          failure-add-pr-labels: "pr-check-failed"
-          failure-pr-message: "感谢您的提交。由于该 PR 未遵循我们的贡献模板，且被识别为缺乏人工参与的纯 AI 生成内容 (AI Slop)，我们将先予以关闭。我们更欢迎经过人工审核、验证并带有个人思考的贡献。如果您认为这其中存在误解，请回复告知。/ Thank you for your submission. This PR has been closed because it does not follow our contribution template and has been identified as purely AI-generated content (AI Slop) without meaningful human involvement. We prioritize contributions that are human-verified and reflect individual effort. If you believe this is a mistake, please let us know by replying to this comment."
-          close-pr: true
+          failure-add-pr-labels: ""
+          failure-pr-message: "该 PR 未满足贡献模板或人工验证要求。此检查只提供反馈，不会自动关闭 PR；请补充变更动机、验证结果和人工判断。/ This PR does not yet satisfy the contribution template or human-verification requirements. This check is advisory and will not close the PR automatically; please add the motivation, verification results, and human judgment."
+          close-pr: false

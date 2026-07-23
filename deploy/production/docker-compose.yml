@@ -1,0 +1,26 @@
+services:
+  meimei-api:
+    image: ${MEIMEI_API_IMAGE:?MEIMEI_API_IMAGE is required}
+    container_name: meimei-api
+    restart: unless-stopped
+    command: --log-dir /app/logs
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - ${MEIMEI_API_ENV_FILE:-/etc/meimei-api/production.env}
+    environment:
+      TZ: Asia/Shanghai
+      NODE_NAME: meimei-api-prod-app-sgp1
+      NODE_TYPE: master
+    volumes:
+      - /var/lib/meimei-api/data:/data
+      - /var/log/meimei-api:/app/logs
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/healthz/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    stop_grace_period: 150s

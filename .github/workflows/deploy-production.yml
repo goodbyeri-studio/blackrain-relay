@@ -1,0 +1,296 @@
+name: Deploy MeiMei API production
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Deployment operation
+        required: true
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
+      target_sha:
+        description: 40-character main commit SHA (required for deploy)
+        required: false
+        type: string
+      confirm:
+        description: Type DEPLOY_PRODUCTION to continue
+        required: true
+        type: string
+      reason:
+        description: Short release or rollback reason
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meimei-api-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: registry.digitalocean.com/meimei-api
+  IMAGE_NAME: meimei-api
+
+jobs:
+  prepare:
+    name: Validate release request
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      target_sha: ${{ steps.release.outputs.target_sha }}
+      image_tag: ${{ steps.release.outputs.image_tag }}
+    steps:
+      - name: Check out main
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Validate confirmation and commit
+        id: release
+        env:
+          OPERATION: ${{ inputs.operation }}
+          CONFIRM: ${{ inputs.confirm }}
+          REQUESTED_SHA: ${{ inputs.target_sha }}
+          WORKFLOW_REF: ${{ github.ref_name }}
+        run: |
+          [[ "$CONFIRM" == 'DEPLOY_PRODUCTION' ]] || {
+            echo '::error::confirm must be DEPLOY_PRODUCTION'
+            exit 1
+          }
+          [[ "$WORKFLOW_REF" == 'main' ]] || {
+            echo '::error::production deployment must be started from main'
+            exit 1
+          }
+
+          if [[ "$OPERATION" == 'rollback' ]]; then
+            target_sha=$(git rev-parse HEAD)
+          else
+            [[ "$REQUESTED_SHA" =~ ^[a-f0-9]{40}$ ]] || {
+              echo '::error::target_sha must be a 40-character hexadecimal main commit SHA'
+              exit 1
+            }
+            git cat-file -e "$REQUESTED_SHA^{commit}" || {
+              echo '::error::target_sha does not exist in this repository'
+              exit 1
+            }
+            git merge-base --is-ancestor "$REQUESTED_SHA" main || {
+              echo '::error::target_sha is not an ancestor of main'
+              exit 1
+            }
+            target_sha="$REQUESTED_SHA"
+          fi
+
+          echo "target_sha=$target_sha" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$REGISTRY/$IMAGE_NAME:sha-$target_sha" >> "$GITHUB_OUTPUT"
+
+  validate:
+    name: Re-validate deploy target
+    needs: prepare
+    if: inputs.operation == 'deploy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out target commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ needs.prepare.outputs.target_sha }}
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Run Go tests
+        run: go test ./...
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+      - name: Install web dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - name: Build default frontend
+        working-directory: web/default
+        run: bun run build:check
+
+  build_image:
+    name: Build and push production image
+    needs: [prepare, validate]
+    if: inputs.operation == 'deploy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_ref: ${{ steps.release.outputs.image_ref }}
+    steps:
+      - name: Check out target commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ needs.prepare.outputs.target_sha }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      - name: Install doctl
+        uses: digitalocean/action-doctl@135ac0aa0eed4437d547c6f12c364d3006b42824 # v2.5.1
+        with:
+          token: ${{ secrets.DOCR_PUSH_TOKEN }}
+      - name: Log in to DigitalOcean Container Registry
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DOCR_PUSH_TOKEN }}
+        run: doctl registry login --expiry-seconds 1200
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ needs.prepare.outputs.image_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+      - name: Export immutable image reference
+        id: release
+        env:
+          IMAGE_TAG: ${{ needs.prepare.outputs.image_tag }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || {
+            echo '::error::build did not return a valid sha256 image digest'
+            exit 1
+          }
+          echo "image_ref=$IMAGE_TAG@$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy to production host
+    needs: [prepare, build_image]
+    if: >-
+      always() && needs.prepare.result == 'success' &&
+      (inputs.operation == 'rollback' || needs.build_image.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - name: Check out deployment files
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: main
+      - name: Validate deployment variables
+        env:
+          PROD_HOST: ${{ vars.PROD_HOST }}
+          PROD_DROPLET_ID: ${{ vars.PROD_DROPLET_ID }}
+          PROD_DEPLOY_USER: ${{ vars.PROD_DEPLOY_USER }}
+          PROD_APP_ROOT: ${{ vars.PROD_APP_ROOT }}
+        run: |
+          [[ "$PROD_HOST" =~ ^[A-Za-z0-9.-]+$ ]] || {
+            echo '::error::PROD_HOST is missing or invalid'
+            exit 1
+          }
+          [[ "$PROD_DROPLET_ID" =~ ^[0-9]+$ ]] || {
+            echo '::error::PROD_DROPLET_ID is missing or invalid'
+            exit 1
+          }
+          [[ "$PROD_DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || {
+            echo '::error::PROD_DEPLOY_USER is missing or invalid'
+            exit 1
+          }
+          [[ "$PROD_APP_ROOT" =~ ^/opt/[A-Za-z0-9._/-]+$ && "$PROD_APP_ROOT" != *'..'* ]] || {
+            echo '::error::PROD_APP_ROOT must be an absolute path below /opt without parent traversal'
+            exit 1
+          }
+      - name: Install doctl
+        uses: digitalocean/action-doctl@135ac0aa0eed4437d547c6f12c364d3006b42824 # v2.5.1
+        with:
+          token: ${{ secrets.DO_FIREWALL_TOKEN }}
+      - name: Prepare SSH identity
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/meimei-api-deploy"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/meimei-api-deploy" "$HOME/.ssh/known_hosts"
+      - name: Allow this runner to SSH temporarily
+        id: firewall
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DO_FIREWALL_TOKEN }}
+          DROPLET_ID: ${{ vars.PROD_DROPLET_ID }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          runner_ip=$(curl --fail --silent --show-error https://api.ipify.org)
+          [[ "$runner_ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || {
+            echo '::error::could not resolve the GitHub runner IPv4 address'
+            exit 1
+          }
+          firewall_id=$(doctl compute firewall create \
+            --name "meimei-api-deploy-$RUN_ID" \
+            --inbound-rules "protocol:tcp,ports:22,address:${runner_ip}/32" \
+            --outbound-rules "protocol:tcp,ports:all,address:0.0.0.0/0 protocol:udp,ports:all,address:0.0.0.0/0 protocol:icmp,address:0.0.0.0/0" \
+            --droplet-ids "$DROPLET_ID" \
+            --format ID --no-header)
+          [[ "$firewall_id" =~ ^[a-f0-9-]+$ ]] || {
+            echo '::error::DigitalOcean did not return a firewall ID'
+            exit 1
+          }
+          echo "id=$firewall_id" >> "$GITHUB_OUTPUT"
+      - name: Upload deployment files
+        env:
+          PROD_HOST: ${{ vars.PROD_HOST }}
+          PROD_DEPLOY_USER: ${{ vars.PROD_DEPLOY_USER }}
+          PROD_APP_ROOT: ${{ vars.PROD_APP_ROOT }}
+        run: |
+          ssh_args=(-i "$HOME/.ssh/meimei-api-deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+          ssh "${ssh_args[@]}" "$PROD_DEPLOY_USER@$PROD_HOST" "mkdir -p '$PROD_APP_ROOT'"
+          scp "${ssh_args[@]}" deploy/production/deploy.sh deploy/production/docker-compose.yml \
+            "$PROD_DEPLOY_USER@$PROD_HOST:$PROD_APP_ROOT/"
+      - name: Run deployment or rollback
+        env:
+          OPERATION: ${{ inputs.operation }}
+          IMAGE_REF: ${{ needs.build_image.outputs.image_ref }}
+          TARGET_SHA: ${{ needs.prepare.outputs.target_sha }}
+          PROD_HOST: ${{ vars.PROD_HOST }}
+          PROD_DEPLOY_USER: ${{ vars.PROD_DEPLOY_USER }}
+          PROD_APP_ROOT: ${{ vars.PROD_APP_ROOT }}
+        run: |
+          ssh_args=(-i "$HOME/.ssh/meimei-api-deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+          if [[ "$OPERATION" == 'rollback' ]]; then
+            remote_command="cd '$PROD_APP_ROOT' && APP_ROOT='$PROD_APP_ROOT' ./deploy.sh rollback"
+          else
+            remote_command="cd '$PROD_APP_ROOT' && APP_ROOT='$PROD_APP_ROOT' ./deploy.sh deploy '$IMAGE_REF' '$TARGET_SHA'"
+          fi
+          ssh "${ssh_args[@]}" "$PROD_DEPLOY_USER@$PROD_HOST" "$remote_command"
+      - name: Verify public readiness
+        run: |
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error --max-time 10 https://api.meimeiapi.com/healthz/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo '::error::public readiness check failed'
+          exit 1
+      - name: Remove temporary SSH firewall
+        if: always() && steps.firewall.outputs.id != ''
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DO_FIREWALL_TOKEN }}
+          FIREWALL_ID: ${{ steps.firewall.outputs.id }}
+        run: doctl compute firewall delete "$FIREWALL_ID" --force
+      - name: Deployment summary
+        if: always()
+        env:
+          OPERATION: ${{ inputs.operation }}
+          TARGET_SHA: ${{ needs.prepare.outputs.target_sha }}
+          IMAGE_REF: ${{ needs.build_image.outputs.image_ref }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          {
+            echo '### MeiMei API production deployment'
+            echo "- Operation: $OPERATION"
+            echo "- Commit: $TARGET_SHA"
+            [[ -n "$IMAGE_REF" ]] && echo "- Image: $IMAGE_REF"
+            [[ -n "$REASON" ]] && echo "- Reason: $REASON"
+          } >> "$GITHUB_STEP_SUMMARY"

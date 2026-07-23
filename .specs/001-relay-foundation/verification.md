@@ -29,6 +29,8 @@
 | 2026-07-23 | default 用量日志界面 | `tsgo -b`; `npx tsx --tsconfig tsconfig.app.json --test ...`; `rsbuild build` | 通过 | 覆盖普通用户/管理员列、实际 quota、订阅扣费标记与移动端字段恢复；4 个回归场景通过 |
 | 2026-07-23 | 本地完整镜像 Compose | Windows Docker Compose 与 Linux `docker:27-cli` 执行基础/微信支付 override 的 `config --quiet` | 通过 | 基础组合无需支付 Secret；支付组合显式要求 `WECHAT_PAY_ENV_FILE` 和 `WECHAT_PAY_SECRET_DIR` |
 | 2026-07-23 | 本地完整镜像构建 | `docker compose -f docker-compose.yml -f docker-compose.local.yml build new-api` | 通过 | default/classic 前端产物与 Go 后端均构建完成，生成 `meimei-api:local` |
+| 2026-07-24 | CI 与生产发布 workflow | `actionlint`; `bash -n`; production Compose `config --quiet`; `go test ./...`; default/classic build | 通过 | Action 固定到 commit SHA；PR CI 不读取 Secret；production 仅手动固定 SHA/digest；安全审计为非阻塞告警 |
+| 2026-07-24 | 生产镜像与健康端点 | `docker buildx build --platform linux/amd64 --load`; 临时容器请求 `/healthz/live`、`/healthz/ready` | 通过 | 镜像 `sha256:4c1bdc9b027e96a6997d4e6d5780e4bc2590b1c8047186d27d6df305e8453fb3`；SQLite/Redis-disabled 验证环境中两个端点均返回 `200` |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无企业合同实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
 

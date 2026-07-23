@@ -50,6 +50,13 @@
 - 迁移策略：应用尚未部署且 PostgreSQL/Valkey 无业务数据，因此先完成资源重建和旧 `relay.goodbyeri.cc` DNS/Caddy 入口清理，再部署生产镜像。
 - 原因：`meimeiapi.com` 与 MeiMei API（莓莓 API）一致，用户更容易记忆；技术 slug 与公开品牌保持同一词根，降低小团队长期运维认知成本。
 
+## 2026-07-24：采用 GitHub Free 兼容的手动生产发布
+
+- 决策：PR 和 `main` 使用只读 CI 软门禁；生产只从 `main` 手动指定 40 位 SHA 发布，镜像使用 digest，单节点通过 SSH 部署脚本保存当前/上一版本并支持回滚。
+- 原因：小团队不维护长期 staging，也不依赖 GitHub Free 不一定提供的强制审查/required checks；把安全重点放在 Secret 隔离、最小 workflow 权限、固定 Action SHA、一次性 SSH Firewall 规则、健康检查和可回滚状态。
+- 替代方案：合并即自动生产发布；长期 staging；在生产 Droplet 上运行 self-hosted GitHub Runner；永久开放公网 SSH。
+- 后续复查条件：首次部署完成后补齐 deploy 用户、Registry 只读凭据、备份恢复、Uptime Check、SSE 回归和 100/250/500 并发压测；出现无中断发布或明确 SLA 时再升级双 App/Load Balancer。
+
 ## 2026-07-13：企业控制面使用独立凭据域
 
 - 决策：企业自动化接口固定在 `/api/enterprise/v1`，使用独立 service credential；每个 tenant 绑定一个内部执行用户，external subject 关联现有 scoped token。

@@ -36,7 +36,7 @@
 
 - [x] 本地开发环境和仅限开发的 Secret 模板
 - [x] 建立 MeiMei API 独立 DigitalOcean 生产基础设施（VPC、单 App、Reserved IP、托管 PostgreSQL/Valkey、Firewall、Registry）
-- [x] 配置 Caddy/TLS 与固定入口；Admin API 仅监听 localhost；固定 SHA 镜像、production Secret、独立健康检查和 SSE 压缩回归仍待完成
+- [x] 配置 Caddy/TLS 与固定入口；Admin API 仅监听 localhost；新增 `/healthz/live`、`/healthz/ready` 和固定 SHA 部署 workflow 代码；production Secret、首次镜像发布和 SSE 压缩回归仍待完成
 - [x] 建立 MeiMei API 公开品牌与 `meimeiapi.com`、`api.meimeiapi.com`、`www.meimeiapi.com` DNS/TLS；移除旧 `relay.goodbyeri.cc` 入口
 - [x] 将 GitHub 仓库、DigitalOcean Project/VPC/Droplet/Firewall/Registry/tag/hostname、PostgreSQL、Valkey、监控告警、Caddy 和本地 Compose 技术标识迁移到 `meimei-api`
 - [ ] 完成 500 在线连接与 100/250/500 并发流式请求分级压测
