@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -39,6 +40,42 @@ func PreConsumeBilling(c *gin.Context, preConsumedQuota int, relayInfo *relaycom
 		return apiErr
 	}
 	relayInfo.Billing = session
+	return nil
+}
+
+func ReserveBilling(c *gin.Context, targetQuota int, relayInfo *relaycommon.RelayInfo) *types.NewAPIError {
+	if relayInfo != nil && relayInfo.QuotaClamp != nil {
+		return types.NewErrorWithStatusCode(
+			relayInfo.QuotaClamp,
+			types.ErrorCodeModelPriceError,
+			http.StatusBadRequest,
+			types.ErrOptionWithSkipRetry(),
+		)
+	}
+	if targetQuota < 0 {
+		return types.NewErrorWithStatusCode(
+			fmt.Errorf("reserve quota cannot be negative: %d", targetQuota),
+			types.ErrorCodeModelPriceError,
+			http.StatusBadRequest,
+			types.ErrOptionWithSkipRetry(),
+		)
+	}
+	if relayInfo == nil || relayInfo.Billing == nil {
+		return PreConsumeBilling(c, targetQuota, relayInfo)
+	}
+	if err := relayInfo.Billing.Reserve(targetQuota); err != nil {
+		var apiErr *types.NewAPIError
+		if errors.As(err, &apiErr) {
+			return apiErr
+		}
+		return types.NewErrorWithStatusCode(
+			err,
+			types.ErrorCodeInsufficientUserQuota,
+			http.StatusForbidden,
+			types.ErrOptionWithSkipRetry(),
+			types.ErrOptionWithNoRecordErrorLog(),
+		)
+	}
 	return nil
 }
 

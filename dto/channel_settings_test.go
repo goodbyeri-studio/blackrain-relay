@@ -293,6 +293,33 @@ func TestAdvancedCustomValidateDuplicateIncomingPathRejectsInvalidRegexModels(t 
 	}
 }
 
+func TestChannelOtherSettingsValidateModelRatios(t *testing.T) {
+	tests := []struct {
+		name      string
+		ratios    map[string]float64
+		wantError bool
+	}{
+		{name: "empty map", ratios: nil},
+		{name: "free model", ratios: map[string]float64{"free-model": 0}},
+		{name: "positive ratio", ratios: map[string]float64{"gpt-test": 1.3}},
+		{name: "negative ratio", ratios: map[string]float64{"gpt-test": -1}, wantError: true},
+		{name: "empty model name", ratios: map[string]float64{" ": 1}, wantError: true},
+		{name: "ratio above limit", ratios: map[string]float64{"gpt-test": MaxChannelModelRatio + 1}, wantError: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			settings := ChannelOtherSettings{ModelRatios: test.ratios}
+			err := settings.ValidateModelRatios()
+			if test.wantError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
 func TestAdvancedCustomValidateDuplicateIncomingPathRejectsDuplicateRegexModels(t *testing.T) {
 	config := &AdvancedCustomConfig{
 		Routes: []AdvancedCustomRoute{

@@ -196,6 +196,10 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 			newAPIError = channelErr
 			break
 		}
+		if priceErr := refreshRelayPriceForSelectedChannel(c, relayInfo, tokens, meta); priceErr != nil {
+			newAPIError = priceErr
+			break
+		}
 
 		addUsedChannel(c, channel.Id)
 		bodyStorage, bodyErr := common.GetBodyStorage(c)
@@ -288,6 +292,17 @@ func fastTokenCountMetaForPricing(request dto.Request) *types.TokenCountMeta {
 		// Best-effort: leave CombineText empty to avoid large allocations.
 	}
 	return meta
+}
+
+func refreshRelayPriceForSelectedChannel(c *gin.Context, relayInfo *relaycommon.RelayInfo, promptTokens int, meta *types.TokenCountMeta) *types.NewAPIError {
+	priceData, err := helper.ModelPriceHelper(c, relayInfo, promptTokens, meta)
+	if err != nil {
+		return types.NewError(err, types.ErrorCodeModelPriceError, types.ErrOptionWithStatusCode(http.StatusBadRequest))
+	}
+	if priceData.FreeModel {
+		return nil
+	}
+	return service.ReserveBilling(c, priceData.QuotaToPreConsume, relayInfo)
 }
 
 func getChannel(c *gin.Context, info *relaycommon.RelayInfo, retryParam *service.RetryParam) (*model.Channel, *types.NewAPIError) {

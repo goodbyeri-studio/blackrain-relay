@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
+	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/pkg/billingexpr"
@@ -98,6 +100,11 @@ func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens 
 		var success bool
 		var matchName string
 		modelRatio, success, matchName = ratio_setting.GetModelRatio(info.OriginModelName)
+		if channelRatio, ok := getChannelModelRatio(c, info.OriginModelName); ok {
+			modelRatio = channelRatio
+			success = true
+			matchName = info.OriginModelName
+		}
 		if !success {
 			acceptUnsetRatio := false
 			if info.UserSetting.AcceptUnsetRatioModel {
@@ -199,6 +206,11 @@ func ModelPriceHelperPerCall(c *gin.Context, info *relaycommon.RelayInfo) (types
 			var ratioSuccess bool
 			var matchName string
 			modelRatio, ratioSuccess, matchName = ratio_setting.GetModelRatio(info.OriginModelName)
+			if channelRatio, ok := getChannelModelRatio(c, info.OriginModelName); ok {
+				modelRatio = channelRatio
+				ratioSuccess = true
+				matchName = info.OriginModelName
+			}
 			acceptUnsetRatio := false
 			if info.UserSetting.AcceptUnsetRatioModel {
 				acceptUnsetRatio = true
@@ -249,6 +261,15 @@ func ModelPriceHelperPerCall(c *gin.Context, info *relaycommon.RelayInfo) (types
 		GroupRatioInfo: groupRatioInfo,
 	}
 	return priceData, nil
+}
+
+func getChannelModelRatio(c *gin.Context, modelName string) (float64, bool) {
+	settings, ok := common.GetContextKeyType[dto.ChannelOtherSettings](c, constant.ContextKeyChannelOtherSetting)
+	if !ok || len(settings.ModelRatios) == 0 {
+		return 0, false
+	}
+	ratio, ok := settings.ModelRatios[strings.TrimSpace(modelName)]
+	return ratio, ok
 }
 
 func HasModelBillingConfig(modelName string) bool {
