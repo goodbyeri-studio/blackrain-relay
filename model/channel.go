@@ -725,6 +725,19 @@ func hasEnabledMultiKey(keys []string, statusList map[int]int) bool {
 }
 
 func UpdateChannelStatus(channelId int, usingKey string, status int, reason string) bool {
+	if status == common.ChannelStatusEnabled {
+		candidate, err := GetChannelById(channelId, true)
+		if err != nil {
+			common.SysLog(fmt.Sprintf("failed to validate channel enable: channel_id=%d, error=%v", channelId, err))
+			return false
+		}
+		candidate.Status = common.ChannelStatusEnabled
+		if err := ValidateDeepKeyChannelGroupIsolation(candidate); err != nil {
+			common.SysLog(fmt.Sprintf("rejected channel enable: channel_id=%d, error=%v", channelId, err))
+			return false
+		}
+	}
+
 	if common.MemoryCacheEnabled {
 		channelStatusLock.Lock()
 		defer channelStatusLock.Unlock()
@@ -800,6 +813,13 @@ func UpdateChannelStatus(channelId int, usingKey string, status int, reason stri
 }
 
 func EnableChannelByTag(tag string) error {
+	var channelIds []int
+	if err := DB.Model(&Channel{}).Where("tag = ?", tag).Pluck("id", &channelIds).Error; err != nil {
+		return err
+	}
+	if err := ValidateDeepKeyChannelsForEnable(channelIds); err != nil {
+		return err
+	}
 	err := DB.Model(&Channel{}).Where("tag = ?", tag).Update("status", common.ChannelStatusEnabled).Error
 	if err != nil {
 		return err
@@ -836,6 +856,19 @@ func EditChannelByTag(tag string, newTag *string, modelMapping *string, models *
 	if group != nil && *group != "" {
 		shouldReCreateAbilities = true
 		updateData.Group = *group
+
+		var channels []Channel
+		if err := DB.Where("status = ?", common.ChannelStatusEnabled).Find(&channels).Error; err != nil {
+			return err
+		}
+		for i := range channels {
+			if channels[i].GetTag() == tag {
+				channels[i].Group = *group
+			}
+		}
+		if _, err := validateDeepKeyChannelSet(channels); err != nil {
+			return err
+		}
 	}
 	if priority != nil {
 		updateData.Priority = priority

@@ -1,6 +1,68 @@
 package controller
 
-import "github.com/QuantumNous/new-api/model"
+import (
+	"fmt"
+
+	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/model"
+)
+
+// mergeChannelPatchCandidate applies only fields present in a PATCH request to
+// the persisted channel. Validation must use this effective state; decoding a
+// partial request into model.Channel would otherwise turn omitted fields into
+// zero values and either reject valid edits or bypass DeepKey isolation.
+func mergeChannelPatchCandidate(origin *model.Channel, patch *PatchChannel, requestData map[string]any) (*model.Channel, error) {
+	if origin == nil || patch == nil {
+		return nil, fmt.Errorf("channel patch candidate requires an origin and patch")
+	}
+
+	originJSON, err := common.Marshal(origin)
+	if err != nil {
+		return nil, err
+	}
+	patchJSON, err := common.Marshal(&patch.Channel)
+	if err != nil {
+		return nil, err
+	}
+
+	var candidateFields map[string]any
+	if err := common.Unmarshal(originJSON, &candidateFields); err != nil {
+		return nil, err
+	}
+	var patchFields map[string]any
+	if err := common.Unmarshal(patchJSON, &patchFields); err != nil {
+		return nil, err
+	}
+
+	for field := range requestData {
+		// These fields are either managed by another endpoint or intentionally
+		// preserved from the origin channel by UpdateChannel.
+		if field == "status" || field == "channel_info" || field == "multi_key_mode" || field == "key_mode" {
+			continue
+		}
+		if _, readOnly := channelReadOnlyFields[field]; readOnly {
+			continue
+		}
+		if value, ok := patchFields[field]; ok {
+			candidateFields[field] = value
+		}
+	}
+
+	mergedJSON, err := common.Marshal(candidateFields)
+	if err != nil {
+		return nil, err
+	}
+	var candidate model.Channel
+	if err := common.Unmarshal(mergedJSON, &candidate); err != nil {
+		return nil, err
+	}
+	candidate.Id = origin.Id
+	candidate.Status = origin.Status
+	// ChannelInfo is copied and adjusted by UpdateChannel before validation so
+	// multi-key state is never replaced by a partial request payload.
+	candidate.ChannelInfo = patch.ChannelInfo
+	return &candidate, nil
+}
 
 func channelHasSensitiveChanges(channel *PatchChannel, origin *model.Channel, requestData map[string]any) bool {
 	if _, ok := requestData["type"]; ok && channel.Type != origin.Type {

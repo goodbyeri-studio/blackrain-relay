@@ -27,7 +27,11 @@ import * as z from 'zod'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-import { resetModelRatios, syncDeepKeyGroups } from '../api'
+import {
+  resetModelRatios,
+  syncDeepKeyGroups,
+  updateGroupRatioOptions,
+} from '../api'
 import { SettingsPageTitleStatusPortal } from '../components/settings-page-context'
 import { SettingsSection } from '../components/settings-section'
 import { useUpdateOption } from '../hooks/use-update-option'
@@ -163,6 +167,22 @@ export function RatioSettingsCard({
   const queryClient = useQueryClient()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [deepKeyGroupConfirmOpen, setDeepKeyGroupConfirmOpen] = useState(false)
+
+  const groupRatioMutation = useMutation({
+    mutationFn: updateGroupRatioOptions,
+    onSuccess: (data) => {
+      if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ['system-options'] })
+        queryClient.invalidateQueries({ queryKey: ['user-groups'] })
+        toast.success(t('Setting updated successfully'))
+      } else {
+        toast.error(data.message || t('Failed to update setting'))
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to update setting'))
+    },
+  })
 
   const resetMutation = useMutation({
     mutationFn: resetModelRatios,
@@ -402,24 +422,23 @@ export function RatioSettingsCard({
         ),
       }
 
-      // Map form field names to API keys (most are 1:1, except GroupSpecialUsableGroup)
-      const apiKeyMap: Record<string, string> = {
-        GroupSpecialUsableGroup:
-          'group_ratio_setting.group_special_usable_group',
-      }
-
       const updates = (
         Object.keys(normalized) as Array<keyof typeof normalized>
       ).filter(
         (key) => normalized[key] !== groupNormalizedDefaults.current[key]
       )
 
-      for (const key of updates) {
-        const apiKey = apiKeyMap[key] || key
-        await updateOption.mutateAsync({ key: apiKey, value: normalized[key] })
+      if (updates.length === 0) {
+        toast.info(t('No changes to save'))
+        return
+      }
+
+      const result = await groupRatioMutation.mutateAsync(normalized)
+      if (result.success) {
+        groupNormalizedDefaults.current = normalized
       }
     },
-    [updateOption]
+    [groupRatioMutation, t]
   )
 
   const handleResetRatios = useCallback(() => {
@@ -468,7 +487,7 @@ export function RatioSettingsCard({
           form={groupForm}
           onSave={saveGroupRatios}
           onSyncDeepKeyGroups={() => setDeepKeyGroupConfirmOpen(true)}
-          isSaving={updateOption.isPending}
+          isSaving={groupRatioMutation.isPending}
           isSyncingDeepKeyGroups={deepKeyGroupSyncMutation.isPending}
         />
       )

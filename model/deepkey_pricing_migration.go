@@ -97,6 +97,104 @@ func GetDeepKeyPricingMigrationSnapshot() (DeepKeyPricingMigrationSnapshot, erro
 	return loadDeepKeyPricingMigrationSnapshot(DB)
 }
 
+func IsDeepKeyBaseURL(baseURL string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(baseURL))
+	return err == nil && strings.EqualFold(parsed.Hostname(), "deepkey.top")
+}
+
+func validateDeepKeyChannelSet(channels []Channel) (map[string]struct{}, error) {
+	deepKeyGroups := make(map[string]struct{})
+	nonDeepKeyGroups := make(map[string]struct{})
+	groupKeys := make(map[string]string)
+
+	for i := range channels {
+		channel := &channels[i]
+		if channel.Status != common.ChannelStatusEnabled {
+			continue
+		}
+		groups := channel.GetGroups()
+		if !IsDeepKeyBaseURL(channel.GetBaseURL()) {
+			for _, group := range groups {
+				nonDeepKeyGroups[group] = struct{}{}
+			}
+			continue
+		}
+
+		keys := channel.GetKeys()
+		upstreamKeys := make([]string, 0, len(keys))
+		for _, key := range keys {
+			key = strings.TrimSpace(key)
+			if key != "" {
+				upstreamKeys = append(upstreamKeys, key)
+			}
+		}
+		if len(upstreamKeys) != 1 {
+			return nil, fmt.Errorf("DeepKey channel %d must contain exactly one upstream key", channel.Id)
+		}
+		upstreamKey := upstreamKeys[0]
+		for _, group := range groups {
+			if existingKey, exists := groupKeys[group]; exists && existingKey != upstreamKey {
+				return nil, fmt.Errorf("DeepKey group %q has multiple upstream key configurations", group)
+			}
+			groupKeys[group] = upstreamKey
+			deepKeyGroups[group] = struct{}{}
+		}
+	}
+
+	for group := range deepKeyGroups {
+		if _, exists := nonDeepKeyGroups[group]; exists {
+			return nil, fmt.Errorf("DeepKey group %q is also assigned to a non-DeepKey channel", group)
+		}
+	}
+	return deepKeyGroups, nil
+}
+
+func GetEnabledDeepKeyChannelGroups() (map[string]struct{}, error) {
+	var channels []Channel
+	if err := DB.Where("status = ?", common.ChannelStatusEnabled).Find(&channels).Error; err != nil {
+		return nil, err
+	}
+	return validateDeepKeyChannelSet(channels)
+}
+
+func ValidateDeepKeyChannelGroupIsolation(candidate *Channel) error {
+	if candidate == nil || candidate.Status != common.ChannelStatusEnabled {
+		return nil
+	}
+	var channels []Channel
+	query := DB.Where("status = ?", common.ChannelStatusEnabled)
+	if candidate.Id > 0 {
+		query = query.Where("id <> ?", candidate.Id)
+	}
+	if err := query.Find(&channels).Error; err != nil {
+		return err
+	}
+	channels = append(channels, *candidate)
+	_, err := validateDeepKeyChannelSet(channels)
+	return err
+}
+
+func ValidateDeepKeyChannelsForEnable(ids []int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	var channels []Channel
+	if err := DB.Where("status = ? OR id IN ?", common.ChannelStatusEnabled, ids).Find(&channels).Error; err != nil {
+		return err
+	}
+	requested := make(map[int]struct{}, len(ids))
+	for _, id := range ids {
+		requested[id] = struct{}{}
+	}
+	for i := range channels {
+		if _, exists := requested[channels[i].Id]; exists {
+			channels[i].Status = common.ChannelStatusEnabled
+		}
+	}
+	_, err := validateDeepKeyChannelSet(channels)
+	return err
+}
+
 func GetEnabledDeepKeyModelNames() ([]string, error) {
 	var channels []Channel
 	if err := DB.Select("type", "base_url", "models").Where("status = ?", common.ChannelStatusEnabled).Find(&channels).Error; err != nil {
@@ -104,8 +202,7 @@ func GetEnabledDeepKeyModelNames() ([]string, error) {
 	}
 	seen := make(map[string]struct{})
 	for _, channel := range channels {
-		parsed, err := url.Parse(channel.GetBaseURL())
-		if err != nil || !strings.EqualFold(parsed.Hostname(), "deepkey.top") {
+		if !IsDeepKeyBaseURL(channel.GetBaseURL()) {
 			continue
 		}
 		for _, modelName := range channel.GetModels() {

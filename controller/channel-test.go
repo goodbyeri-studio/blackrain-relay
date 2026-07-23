@@ -993,8 +993,9 @@ func performChannelTests(ctx context.Context, channels []*model.Channel, testUse
 
 		// enable channel
 		if result.localErr == nil && !isChannelEnabled && service.ShouldEnableChannel(newAPIError, channel.Status) {
-			service.EnableChannel(channel.Id, common.GetContextKeyString(result.context, constant.ContextKeyChannelKey), channel.Name)
-			summary.Enabled++
+			if service.EnableChannel(channel.Id, common.GetContextKeyString(result.context, constant.ContextKeyChannelKey), channel.Name) {
+				summary.Enabled++
+			}
 		}
 
 		channel.UpdateResponseTime(milliseconds)

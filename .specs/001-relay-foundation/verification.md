@@ -22,6 +22,7 @@
 | 2026-07-23 | 支付事务 MySQL 8.0 | `PAYMENT_TEST_DB=mysql PAYMENT_TEST_DSN=... go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUpQuota' -count=1` | 通过 | 临时 MySQL 8 容器，端口 33306；测试后销毁 |
 | 2026-07-23 | 支付事务 SQLite | `go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUp' -count=1` | 通过 | 默认内存 SQLite |
 | 2026-07-23 | 支付三数据库事务 | `PAYMENT_TEST_DIALECT=... PAYMENT_TEST_DSN=... go test ./model -run TestPaymentTransactionDatabaseMatrix -count=1` | 自动化矩阵 | GitHub Actions 覆盖 SQLite、MySQL 8.0、PostgreSQL 15；保护并发通知、额度上限、邀请奖励和状态一致性 |
+| 2026-07-23 | DeepKey 闭环修复 | `go test ./model ./controller ./relay/helper`；`pwsh .specs/001-relay-foundation/audit-deepkey-customer-flow.ps1 -OutputPath ...` | 未跑 | 本次分支新增 DeepKey 渠道隔离、固定价渠道倍率、分组配置原子保存和全分组客户审计；当前环境未启动 Relay/PostgreSQL，未伪称真实调用通过 |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无 BlackRain 实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
 
@@ -32,6 +33,27 @@
 - default/classic production build、完整 `go test ./...` 与 production Docker image build 已通过。
 - SQLite、PostgreSQL 15、MySQL 8.0 均完成自动迁移和健康检查；PostgreSQL/MySQL 重启正常。
 - 本地 dev 环境已使用 PostgreSQL、Redis、宿主机 Go 后端和 default 前端 dev server 跑通。
+
+## DeepKey 闭环约束
+
+- 只有主机名为 `deepkey.top` 的启用渠道参与 DeepKey 目录/分组同步；普通渠道不能与 DeepKey 渠道共享同一分组。
+- 每个启用 DeepKey 渠道必须恰好有一个非空上游 Key；同一分组下的 DeepKey 渠道必须使用同一个上游 Key。新增、编辑、单独启用和批量启用都会执行校验。
+- 客户 Token 始终是 Relay 本地随机 Key，日志按不可变的 `user_id`、`token_id` 和 `channel_id` 归属；上游 Key 不向客户返回。
+- 普通倍率和固定价格模型会应用渠道模型倍率；`tiered_expr` 的表达式仍是唯一计费真相，配置渠道倍率会被明确拒绝，避免重复计费。
+- 分组倍率、充值倍率、可用分组、自动分组和特殊分组配置通过一个事务接口保存：`PUT /api/option/group_ratios`。
+
+## 客户全分组审计脚本
+
+在已启动 Relay、PostgreSQL 和 Docker 的开发环境中运行：
+
+```powershell
+pwsh .specs/001-relay-foundation/audit-deepkey-customer-flow.ps1 `
+  -RelayBaseUrl http://127.0.0.1:3010 `
+  -PostgresContainer blackrain-relay-dev-pg `
+  -OutputPath .specs/001-relay-foundation/audit-result.json
+```
+
+脚本会创建两个临时客户，为每个已发布分组创建有限额度 Token，逐组执行真实 chat/image/Gemini 请求，并验证：随机客户 Key 唯一且不等于渠道 Key；每个分组的渠道 Key 指纹一致；消费日志的 `user_id`、`token_id`、`channel_id` 属于预期范围；用户和 Token 的剩余额度/已用额度增量分别等于消费日志 `quota` 总和；失败请求不产生消费日志且不扣费。输出只包含渠道 Key 的 SHA-256 指纹，`finally` 块会清理临时客户、Token、日志和额度数据。
 
 ## 未验证风险
 

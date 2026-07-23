@@ -73,11 +73,15 @@ func HandleGroupRatio(ctx *gin.Context, relayInfo *relaycommon.RelayInfo) types.
 
 func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens int, meta *types.TokenCountMeta) (types.PriceData, error) {
 	modelPrice, usePrice := ratio_setting.GetModelPrice(info.OriginModelName, false)
+	channelRatio, hasChannelRatio := getChannelModelRatio(c, info.OriginModelName)
 
 	groupRatioInfo := HandleGroupRatio(c, info)
 
 	// Check if this model uses tiered_expr billing
 	if billing_setting.GetBillingMode(info.OriginModelName) == billing_setting.BillingModeTieredExpr {
+		if hasChannelRatio {
+			return types.PriceData{}, fmt.Errorf("channel model ratio is not supported for tiered_expr model %s; update the billing expression instead", info.OriginModelName)
+		}
 		return modelPriceHelperTiered(c, info, promptTokens, meta, groupRatioInfo)
 	}
 
@@ -100,7 +104,7 @@ func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens 
 		var success bool
 		var matchName string
 		modelRatio, success, matchName = ratio_setting.GetModelRatio(info.OriginModelName)
-		if channelRatio, ok := getChannelModelRatio(c, info.OriginModelName); ok {
+		if hasChannelRatio {
 			modelRatio = channelRatio
 			success = true
 			matchName = info.OriginModelName
@@ -130,6 +134,10 @@ func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens 
 		}
 		preConsumedQuota = quota
 	} else {
+		if hasChannelRatio {
+			modelPrice *= channelRatio
+			modelRatio = channelRatio
+		}
 		if meta.ImagePriceRatio != 0 {
 			modelPrice = modelPrice * meta.ImagePriceRatio
 		}
@@ -192,6 +200,7 @@ func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens 
 // ModelPriceHelperPerCall 按次/按量计费的 PriceHelper (MJ、Task)
 func ModelPriceHelperPerCall(c *gin.Context, info *relaycommon.RelayInfo) (types.PriceData, error) {
 	groupRatioInfo := HandleGroupRatio(c, info)
+	channelRatio, hasChannelRatio := getChannelModelRatio(c, info.OriginModelName)
 
 	modelPrice, success := ratio_setting.GetModelPrice(info.OriginModelName, true)
 	usePrice := success
@@ -206,7 +215,7 @@ func ModelPriceHelperPerCall(c *gin.Context, info *relaycommon.RelayInfo) (types
 			var ratioSuccess bool
 			var matchName string
 			modelRatio, ratioSuccess, matchName = ratio_setting.GetModelRatio(info.OriginModelName)
-			if channelRatio, ok := getChannelModelRatio(c, info.OriginModelName); ok {
+			if hasChannelRatio {
 				modelRatio = channelRatio
 				ratioSuccess = true
 				matchName = info.OriginModelName
@@ -225,6 +234,10 @@ func ModelPriceHelperPerCall(c *gin.Context, info *relaycommon.RelayInfo) (types
 	freeModel := false
 
 	if usePrice {
+		if hasChannelRatio {
+			modelPrice *= channelRatio
+			modelRatio = channelRatio
+		}
 		var err error
 		quota, err = common.QuotaFromFloatStrict(modelPrice * common.QuotaPerUnit * groupRatioInfo.GroupRatio)
 		if err != nil {

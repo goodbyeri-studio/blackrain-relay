@@ -519,6 +519,15 @@ func validateChannel(channel *model.Channel, isAdd bool) error {
 			}
 		}
 	}
+	if isAdd {
+		candidate := *channel
+		if candidate.Status == 0 {
+			candidate.Status = common.ChannelStatusEnabled
+		}
+		if err := model.ValidateDeepKeyChannelGroupIsolation(&candidate); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -935,14 +944,6 @@ func UpdateChannel(c *gin.Context) {
 	}
 	clearChannelReadOnlyFields(&channel, requestData)
 
-	// 使用统一的校验函数
-	if err := validateChannel(&channel.Channel, false); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
-		return
-	}
 	// Preserve existing ChannelInfo to ensure multi-key channels keep correct state even if the client does not send ChannelInfo in the request.
 	originChannel, err := model.GetChannelById(channel.Id, true)
 	if err != nil {
@@ -1047,6 +1048,22 @@ func UpdateChannel(c *gin.Context) {
 			// 覆盖模式：直接使用新密钥（默认行为，不需要特殊处理）
 		}
 	}
+	candidate, err := mergeChannelPatchCandidate(originChannel, &channel, requestData)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	if err := validateChannel(candidate, false); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	if err := model.ValidateDeepKeyChannelGroupIsolation(candidate); err != nil {
+		common.ApiError(c, err)
+		return
+	}
 	err = channel.Update()
 	if err != nil {
 		common.ApiError(c, err)
@@ -1097,6 +1114,12 @@ func UpdateChannelStatus(c *gin.Context) {
 		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
 		return
 	}
+	if req.Status == common.ChannelStatusEnabled {
+		if err := model.ValidateDeepKeyChannelsForEnable([]int{id}); err != nil {
+			common.ApiError(c, err)
+			return
+		}
+	}
 	changed := model.UpdateChannelStatus(id, "", req.Status, "manual operation")
 	if changed {
 		model.InitChannelCache()
@@ -1119,6 +1142,12 @@ func BatchUpdateChannelStatus(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil || len(req.Ids) == 0 || !isManageableChannelStatus(req.Status) {
 		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
 		return
+	}
+	if req.Status == common.ChannelStatusEnabled {
+		if err := model.ValidateDeepKeyChannelsForEnable(req.Ids); err != nil {
+			common.ApiError(c, err)
+			return
+		}
 	}
 	changedCount := 0
 	for _, id := range req.Ids {

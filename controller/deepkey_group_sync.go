@@ -80,7 +80,7 @@ func SyncDeepKeyGroups(c *gin.Context) {
 		return
 	}
 
-	enabledChannelGroups, err := model.GetEnabledChannelGroups()
+	enabledChannelGroups, err := model.GetEnabledDeepKeyChannelGroups()
 	if err != nil {
 		common.ApiError(c, err)
 		return

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -115,6 +116,118 @@ func GetOptions(c *gin.Context) {
 type OptionUpdateRequest struct {
 	Key   string `json:"key"`
 	Value any    `json:"value"`
+}
+
+type GroupRatioOptionsRequest struct {
+	GroupRatio              string `json:"GroupRatio"`
+	TopupGroupRatio         string `json:"TopupGroupRatio"`
+	UserUsableGroups        string `json:"UserUsableGroups"`
+	GroupGroupRatio         string `json:"GroupGroupRatio"`
+	AutoGroups              string `json:"AutoGroups"`
+	DefaultUseAutoGroup     bool   `json:"DefaultUseAutoGroup"`
+	GroupSpecialUsableGroup string `json:"GroupSpecialUsableGroup"`
+}
+
+func decodeGroupJSON(raw, emptyValue string, target any) (string, error) {
+	normalized := strings.TrimSpace(raw)
+	if normalized == "" {
+		normalized = emptyValue
+	}
+	if err := common.UnmarshalJsonStr(normalized, target); err != nil {
+		return "", err
+	}
+	return normalized, nil
+}
+
+func validateNonNegativeRatioMap(value, key string) error {
+	var ratios map[string]float64
+	if _, err := decodeGroupJSON(value, "{}", &ratios); err != nil {
+		return fmt.Errorf("%s must be a JSON object: %w", key, err)
+	}
+	if ratios == nil {
+		return fmt.Errorf("%s must be a JSON object", key)
+	}
+	for name, ratio := range ratios {
+		if math.IsNaN(ratio) || math.IsInf(ratio, 0) || ratio < 0 {
+			return fmt.Errorf("%s[%q] must be a finite non-negative number", key, name)
+		}
+	}
+	return nil
+}
+
+func validateNestedNonNegativeRatioMap(value, key string) error {
+	var ratios map[string]map[string]float64
+	if _, err := decodeGroupJSON(value, "{}", &ratios); err != nil {
+		return fmt.Errorf("%s must be a JSON object: %w", key, err)
+	}
+	if ratios == nil {
+		return fmt.Errorf("%s must be a JSON object", key)
+	}
+	for outerName, inner := range ratios {
+		for innerName, ratio := range inner {
+			if math.IsNaN(ratio) || math.IsInf(ratio, 0) || ratio < 0 {
+				return fmt.Errorf("%s[%q][%q] must be a finite non-negative number", key, outerName, innerName)
+			}
+		}
+	}
+	return nil
+}
+
+func normalizeGroupRatioOptions(request GroupRatioOptionsRequest) (map[string]string, error) {
+	groupRatio := map[string]float64{}
+	groupRatioJSON, err := decodeGroupJSON(request.GroupRatio, "{}", &groupRatio)
+	if err != nil {
+		return nil, fmt.Errorf("GroupRatio must be a JSON object: %w", err)
+	}
+	if err := ratio_setting.CheckGroupRatio(groupRatioJSON); err != nil {
+		return nil, err
+	}
+	if groupRatio == nil {
+		return nil, fmt.Errorf("GroupRatio must be a JSON object")
+	}
+	if err := validateNonNegativeRatioMap(request.TopupGroupRatio, "TopupGroupRatio"); err != nil {
+		return nil, err
+	}
+	if err := validateNestedNonNegativeRatioMap(request.GroupGroupRatio, "GroupGroupRatio"); err != nil {
+		return nil, err
+	}
+	userUsableGroups := map[string]string{}
+	if _, err := decodeGroupJSON(request.UserUsableGroups, "{}", &userUsableGroups); err != nil {
+		return nil, fmt.Errorf("UserUsableGroups must be a JSON object: %w", err)
+	}
+	if userUsableGroups == nil {
+		return nil, fmt.Errorf("UserUsableGroups must be a JSON object")
+	}
+	var autoGroups []string
+	if _, err := decodeGroupJSON(request.AutoGroups, "[]", &autoGroups); err != nil {
+		return nil, fmt.Errorf("AutoGroups must be a JSON array: %w", err)
+	}
+	if autoGroups == nil {
+		return nil, fmt.Errorf("AutoGroups must be a JSON array")
+	}
+	specialUsableGroups := map[string]map[string]string{}
+	if _, err := decodeGroupJSON(request.GroupSpecialUsableGroup, "{}", &specialUsableGroups); err != nil {
+		return nil, fmt.Errorf("GroupSpecialUsableGroup must be a JSON object: %w", err)
+	}
+	if specialUsableGroups == nil {
+		return nil, fmt.Errorf("GroupSpecialUsableGroup must be a JSON object")
+	}
+	return map[string]string{
+		"GroupRatio":          groupRatioJSON,
+		"TopupGroupRatio":     normalizeEmptyJSON(request.TopupGroupRatio, "{}"),
+		"UserUsableGroups":    normalizeEmptyJSON(request.UserUsableGroups, "{}"),
+		"GroupGroupRatio":     normalizeEmptyJSON(request.GroupGroupRatio, "{}"),
+		"AutoGroups":          normalizeEmptyJSON(request.AutoGroups, "[]"),
+		"DefaultUseAutoGroup": strconv.FormatBool(request.DefaultUseAutoGroup),
+		"group_ratio_setting.group_special_usable_group": normalizeEmptyJSON(request.GroupSpecialUsableGroup, "{}"),
+	}, nil
+}
+
+func normalizeEmptyJSON(value, emptyValue string) string {
+	if strings.TrimSpace(value) == "" {
+		return emptyValue
+	}
+	return strings.TrimSpace(value)
 }
 
 func UpdateOption(c *gin.Context) {
@@ -340,6 +453,30 @@ func UpdateOption(c *gin.Context) {
 	// 出于安全考虑只记录被修改的配置项名称，不记录配置值（可能含密钥等敏感信息）。
 	recordManageAudit(c, "option.update", map[string]interface{}{
 		"key": option.Key,
+	})
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+	})
+}
+
+func UpdateGroupRatioOptions(c *gin.Context) {
+	var request GroupRatioOptionsRequest
+	if err := common.DecodeJson(c.Request.Body, &request); err != nil {
+		common.ApiErrorMsg(c, "无效的分组配置参数")
+		return
+	}
+	values, err := normalizeGroupRatioOptions(request)
+	if err != nil {
+		common.ApiErrorMsg(c, err.Error())
+		return
+	}
+	if err := model.UpdateOptionsBulk(values); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	recordManageAudit(c, "option.update", map[string]interface{}{
+		"key": "group_ratio_settings",
 	})
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

@@ -39,6 +39,16 @@ export type UpdateOptionResponse = {
   message: string
 }
 
+export type UpdateGroupRatioOptionsRequest = {
+  GroupRatio: string
+  TopupGroupRatio: string
+  UserUsableGroups: string
+  GroupGroupRatio: string
+  AutoGroups: string
+  DefaultUseAutoGroup: boolean
+  GroupSpecialUsableGroup: string
+}
+
 export type DeepKeyGroupSyncResponse = {
   success: boolean
   message: string

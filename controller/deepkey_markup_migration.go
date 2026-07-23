@@ -157,7 +157,7 @@ func MigrateDeepKeyPricing(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	enabledGroups, err := model.GetEnabledChannelGroups()
+	enabledGroups, err := model.GetEnabledDeepKeyChannelGroups()
 	if err != nil {
 		common.ApiError(c, err)
 		return

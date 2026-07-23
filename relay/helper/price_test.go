@@ -308,3 +308,101 @@ func TestModelPriceHelperUsesSelectedChannelModelRatio(t *testing.T) {
 	require.Equal(t, 2.5, priceData.ModelRatio)
 	require.Equal(t, 2500, priceData.QuotaToPreConsume)
 }
+
+func TestModelPriceHelperAppliesSelectedChannelRatioToFixedPrice(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	savedModelPrices := ratio_setting.ModelPrice2JSONString()
+	savedModelRatios := ratio_setting.ModelRatio2JSONString()
+	t.Cleanup(func() {
+		require.NoError(t, ratio_setting.UpdateModelPriceByJSONString(savedModelPrices))
+		require.NoError(t, ratio_setting.UpdateModelRatioByJSONString(savedModelRatios))
+	})
+
+	prices, err := common.Marshal(map[string]float64{"channel-fixed-price": 0.04})
+	require.NoError(t, err)
+	require.NoError(t, ratio_setting.UpdateModelPriceByJSONString(string(prices)))
+	ratios, err := common.Marshal(map[string]float64{})
+	require.NoError(t, err)
+	require.NoError(t, ratio_setting.UpdateModelRatioByJSONString(string(ratios)))
+
+	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+	ctx.Set("group", "default")
+	common.SetContextKey(ctx, constant.ContextKeyChannelOtherSetting, dto.ChannelOtherSettings{
+		ModelRatios: map[string]float64{"channel-fixed-price": 2.5},
+	})
+	info := &relaycommon.RelayInfo{
+		OriginModelName: "channel-fixed-price",
+		UserGroup:       "default",
+		UsingGroup:      "default",
+	}
+
+	priceData, err := ModelPriceHelper(ctx, info, 1000, &types.TokenCountMeta{})
+	require.NoError(t, err)
+	require.Equal(t, 0.1, priceData.ModelPrice)
+	require.Equal(t, 50000, priceData.QuotaToPreConsume)
+}
+
+func TestModelPriceHelperPerCallAppliesSelectedChannelRatioToFixedPrice(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	savedModelPrices := ratio_setting.ModelPrice2JSONString()
+	savedModelRatios := ratio_setting.ModelRatio2JSONString()
+	t.Cleanup(func() {
+		require.NoError(t, ratio_setting.UpdateModelPriceByJSONString(savedModelPrices))
+		require.NoError(t, ratio_setting.UpdateModelRatioByJSONString(savedModelRatios))
+	})
+
+	prices, err := common.Marshal(map[string]float64{"channel-per-call-fixed-price": 0.04})
+	require.NoError(t, err)
+	require.NoError(t, ratio_setting.UpdateModelPriceByJSONString(string(prices)))
+	ratios, err := common.Marshal(map[string]float64{})
+	require.NoError(t, err)
+	require.NoError(t, ratio_setting.UpdateModelRatioByJSONString(string(ratios)))
+
+	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+	ctx.Set("group", "default")
+	common.SetContextKey(ctx, constant.ContextKeyChannelOtherSetting, dto.ChannelOtherSettings{
+		ModelRatios: map[string]float64{"channel-per-call-fixed-price": 2.5},
+	})
+	info := &relaycommon.RelayInfo{
+		OriginModelName: "channel-per-call-fixed-price",
+		UserGroup:       "default",
+		UsingGroup:      "default",
+	}
+
+	priceData, err := ModelPriceHelperPerCall(ctx, info)
+	require.NoError(t, err)
+	require.Equal(t, 0.1, priceData.ModelPrice)
+	require.Equal(t, 50000, priceData.Quota)
+}
+
+func TestModelPriceHelperRejectsChannelRatioForTieredBilling(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	saved := map[string]string{}
+	require.NoError(t, config.GlobalConfig.SaveToDB(func(key, value string) error {
+		saved[key] = value
+		return nil
+	}))
+	t.Cleanup(func() { require.NoError(t, config.GlobalConfig.LoadFromDB(saved)) })
+	require.NoError(t, config.GlobalConfig.LoadFromDB(map[string]string{
+		"billing_setting.billing_mode": `{"channel-tiered":"tiered_expr"}`,
+		"billing_setting.billing_expr": `{"channel-tiered":"tier(\"base\", p * 2)"}`,
+	}))
+
+	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+	ctx.Set("group", "default")
+	common.SetContextKey(ctx, constant.ContextKeyChannelOtherSetting, dto.ChannelOtherSettings{
+		ModelRatios: map[string]float64{"channel-tiered": 2},
+	})
+	info := &relaycommon.RelayInfo{
+		OriginModelName: "channel-tiered",
+		UserGroup:       "default",
+		UsingGroup:      "default",
+		BillingRequestInput: &billingexpr.RequestInput{
+			Body: []byte(`{}`),
+		},
+	}
+
+	_, err := ModelPriceHelper(ctx, info, 1000, &types.TokenCountMeta{})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not supported for tiered_expr")
+}

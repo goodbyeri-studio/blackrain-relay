@@ -11,8 +11,10 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/gin-gonic/gin"
+	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func TestChannelHasSensitiveChanges(t *testing.T) {
@@ -127,6 +129,107 @@ func TestClearChannelReadOnlyFields(t *testing.T) {
 	assert.Zero(t, channel.UsedQuota)
 	assert.Equal(t, "gpt-4o", channel.Models)
 	assert.Equal(t, "default", channel.Group)
+}
+
+func TestMergeChannelPatchCandidatePreservesOmittedFields(t *testing.T) {
+	baseURL := "https://deepkey.top/v1"
+	origin := &model.Channel{
+		Id:      42,
+		Type:    1,
+		Key:     "upstream-key",
+		BaseURL: &baseURL,
+		Status:  common.ChannelStatusEnabled,
+		Name:    "before",
+		Models:  "model-a",
+		Group:   "deepkey",
+	}
+	patch := &PatchChannel{Channel: model.Channel{
+		Id:          origin.Id,
+		Name:        "after",
+		Models:      "model-b",
+		ChannelInfo: origin.ChannelInfo,
+	}}
+
+	candidate, err := mergeChannelPatchCandidate(origin, patch, map[string]any{
+		"id":     origin.Id,
+		"name":   patch.Name,
+		"models": patch.Models,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, origin.Id, candidate.Id)
+	assert.Equal(t, "after", candidate.Name)
+	assert.Equal(t, "model-b", candidate.Models)
+	assert.Equal(t, origin.Key, candidate.Key)
+	require.NotNil(t, candidate.BaseURL)
+	assert.Equal(t, *origin.BaseURL, *candidate.BaseURL)
+	assert.Equal(t, origin.Group, candidate.Group)
+}
+
+func TestMergeChannelPatchCandidateAppliesExplicitEmptyKey(t *testing.T) {
+	baseURL := "https://deepkey.top/v1"
+	origin := &model.Channel{
+		Id:      42,
+		Type:    1,
+		Key:     "upstream-key",
+		BaseURL: &baseURL,
+		Status:  common.ChannelStatusEnabled,
+		Group:   "deepkey",
+	}
+	patch := &PatchChannel{Channel: model.Channel{Id: origin.Id, Key: ""}}
+
+	candidate, err := mergeChannelPatchCandidate(origin, patch, map[string]any{
+		"id":  origin.Id,
+		"key": "",
+	})
+	require.NoError(t, err)
+	assert.Empty(t, candidate.Key)
+	require.NotNil(t, candidate.BaseURL)
+	assert.Equal(t, *origin.BaseURL, *candidate.BaseURL)
+}
+
+func TestMergedChannelPatchCannotBypassDeepKeyGroupIsolation(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:channel_patch_candidate?mode=memory&cache=shared"), &gorm.Config{})
+	require.NoError(t, err)
+	require.NoError(t, db.AutoMigrate(&model.Channel{}))
+	originalDB := model.DB
+	model.DB = db
+	t.Cleanup(func() {
+		model.DB = originalDB
+		sqlDB, dbErr := db.DB()
+		if dbErr == nil {
+			_ = sqlDB.Close()
+		}
+	})
+	deepKeyURL := "https://deepkey.top/v1"
+	otherURL := "https://other.example.com/v1"
+	names := []string{"deepkey-partial-patch", "other-partial-patch"}
+	t.Cleanup(func() { model.DB.Where("name in ?", names).Delete(&model.Channel{}) })
+
+	origin := model.Channel{
+		Name: names[0], Key: "upstream-key", Status: common.ChannelStatusEnabled,
+		BaseURL: &deepKeyURL, Group: "deepkey-safe",
+	}
+	other := model.Channel{
+		Name: names[1], Key: "other-key", Status: common.ChannelStatusEnabled,
+		BaseURL: &otherURL, Group: "shared-group",
+	}
+	require.NoError(t, model.DB.Create(&origin).Error)
+	require.NoError(t, model.DB.Create(&other).Error)
+
+	patch := &PatchChannel{Channel: model.Channel{
+		Id: origin.Id, Group: "shared-group", ChannelInfo: origin.ChannelInfo,
+	}}
+	candidate, err := mergeChannelPatchCandidate(&origin, patch, map[string]any{
+		"id": origin.Id, "group": patch.Group,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, candidate.BaseURL)
+	assert.Equal(t, deepKeyURL, *candidate.BaseURL)
+	assert.Equal(t, origin.Key, candidate.Key)
+
+	err = model.ValidateDeepKeyChannelGroupIsolation(candidate)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "non-DeepKey channel")
 }
 
 func TestUpdateChannelRejectsStatusField(t *testing.T) {

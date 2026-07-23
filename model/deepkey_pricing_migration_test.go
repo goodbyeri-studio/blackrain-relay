@@ -74,3 +74,163 @@ func TestGetEnabledDeepKeyModelNamesIgnoresDisabledAndOtherChannels(t *testing.T
 	require.NoError(t, err)
 	assert.Equal(t, []string{"gpt", "image"}, models)
 }
+
+func TestIsDeepKeyBaseURLMatchesOnlyConfiguredHost(t *testing.T) {
+	assert.True(t, IsDeepKeyBaseURL("https://deepkey.top/v1"))
+	assert.True(t, IsDeepKeyBaseURL("https://DEEPKEY.TOP"))
+	assert.False(t, IsDeepKeyBaseURL("https://api.deepkey.top"))
+	assert.False(t, IsDeepKeyBaseURL("https://deepkey.top.example.com"))
+	assert.False(t, IsDeepKeyBaseURL("not-a-url"))
+}
+
+func TestGetEnabledDeepKeyChannelGroupsRequiresIsolatedSharedKey(t *testing.T) {
+	require.NoError(t, DB.AutoMigrate(&Channel{}))
+	names := []string{"deepkey-group-one", "deepkey-group-two", "deepkey-group-disabled", "other-group"}
+	t.Cleanup(func() { DB.Where("name in ?", names).Delete(&Channel{}) })
+	deepKeyURL := "https://deepkey.top"
+	otherURL := "https://other.example.com"
+	require.NoError(t, DB.Create(&[]Channel{
+		{Name: names[0], Key: "shared-key", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "alpha,beta"},
+		{Name: names[1], Key: "shared-key", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "beta"},
+		{Name: names[2], Key: "disabled-key", Status: common.ChannelStatusManuallyDisabled, BaseURL: &deepKeyURL, Group: "disabled"},
+		{Name: names[3], Key: "other-key", Status: common.ChannelStatusEnabled, BaseURL: &otherURL, Group: "other"},
+	}).Error)
+
+	groups, err := GetEnabledDeepKeyChannelGroups()
+	require.NoError(t, err)
+	assert.Equal(t, map[string]struct{}{"alpha": {}, "beta": {}}, groups)
+}
+
+func TestGetEnabledDeepKeyChannelGroupsRejectsRoutingAmbiguity(t *testing.T) {
+	require.NoError(t, DB.AutoMigrate(&Channel{}))
+	deepKeyURL := "https://deepkey.top"
+	otherURL := "https://other.example.com"
+
+	t.Run("duplicate entries in one DeepKey channel", func(t *testing.T) {
+		name := "deepkey-duplicate-key"
+		t.Cleanup(func() { DB.Where("name = ?", name).Delete(&Channel{}) })
+		require.NoError(t, DB.Create(&Channel{
+			Name: name, Key: "key-one\nkey-one", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "duplicate-key",
+		}).Error)
+
+		_, err := GetEnabledDeepKeyChannelGroups()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "exactly one upstream key")
+	})
+
+	t.Run("different DeepKey keys in one group", func(t *testing.T) {
+		names := []string{"deepkey-conflict-one", "deepkey-conflict-two"}
+		t.Cleanup(func() { DB.Where("name in ?", names).Delete(&Channel{}) })
+		require.NoError(t, DB.Create(&[]Channel{
+			{Name: names[0], Key: "key-one", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "conflict-key"},
+			{Name: names[1], Key: "key-two", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "conflict-key"},
+		}).Error)
+
+		_, err := GetEnabledDeepKeyChannelGroups()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "multiple upstream key configurations")
+	})
+
+	t.Run("DeepKey and non-DeepKey channels share a group", func(t *testing.T) {
+		names := []string{"deepkey-host-conflict", "other-host-conflict"}
+		t.Cleanup(func() { DB.Where("name in ?", names).Delete(&Channel{}) })
+		require.NoError(t, DB.Create(&[]Channel{
+			{Name: names[0], Key: "shared-key", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "conflict-host"},
+			{Name: names[1], Key: "other-key", Status: common.ChannelStatusEnabled, BaseURL: &otherURL, Group: "conflict-host"},
+		}).Error)
+
+		_, err := GetEnabledDeepKeyChannelGroups()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "non-DeepKey channel")
+	})
+}
+
+func TestValidateDeepKeyChannelGroupIsolationChecksCandidate(t *testing.T) {
+	require.NoError(t, DB.AutoMigrate(&Channel{}))
+	deepKeyURL := "https://deepkey.top"
+	existing := Channel{Name: "deepkey-candidate-existing", Key: "shared-key", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "candidate-group"}
+	require.NoError(t, DB.Create(&existing).Error)
+	t.Cleanup(func() { DB.Where("name = ?", existing.Name).Delete(&Channel{}) })
+
+	compatible := Channel{Key: "shared-key", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "candidate-group"}
+	require.NoError(t, ValidateDeepKeyChannelGroupIsolation(&compatible))
+
+	conflicting := Channel{Key: "different-key", Status: common.ChannelStatusEnabled, BaseURL: &deepKeyURL, Group: "candidate-group"}
+	err := ValidateDeepKeyChannelGroupIsolation(&conflicting)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "multiple upstream key configurations")
+}
+
+func TestUpdateChannelStatusRejectsInvalidDeepKeyEnable(t *testing.T) {
+	require.NoError(t, DB.AutoMigrate(&Channel{}))
+	previousMemoryCacheEnabled := common.MemoryCacheEnabled
+	common.MemoryCacheEnabled = false
+	t.Cleanup(func() { common.MemoryCacheEnabled = previousMemoryCacheEnabled })
+
+	deepKeyURL := "https://deepkey.top"
+	names := []string{"deepkey-enable-existing", "deepkey-enable-conflict"}
+	t.Cleanup(func() { DB.Where("name in ?", names).Delete(&Channel{}) })
+	existing := Channel{
+		Name: names[0], Key: "key-one", Status: common.ChannelStatusEnabled,
+		BaseURL: &deepKeyURL, Group: "enable-conflict",
+	}
+	conflicting := Channel{
+		Name: names[1], Key: "key-two", Status: common.ChannelStatusManuallyDisabled,
+		BaseURL: &deepKeyURL, Group: "enable-conflict",
+	}
+	require.NoError(t, DB.Create(&existing).Error)
+	require.NoError(t, DB.Create(&conflicting).Error)
+
+	assert.False(t, UpdateChannelStatus(conflicting.Id, "", common.ChannelStatusEnabled, "test"))
+	require.NoError(t, DB.First(&conflicting, conflicting.Id).Error)
+	assert.Equal(t, common.ChannelStatusManuallyDisabled, conflicting.Status)
+}
+
+func TestEnableChannelByTagRejectsInvalidDeepKeyGroup(t *testing.T) {
+	require.NoError(t, DB.AutoMigrate(&Channel{}))
+	deepKeyURL := "https://deepkey.top"
+	tag := "deepkey-enable-tag-conflict"
+	names := []string{"deepkey-tag-existing", "deepkey-tag-conflict"}
+	t.Cleanup(func() { DB.Where("name in ?", names).Delete(&Channel{}) })
+	existing := Channel{
+		Name: names[0], Key: "key-one", Status: common.ChannelStatusEnabled,
+		BaseURL: &deepKeyURL, Group: "tag-conflict",
+	}
+	conflicting := Channel{
+		Name: names[1], Key: "key-two", Status: common.ChannelStatusManuallyDisabled,
+		BaseURL: &deepKeyURL, Group: "tag-conflict", Tag: &tag,
+	}
+	require.NoError(t, DB.Create(&existing).Error)
+	require.NoError(t, DB.Create(&conflicting).Error)
+
+	err := EnableChannelByTag(tag)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "multiple upstream key configurations")
+	require.NoError(t, DB.First(&conflicting, conflicting.Id).Error)
+	assert.Equal(t, common.ChannelStatusManuallyDisabled, conflicting.Status)
+}
+
+func TestEditChannelByTagRejectsInvalidDeepKeyGroup(t *testing.T) {
+	require.NoError(t, DB.AutoMigrate(&Channel{}))
+	deepKeyURL := "https://deepkey.top"
+	tag := "deepkey-edit-tag-conflict"
+	names := []string{"deepkey-edit-tag-existing", "deepkey-edit-tag-conflict"}
+	t.Cleanup(func() { DB.Where("name in ?", names).Delete(&Channel{}) })
+	existing := Channel{
+		Name: names[0], Key: "key-one", Status: common.ChannelStatusEnabled,
+		BaseURL: &deepKeyURL, Group: "edit-tag-existing",
+	}
+	conflicting := Channel{
+		Name: names[1], Key: "key-two", Status: common.ChannelStatusEnabled,
+		BaseURL: &deepKeyURL, Group: "edit-tag-original", Tag: &tag,
+	}
+	require.NoError(t, DB.Create(&existing).Error)
+	require.NoError(t, DB.Create(&conflicting).Error)
+
+	newGroup := "edit-tag-existing"
+	err := EditChannelByTag(tag, nil, nil, nil, &newGroup, nil, nil, nil, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "multiple upstream key configurations")
+	require.NoError(t, DB.First(&conflicting, conflicting.Id).Error)
+	assert.Equal(t, "edit-tag-original", conflicting.Group)
+}
