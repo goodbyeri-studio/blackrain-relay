@@ -31,14 +31,17 @@ BlackRain Desktop
 ## 当前状态
 
 - New API 上游 release 源码、License、NOTICE 和历史已导入。
-- BlackRain Relay 尚未配置生产域名、模型渠道、数据库、Redis、Secret、备份、监控或 Cloud 企业客户。
+- 已建立 BlackRain Relay 独立生产基础设施：专用 DigitalOcean Project、VPC、双 App 节点、Load Balancer、托管 PostgreSQL、托管 Valkey、Firewall、Container Registry，以及 `relay.goodbyeri.cc` DNS。
+- 当前尚未发布 Relay 应用镜像，也尚未配置 production Secret、TLS 监听、模型渠道、Cloud 企业客户和真实流量压测；基础设施存在不等于中转服务已经上线或可以商业运营。
+- Relay 与 `2049-agent` 完全独立，不共享其 Droplet、数据库、Valkey、Spaces、Secret 或部署节点。
 - 仓库存在和上游代码可构建，不等于中转服务已部署或可商业运营。
 
 ## 下一步
 
 1. 按上游文档完成本地无 Secret build/test 基线。
 2. 冻结 Cloud↔Relay 管理 API、scoped token 和 usage 对账合同。
-3. 建立开发/预发布/生产配置与 Secret 管理。
+3. 按 [.specs/001-relay-foundation/production-infrastructure.md](.specs/001-relay-foundation/production-infrastructure.md) 完成镜像、Secret、TLS 和可回滚发布。
 4. 配置合法授权模型渠道、倍率、限流、日志和备份。
-5. 跑通 WORK Chat 与 CODE Responses 两条 BlackRain 产品链路。
-6. 完成 AGPL 源码提供、模型厂商转售条款和国内运营合规审查。
+5. 跑通 WORK Chat 与 CODE Responses 两条 BlackRain 产品链路，并完成约 500 活跃流式请求压测。
+6. 完成 Cloud↔Relay 管理 API、scoped token 和 usage 对账合同。
+7. 完成 AGPL 源码提供、模型厂商转售条款和国内运营合规审查。
