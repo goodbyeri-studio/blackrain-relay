@@ -61,6 +61,7 @@ func TestMain(m *testing.M) {
 		&Ability{},
 		&TopUp{},
 		&WechatPayOrder{},
+		&SubscriptionWechatPayOrder{},
 		&WechatPayNotification{},
 		&AlipayOrder{},
 		&AlipayNotification{},
@@ -92,6 +93,7 @@ func truncateTables(t *testing.T) {
 		DB.Exec("DELETE FROM top_ups")
 		DB.Exec("DELETE FROM wechat_pay_notifications")
 		DB.Exec("DELETE FROM wechat_pay_orders")
+		DB.Exec("DELETE FROM subscription_wechat_pay_orders")
 		DB.Exec("DELETE FROM alipay_notifications")
 		DB.Exec("DELETE FROM alipay_orders")
 		DB.Exec("DELETE FROM subscription_orders")

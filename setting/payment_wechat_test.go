@@ -38,4 +38,11 @@ func TestWechatPayConfigValidate(t *testing.T) {
 
 	config.NotifyURL = "https://127.0.0.1/api/payment/wechat/notify"
 	require.Error(t, config.Validate())
+
+	config.NotifyURL = "https://relay.example.com/api/payment/wechat/notify"
+	config.MerchantPrivateKeyPath = ""
+	config.PublicKeyPath = ""
+	config.MerchantPrivateKeyPEM = "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"
+	config.PublicKeyPEM = "-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----"
+	require.NoError(t, config.Validate())
 }

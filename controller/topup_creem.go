@@ -144,7 +144,7 @@ func (*CreemAdaptor) RequestPay(c *gin.Context, req *CreemPayRequest) {
 func RequestCreemPay(c *gin.Context) {
 	var req CreemPayRequest
 
-	// 读取body内容用于打印，同时保留原始数据供后续使用
+	// 读取并保留原始请求体，供验签和后续 JSON 解析使用。
 	bodyBytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem 支付请求读取失败 error=%q", err.Error()))
@@ -240,19 +240,20 @@ func CreemWebhook(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
+	bodyDigest := fmt.Sprintf("%x", sha256.Sum256(bodyBytes))
 
 	// 获取签名头
 	signature := c.GetHeader(CreemSignatureHeader)
-	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem webhook 收到请求 path=%q client_ip=%s signature=%q body=%q", c.Request.RequestURI, c.ClientIP(), signature, string(bodyBytes)))
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem webhook 收到请求 path=%q client_ip=%s body_digest=%s", c.Request.RequestURI, c.ClientIP(), bodyDigest))
 	if signature == "" {
-		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem webhook 缺少签名 path=%q client_ip=%s body=%q", c.Request.RequestURI, c.ClientIP(), string(bodyBytes)))
+		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem webhook 缺少签名 path=%q client_ip=%s body_digest=%s", c.Request.RequestURI, c.ClientIP(), bodyDigest))
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	// 验证签名
 	if !verifyCreemSignature(string(bodyBytes), signature, setting.CreemWebhookSecret) {
-		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem webhook 验签失败 path=%q client_ip=%s signature=%q body=%q", c.Request.RequestURI, c.ClientIP(), signature, string(bodyBytes)))
+		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem webhook 验签失败 path=%q client_ip=%s body_digest=%s", c.Request.RequestURI, c.ClientIP(), bodyDigest))
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -265,7 +266,7 @@ func CreemWebhook(c *gin.Context) {
 	// 解析新格式的webhook数据
 	var webhookEvent CreemWebhookEvent
 	if err := c.ShouldBindJSON(&webhookEvent); err != nil {
-		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem webhook 解析失败 path=%q client_ip=%s error=%q body=%q", c.Request.RequestURI, c.ClientIP(), err.Error(), string(bodyBytes)))
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem webhook 解析失败 path=%q client_ip=%s body_digest=%s error=%q", c.Request.RequestURI, c.ClientIP(), bodyDigest, err.Error()))
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}

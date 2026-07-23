@@ -317,7 +317,7 @@ export function SubscriptionsMutateDrawer({
                 )}
               />
 
-              <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+              <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
                 <FormField
                   control={form.control}
                   name='price_amount'
@@ -342,6 +342,41 @@ export function SubscriptionsMutateDrawer({
                           'Amount the user pays to purchase this plan; the actual currency depends on the payment gateway.'
                         )}
                       </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='currency'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Currency')}</FormLabel>
+                      <Select
+                        items={(['CNY', 'USD', 'EUR'] as const).map(
+                          (value) => ({ value, label: t(value) })
+                        )}
+                        value={field.value}
+                        onValueChange={(value) =>
+                          value !== null && field.onChange(value)
+                        }
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue>{t(field.value)}</SelectValue>
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent alignItemWithTrigger={false}>
+                          <SelectGroup>
+                            {(['CNY', 'USD', 'EUR'] as const).map((value) => (
+                              <SelectItem key={value} value={value}>
+                                {t(value)}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

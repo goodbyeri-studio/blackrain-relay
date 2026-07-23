@@ -30,6 +30,8 @@ import type {
   SubscriptionPayResponse,
   SubscriptionPayRequest,
   SelfSubscriptionData,
+  SubscriptionWechatPayRequest,
+  SubscriptionWechatPayResponse,
 } from './types'
 
 // ============================================================================
@@ -159,6 +161,25 @@ export async function paySubscriptionBalance(
   data: SubscriptionPayRequest
 ): Promise<SubscriptionPayResponse> {
   const res = await api.post('/api/subscription/balance/pay', data)
+  return res.data
+}
+
+export async function paySubscriptionWechat(
+  data: SubscriptionWechatPayRequest
+): Promise<SubscriptionWechatPayResponse> {
+  const res = await api.post('/api/subscription/wechat/pay', data, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+export async function getSubscriptionWechatPayStatus(
+  tradeNo: string
+): Promise<SubscriptionWechatPayResponse> {
+  const res = await api.get(
+    `/api/subscription/wechat/order/${encodeURIComponent(tradeNo)}`,
+    { skipBusinessError: true } as Record<string, unknown>
+  )
   return res.data
 }
 

@@ -138,6 +138,19 @@ type AdminUpsertSubscriptionPlanRequest struct {
 	Plan model.SubscriptionPlan `json:"plan"`
 }
 
+func normalizeSubscriptionCurrency(currency string) (string, bool) {
+	currency = strings.ToUpper(strings.TrimSpace(currency))
+	if currency == "" {
+		currency = "CNY"
+	}
+	switch currency {
+	case "CNY", "USD", "EUR":
+		return currency, true
+	default:
+		return "", false
+	}
+}
+
 func AdminCreateSubscriptionPlan(c *gin.Context) {
 	if !requirePaymentCompliance(c) {
 		return
@@ -161,10 +174,12 @@ func AdminCreateSubscriptionPlan(c *gin.Context) {
 		common.ApiErrorMsg(c, "价格不能超过9999")
 		return
 	}
-	if req.Plan.Currency == "" {
-		req.Plan.Currency = "USD"
+	currency, validCurrency := normalizeSubscriptionCurrency(req.Plan.Currency)
+	if !validCurrency {
+		common.ApiErrorMsg(c, "不支持的套餐币种")
+		return
 	}
-	req.Plan.Currency = "USD"
+	req.Plan.Currency = currency
 	if req.Plan.AllowBalancePay == nil {
 		req.Plan.AllowBalancePay = common.GetPointer(true)
 	}
@@ -241,10 +256,12 @@ func AdminUpdateSubscriptionPlan(c *gin.Context) {
 		return
 	}
 	req.Plan.Id = id
-	if req.Plan.Currency == "" {
-		req.Plan.Currency = "USD"
+	currency, validCurrency := normalizeSubscriptionCurrency(req.Plan.Currency)
+	if !validCurrency {
+		common.ApiErrorMsg(c, "不支持的套餐币种")
+		return
 	}
-	req.Plan.Currency = "USD"
+	req.Plan.Currency = currency
 	if req.Plan.DurationUnit == "" {
 		req.Plan.DurationUnit = model.SubscriptionDurationMonth
 	}

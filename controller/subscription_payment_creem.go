@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -70,18 +71,6 @@ func SubscriptionRequestCreemPay(c *gin.Context) {
 		return
 	}
 
-	if plan.MaxPurchasePerUser > 0 {
-		count, err := model.CountUserSubscriptionsByPlan(userId, plan.Id)
-		if err != nil {
-			common.ApiError(c, err)
-			return
-		}
-		if count >= int64(plan.MaxPurchasePerUser) {
-			common.ApiErrorMsg(c, "已达到该套餐购买上限")
-			return
-		}
-	}
-
 	reference := "sub-creem-ref-" + randstr.String(6)
 	referenceId := "sub_ref_" + common.Sha1([]byte(reference+time.Now().String()+user.Username))
 
@@ -96,7 +85,11 @@ func SubscriptionRequestCreemPay(c *gin.Context) {
 		CreateTime:      time.Now().Unix(),
 		Status:          common.TopUpStatusPending,
 	}
-	if err := order.Insert(); err != nil {
+	if err := model.CreatePendingSubscriptionOrder(order); err != nil {
+		if errors.Is(err, model.ErrSubscriptionPurchaseLimit) {
+			common.ApiErrorMsg(c, err.Error())
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "创建订单失败"})
 		return
 	}
@@ -121,6 +114,7 @@ func SubscriptionRequestCreemPay(c *gin.Context) {
 
 	checkoutUrl, err := genCreemLink(c.Request.Context(), referenceId, product, user.Email, user.Username)
 	if err != nil {
+		_ = model.ExpireSubscriptionOrder(referenceId, model.PaymentProviderCreem)
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem 订阅支付链接创建失败 trade_no=%s product_id=%s error=%q", referenceId, product.ProductId, err.Error()))
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
 		return
