@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>最佳实践和使用技巧 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">最佳实践和使用技巧</h1>
+<hr/><p>Claude Code 是 Anthropic 推出的智能编程助手，直接集成到终端环境中，能够理解代码库并通过自然语言命令帮助编程。 Claude Code 是 Anthropic 推出的智能编程助手，直接集成到终端环境中，能够理解代码库并通过自然语言命令帮助编程。</p><p>本文从实践者的角度，系统分享 Claude Code 的最佳实践和使用技巧。</p><h2 id="_1️⃣-初始化配置" tabindex="-1">1️⃣ 初始化配置 </h2><h3 id="_1-1-安装-claude-code" tabindex="-1">1.1 安装 Claude Code </h3><pre><code class="language-bash"># 全局安装
+npm install -g @anthropic-ai/claude-code
+
+# 验证安装
+claude --version</code></pre><h3 id="_1-2-创建-claude-md-文件" tabindex="-1">1.2 创建 CLAUDE.md 文件 </h3><p><code>CLAUDE.md</code> 是 Claude Code 的核心配置文件，会被自动读取并加入到上下文中。</p><h4 id="文件内容应包含" tabindex="-1">文件内容应包含： </h4><ul><li><strong>项目基础信息和架构说明</strong></li><li><strong>常用命令和构建脚本</strong></li><li><strong>代码规范和约定</strong></li><li><strong>测试指南</strong></li><li><strong>开发环境配置</strong></li><li><strong>其他必要的上下文信息</strong>（可通过 <code>@path/to/import</code> 来引用项目文件）</li></ul><h4 id="创建方式" tabindex="-1">创建方式： </h4><pre><code class="language-bash"># 使用 /init 命令自动生成
+claude&gt; /init
+
+# 或者手动创建并填充内容
+touch CLAUDE.md</code></pre><h4 id="文件位置优先级" tabindex="-1">文件位置优先级： </h4><ul><li><strong>项目根目录</strong>：<code>./CLAUDE.md</code>（推荐，可提交到 git）</li><li><strong>项目本地</strong>：<code>./CLAUDE.local.md</code>（不提交到 git）</li><li><strong>全局配置</strong>：<code>~/.claude/CLAUDE.md</code></li><li><strong>父目录和子目录中也会被自动读取</strong></li></ul><h3 id="_1-3-配置工具权限" tabindex="-1">1.3 配置工具权限 </h3><p>Claude Code 默认采用保守的权限策略。可以通过四种方式显式授权：</p><ol><li><strong>启动时的交互式授权提示</strong></li><li><strong>运行 <code>/permissions</code> 命令</strong></li><li><strong>手动编辑 <code>.claude/settings.json</code></strong></li><li><strong>启动参数 <code>--allowedTools</code></strong></li></ol><pre><code class="language-bash"># 使用 /permissions 命令管理权限
+&gt; /permissions
+
+# 或者通过命令行参数
+claude --allowedTools Edit,Bash(git commit:*)</code></pre><h4 id="推荐允许的工具" tabindex="-1">推荐允许的工具： </h4><ul><li><strong>Edit</strong>: 文件编辑</li><li><strong>Bash(git commit:*)</strong>: Git 提交操作</li><li><strong>WebFetch(*)</strong>: 访问 URL 网址</li></ul><h3 id="_1-4-安装配套工具" tabindex="-1">1.4 安装配套工具 </h3><p>推荐安装 GitHub CLI，自动化 GitHub 工作流：</p><pre><code class="language-bash"># 安装 GitHub CLI
+brew install gh
+
+# 配置 GitHub 认证
+gh auth login</code></pre><h2 id="_2️⃣-工作流程" tabindex="-1">2️⃣ 工作流程 </h2><h3 id="_2-1-探索-计划-编程-提交流程" tabindex="-1">2.1 探索 - 计划 - 编程 - 提交流程 </h3><p>这是最通用的工作流程，适用于大多数开发任务：</p><pre><code class="language-bash"># 1. 探索阶段 - 了解现有代码
+"请阅读相关文件了解当前架构，但暂时不要编写代码"
+
+# 2. 计划阶段 - 使用扩展思考（按两次 Shift+TAB 进入 PLAN 模式）
+"请 ultrathink 并制定详细的实现计划，并指示 sub-agents 并行验证关键细节"
+
+# 3. 编码阶段
+"请按照计划实现功能"
+
+# 4. 提交阶段
+"请提交更改并创建 PR"</code></pre><h3 id="_2-2-测试驱动开发流程" tabindex="-1">2.2 测试驱动开发流程 </h3><p>对于可以通过测试验证的功能：</p><pre><code class="language-bash"># 1. 编写测试
+"请基于期望的输入输出编写测试，确保测试会失败"
+
+# 2. 运行测试确认失败
+"运行测试确认失败，不要编写实现代码"
+
+# 3. 提交测试
+"请提交测试代码"
+
+# 4. 实现功能
+"请编写代码使测试通过，不要修改测试"
+
+# 5. 提交实现
+"请提交实现代码"</code></pre><h3 id="_2-3-ui-开发迭代流程" tabindex="-1">2.3 UI 开发迭代流程 </h3><p>对于前端开发：</p><pre><code class="language-bash"># 1. 提供设计图
+# 拖拽图片到 Claude Code 界面
+
+# 2. 实现 UI
+"请按照设计图实现界面"
+
+# 3. 截图对比
+"请截图当前实现，与设计图对比并改进"
+
+# 4. 迭代优化
+"请继续优化，直到效果满意"</code></pre><h2 id="_3️⃣-进阶功能和技巧" tabindex="-1">3️⃣ 进阶功能和技巧 </h2><h3 id="_3-1-使用-mcp-扩展工具" tabindex="-1">3.1 使用 MCP 扩展工具 </h3><p>Claude Code 支持 MCP（Model Context Protocol）来扩展功能：</p><pre><code class="language-json">// .mcp.json 示例
+{
+  "mcpServers": {
+    "playwright": {
+      "args": ["@playwright/mcp@latest", "--headless"],
+      "command": "npx"
+    },
+    "context7": {
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "command": "npx"
+    }
+  }
+}</code></pre><h3 id="_3-2-自定义斜杠命令" tabindex="-1">3.2 自定义斜杠命令 </h3><p>在 <code>.claude/commands/</code> 目录创建自定义命令。</p><h4 id="示例-创建-issue-md-用于修复-github-issue" tabindex="-1">示例：创建 <code>issue.md</code> 用于修复 GitHub Issue </h4><pre><code class="language-markdown"># .claude/commands/issue.md
+Please analyze and fix the Github issue: $ARGUMENTS.
+
+Follow these steps:
+
+## PLAN
+1. Use 'gh issue view' to get the issue details
+2. Understand the problem described in the issue
+3. Ask clarifying questions if necessary
+4. Understand the prior art for this issue
+   - Search the scratchpads for previous thoughts related to the issue
+   - Search PRs to see if you can find history on this issue
+   - Search the codebase for relevant files
+5. Think harder about how to break the issue down into a series of small, manageable tasks.
+6. Document your plan in a new scratchpad
+   - include the issue name in the filename
+   - include a link to the issue in the scratchpad.
+
+## CREATE
+- Create a new branch for the issue
+- Solve the issue in small, manageable steps, according to your plan.
+- Commit your changes after each step.
+
+## TEST
+- Use puppeteer via MCP to test the changes if you have made changes to the UI
+- Write unit tests to describe the expected behavior of your code
+- Run the full test suite to ensure you haven't broken anything
+- If the tests are failing, fix them
+- Ensure that all tests are passing before moving on to the next step
+
+## SUBMIT
+- Push and open a PR on Github.
+
+Remember to use the GitHub CLI ('gh') for all Github-related tasks.</code></pre><h4 id="使用方法" tabindex="-1">使用方法： </h4><pre><code class="language-bash">&gt; /issue 1234</code></pre><h3 id="_3-3-上下文管理" tabindex="-1">3.3 上下文管理 </h3><p>Claude Code 的上下文窗口有限，且上下文过长会导致幻觉严重，需要合理管理：</p><h4 id="管理策略" tabindex="-1">管理策略： </h4><ul><li><strong>使用 <code>@</code> 引用文件</strong></li><li><strong>任务切换时使用 <code>/clear</code> 清空上次任务信息</strong></li><li><strong>长时间会话定期压缩上下文</strong></li><li><strong>必要时从历史会话恢复</strong></li><li><strong>将重要信息通过 <code># &lt;context&gt;</code> 记录到 CLAUDE.md 中</strong></li></ul><h4 id="命令格式" tabindex="-1">命令格式： </h4><pre><code class="language-bash"># 使用文件引用
+请参考 @src/components/UserProfile.tsx 的结构
+
+# 压缩上下文
+&gt; /compact
+
+# 清理上下文
+&gt; /clear
+
+# 增加记忆
+# &lt;context&gt;
+
+# 恢复历史会话
+/resume</code></pre><h4 id="启动时恢复会话" tabindex="-1">启动时恢复会话： </h4><pre><code class="language-bash"># 续聊上次会话
+claude --continue
+claude --continue --print   # 适合脚本调用
+
+# 从历史会话中选择再继续
+claude --resume</code></pre><h2 id="_4️⃣-项目组织和管理" tabindex="-1">4️⃣ 项目组织和管理 </h2><h3 id="_4-1-使用-roadmap-md-管理项目" tabindex="-1">4.1 使用 ROADMAP.md 管理项目 </h3><p>创建项目路线图：</p><pre><code class="language-markdown"># 项目开发路线图
+
+## 开发流程
+
+1. **任务规划**
+   - 分析现有代码基础
+   - 更新 ROADMAP.md 添加新任务
+   - 优先级任务插入到最后完成任务之后
+
+2. **任务创建**
+   - 在 `/tasks` 目录创建详细任务文件
+   - 命名格式：`XXX-description.md`
+   - 包含规格说明、相关文件、验收标准
+
+3. **任务实现**
+   - 按照任务文件中的步骤实现
+   - 每完成一步更新任务文件进度
+   - 每步完成后暂停等待进一步指令
+
+## 任务列表
+
+### 已完成 ✅
+- **任务 001: 数据库架构** ✅
+  - 参考: `/tasks/001-database.md`
+  - 实现了核心表结构和关系
+
+### 进行中 🔄
+- **任务 002: 用户界面** 🔄
+  - 参考: `/tasks/002-ui.md`
+  - 正在实现登录和注册页面
+
+### 计划中 📋
+- **任务 003: API 接口**
+  - 设计 RESTful API
+  - 实现用户认证</code></pre><h3 id="_4-2-任务模板" tabindex="-1">4.2 任务模板 </h3><pre><code class="language-markdown"># 任务 XXX: 功能描述
+
+## 进度摘要
+
+**状态**: 未开始
+
+- [ ] 步骤 1: 创建组件
+- [ ] 步骤 2: 实现逻辑
+- [ ] 步骤 3: 编写测试
+- [ ] 步骤 4: 集成验证
+
+## 概述
+
+详细描述功能需求和预期效果。
+
+## 当前状态分析
+
+分析现有代码基础和相关文件。
+
+## 目标状态
+
+描述完成后的期望状态。
+
+## 实现步骤
+
+### 步骤 1: 创建组件
+
+详细描述第一步需要做什么。
+
+**涉及文件:**
+- `src/components/NewComponent.tsx`
+- `src/types/index.ts`
+
+### 步骤 2: 实现逻辑
+
+详细描述第二步需要做什么。
+
+## 验收标准
+
+### 功能要求
+- [ ] 功能 A 正常工作
+- [ ] 功能 B 正常工作
+
+### 技术要求
+- [ ] 通过所有测试
+- [ ] 代码符合规范
+- [ ] 性能满足要求
+
+## 相关文件
+
+### 新建文件
+- `src/components/NewComponent.tsx`
+- `src/utils/helper.ts`
+
+### 修改文件
+- `src/app/page.tsx`
+- `src/types/index.ts`
+
+## 注意事项
+
+- 保持向后兼容性
+- 确保响应式设计
+- 考虑无障碍性</code></pre><h3 id="_4-3-并行工作流" tabindex="-1">4.3 并行工作流 </h3><p>当需要同时开发多个功能分支时，可结合 <code>git worktree</code> 使用：</p><pre><code class="language-bash"># 创建新的工作树
+git worktree add ../feature-branch feature/new-feature
+
+# 在新工作树中启动 Claude Code
+cd ../feature-branch
+claude
+
+# 管理多个工作树
+git worktree list
+git worktree remove ../feature-branch</code></pre><h2 id="_5️⃣-常用命令速查" tabindex="-1">5️⃣ 常用命令速查 </h2><h3 id="基础命令" tabindex="-1">基础命令 </h3><pre><code class="language-bash">claude                    # 启动交互模式
+claude "描述任务"         # 一次性命令
+claude --continue         # 继续上次会话
+claude --resume          # 选择历史会话</code></pre><h3 id="交互命令" tabindex="-1">交互命令 </h3><pre><code class="language-bash">/init                    # 初始化项目配置
+/permissions             # 管理工具权限
+/clear                   # 清空上下文
+/compact                 # 压缩上下文
+/resume                  # 恢复会话</code></pre><h3 id="文件操作" tabindex="-1">文件操作 </h3><pre><code class="language-bash">@filename                # 引用文件
+@folder/                # 引用目录
+# &lt;context&gt;             # 添加上下文标记</code></pre><h3 id="自定义命令" tabindex="-1">自定义命令 </h3><pre><code class="language-bash">/project:command-name    # 项目级自定义命令
+/user:command-name       # 用户级自定义命令</code></pre><h2 id="_6️⃣-最佳实践总结" tabindex="-1">6️⃣ 最佳实践总结 </h2><ol><li><p><strong>项目初始化</strong></p><ul><li>创建详细的 CLAUDE.md 配置文件</li><li>设置合适的工具权限</li><li>建立项目文档结构</li></ul></li><li><p><strong>工作流程</strong></p><ul><li>遵循探索-计划-编程-提交的标准流程</li><li>对重要功能采用测试驱动开发</li><li>UI 开发采用设计图对比迭代</li></ul></li><li><p><strong>上下文管理</strong></p><ul><li>及时清理和压缩上下文</li><li>合理使用文件引用</li><li>重要信息记录到配置文件</li></ul></li><li><p><strong>项目管理</strong></p><ul><li>使用 ROADMAP.md 规划项目</li><li>创建详细的任务模板</li><li>利用 git worktree 并行开发</li></ul></li><li><p><strong>效率提升</strong></p><ul><li>创建常用的自定义命令</li><li>配置 MCP 扩展工具</li><li>结合 GitHub CLI 自动化流程</li></ul></li></ol><p>通过以上最佳实践，你将能够充分发挥 Claude Code 的强大功能，显著提升开发效率和代码质量。</p><hr/><p>💡 <strong>提示</strong>：建议将本指南作为参考手册，在实际开发中根据项目特点调整和优化工作流程。</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

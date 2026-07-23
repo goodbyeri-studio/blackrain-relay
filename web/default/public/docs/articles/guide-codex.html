@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codex 安装 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">Codex 接入 goodbyeri.cc</h1>
+    <p>本页是 goodbyeri.cc 官方维护的 OpenAI Codex 安装与配置指南。Codex 的接入地址统一使用 <code>https://goodbyeri.cc/v1</code>,密钥请在 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 控制台创建。</p>
+
+    <h2>Windows</h2>
+    <h3>1. 安装 Node.js</h3>
+    <p>同 Claude Code,需要 Node.js 18+。</p>
+    <h3>2. 安装 Codex</h3>
+    <pre><code>npm i -g @openai/codex --registry=https://registry.npmmirror.com</code></pre>
+    <h3>3. 配置</h3>
+    <p>创建 <code>C:\Users\你的用户名\.codex\config.toml</code>:</p>
+    <pre><code>model_provider = "custom"
+model = "gpt-5.3-codex"
+model_reasoning_effort = "xhigh"
+disable_response_storage = true
+
+[model_providers.custom]
+name = "custom"
+wire_api = "responses"
+requires_openai_auth = true
+base_url = "https://goodbyeri.cc/v1"</code></pre>
+    <p>创建 <code>auth.json</code>:</p>
+    <pre><code>{
+  "OPENAI_API_KEY": "你的API密钥"
+}</code></pre>
+    <h3>4. 使用</h3>
+    <pre><code>codex</code></pre>
+
+    <h2>Linux</h2>
+    <h3>1. 安装</h3>
+    <pre><code>npm install -g @openai/codex</code></pre>
+    <h3>2. 配置环境变量</h3>
+    <pre><code>echo 'export OPENAI_BASE_URL="https://goodbyeri.cc/v1"' >> ~/.bashrc
+echo 'export OPENAI_API_KEY="你的API密钥"' >> ~/.bashrc
+source ~/.bashrc</code></pre>
+    <h3>3. 使用</h3>
+    <pre><code>codex</code></pre>
+
+    <h2>macOS</h2>
+    <h3>1. 安装</h3>
+    <pre><code>npm install -g @openai/codex</code></pre>
+    <h3>2. 配置环境变量</h3>
+    <pre><code>echo 'export OPENAI_BASE_URL="https://goodbyeri.cc/v1"' >> ~/.zshrc
+echo 'export OPENAI_API_KEY="你的API密钥"' >> ~/.zshrc
+source ~/.zshrc</code></pre>
+    <h3>3. 使用</h3>
+    <pre><code>codex</code></pre>
+
+    <h2>VSCode</h2>
+    <h3>1. 安装扩展</h3>
+    <p>在 VSCode 扩展市场搜索并安装 <strong>Codex - OpenAI's coding agent</strong>。</p>
+    <h3>2. 配置</h3>
+    <p>在 <code>~/.codex/auth.json</code>:</p>
+    <pre><code>{
+  "OPENAI_API_KEY": "你的API密钥"
+}</code></pre>
+    <p>在 <code>~/.codex/config.toml</code>:</p>
+    <pre><code>model_provider = "custom"
+model = "gpt-5.3-codex"
+model_reasoning_effort = "xhigh"
+disable_response_storage = true
+
+[model_providers.custom]
+name = "custom"
+wire_api = "responses"
+requires_openai_auth = true
+base_url = "https://goodbyeri.cc/v1"</code></pre>
+
+    <h2>桌面版</h2>
+    <h3>1. 安装</h3>
+    <p>Windows 可访问 <a href="https://developers.openai.com/codex/app/windows" target="_blank" rel="noopener">Codex Windows App 文档</a> 下载,或使用命令安装:</p>
+    <pre><code>winget install Codex -s msstore</code></pre>
+    <p>Mac / Windows 也可通过 Codex CLI 启动或安装桌面版:</p>
+    <pre><code>codex app</code></pre>
+    <h3>2. 使用</h3>
+    <p>安装后打开 Codex,添加项目即可使用。Windows 需要 WSL 时可在设置中切换 Agent 到 WSL,并重启应用。</p>
+
+    <footer class="doc-footer">
+      <p>© 2025 goodbyeri.cc · 官方接入指南 · 更多 Codex 用法见左侧「进阶教程 › OpenAI Codex」。</p>
+    </footer>
+  </article>
+</body>
+</html>

@@ -8,6 +8,7 @@ const (
 	QuotaDisplayTypeCNY    = "CNY"
 	QuotaDisplayTypeTokens = "TOKENS"
 	QuotaDisplayTypeCustom = "CUSTOM"
+	DefaultDocsLink        = "https://goodbyeri.cc/docs/"
 )
 
 type GeneralSetting struct {
@@ -25,7 +26,7 @@ type GeneralSetting struct {
 
 // 默认配置
 var generalSetting = GeneralSetting{
-	DocsLink:                   "https://docs.newapi.pro",
+	DocsLink:                   DefaultDocsLink,
 	MonitorLink:                "",
 	PingIntervalEnabled:        false,
 	PingIntervalSeconds:        60,

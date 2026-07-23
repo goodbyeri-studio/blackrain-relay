@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>国外大佬如何使用 Claude Code - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">国外大佬如何使用 Claude Code</h1>
+<p><picture><source srcset="/images/4e2e63e743427f4538c85fe2c5f408d4.png" type="image/avif"/><source srcset="/images/4e2e63e743427f4538c85fe2c5f408d4.webp" type="image/webp"/><img alt="/images/ae5952d7-51f3-4118-a338-4924b4437b53.png" decoding="async" loading="lazy" src="../images/4e2e63e743427f4538c85fe2c5f408d4.png"/></picture></p><p>**2025年7月11日，**<strong>作者：Steve Sewell</strong></p><p><a href="https://www.builder.io/blog/claude-code" rel="noopener" target="_blank">https://www.builder.io/blog/claude-code</a></p><p>原文翻译：</p><p>我已经是 Cursor 的重度用户超过一年了。我写过数千名开发者每周参考的 Cursor 技巧指南。我深入研究过 Cursor 的每一个高级功能和代理模式最佳实践。</p><p>然而我放弃了这一切，转向了 Claude Code。</p><p>几周以来，我完全在使用 Claude Code 而不是 Cursor 的代理功能。老实说，已经没有回头路了。</p><p>以下是我如何使用 Claude Code 以及获得最佳体验的技巧。</p><h2 id="使用-vs-code-扩展" tabindex="-1">使用 VS Code 扩展 </h2><p>—</p><p>首先：安装 Claude Code 扩展。它适用于 VS Code、Cursor，可能也适用于 Windsurf。别期待什么惊喜，它基本上就是一个启动器。但它让打开 Claude Code 变得非常简单，只要它们在代码库的不同部分工作，你可以在 IDE 的不同窗格中并行运行多个实例。</p><p>我仍然使用 Cursor 进行快速的 Command+K 补全和 tab 补全。但是代理侧边栏？只有在 Claude 宕机时我才会碰它。</p><p>奇怪的是我的工作流程是如何演变的。我过去是在主编辑器中编码时将 Claude 作为一个小侧边栏。现在我首先默认使用 Claude，只有在审查更改时才瞄一眼代码。它已经成为我的主要界面，而不是次要界面。</p><h2 id="终端-ui-很不错" tabindex="-1">终端 UI 很不错 </h2><p>—</p><p>是的，我也很怀疑。用终端界面进行基于聊天的代码编辑？听起来像是倒退。但 Anthropic 做得不错。</p><p>你可以轻松地用 @ 标记文件，使用斜杠命令（很有帮助），并精确选择要包含的上下文。除非 Opus 出现问题，否则我主要使用 Opus，然后切换到 Sonnet。大多数人可能应该使用默认设置——它会使用 Opus 直到你达到 50% 的使用量，然后为了成本效益切换到 Sonnet。</p><p><strong>专业技巧</strong>：经常使用 /clear。每次开始新任务时，清除聊天记录。你不需要所有那些历史记录占用你的 token，你绝对不需要 Claude 运行压缩调用来总结旧对话。直接清除并继续。</p><p>向上箭头可以让你浏览过去的聊天记录，甚至是之前会话的记录。当你需要参考昨天的内容时很方便。</p><h2 id="权限系统会让你抓狂" tabindex="-1">权限系统会让你抓狂 </h2><p>—</p><p>关于 Claude Code 最烦人的事情是：它什么都要请求权限。你输入一个提示，它开始工作，你去检查 Slack，五分钟后回来，它就坐在那里问"我可以编辑这个文件吗？"</p><p>是的，你可以编辑文件。这就是重点所在。</p><p>运行基本命令也是如此。"我可以运行 lint 吗？"是的。天哪，当然可以。</p><p>不过有一个解决方案。每次我打开 Claude Code 时，我都会按 Command+C 并运行 claude --dangerously-skip-permissions。它没有听起来那么危险——把它想象成 Cursor 的旧 yolo 模式。流氓代理理论上可能运行破坏性命令吗？当然。在我几周的使用中看到过这种情况吗？从未发生过。</p><p>这取决于你的风险承受能力，但我晚上睡得很安稳。</p><h2 id="github-集成实际上很有用" tabindex="-1">GitHub 集成实际上很有用 </h2><p>—</p><p>其中一个更酷的斜杠命令是 /install-github-app。运行后，Claude 会自动审查你的 PR。</p><p>这实际上很有用，因为随着你使用更多 AI 工具，你的 PR 数量会增加。老实说？Claude 经常发现人类遗漏的错误。人类会挑剔变量名。Claude 会发现实际的逻辑错误和安全问题。</p><p>关键是自定义审查提示。开箱即用的提示太冗长了，会对每个小细节都进行评论。Claude 会添加一个 claude-code-review.yml 文件，其中已经有一个提示。以下是我使用的替代版本：</p><pre><code># claude-code-review.yml
+direct_prompt: |
+  请审查这个拉取请求并查找错误和安全问题。只报告你发现的错误和潜在漏洞。请保持简洁。</code></pre><p>我们发现这个工具的原始问题是它真的很冗长。它会对各种细微的、不重要的事情进行评论，并在每个 PR 上写一整篇文章。我们真正最关心的是错误和潜在漏洞。所以我们明确告诉它这一点，并要求简洁。</p><p>它还可以做其他很酷的事情，比如从 GitHub 拉取请求中提取评论并解决它们，或直接审查拉取请求。</p><h2 id="你需要了解的怪癖" tabindex="-1">你需要了解的怪癖 </h2><p>—</p><p>由于它是终端界面，有一些不明显的行为：</p><ul><li><strong>Shift+Enter</strong> 默认不能换行。只需告诉 Claude 用 /terminal-setup 设置你的终端，它会为你修复。</li><li><strong>拖拽文件</strong>通常会像在 Cursor 或 VS Code 中一样在新标签页中打开它们。拖拽时按住 Shift 键可以在 Claude 中正确引用它们。</li><li><strong>从剪贴板粘贴图片</strong>不能用 Command+V。使用 Control+V。我花了很长时间才搞清楚这一点。</li><li><strong>停止 Claude</strong> 不是 Control+C（那会完全退出）。使用 Escape 实际停止 Claude。</li><li><strong>跳转到之前的消息</strong>：按两次 Escape 会显示所有之前消息的列表，你可以跳回去。</li></ul><p>如果你喜欢的话，还有一个 Vim 模式。我不喜欢。</p><h2 id="claude-code-能更好地处理大型代码库" tabindex="-1">Claude Code 能更好地处理大型代码库 </h2><p>—</p><p>真正的区别在于：我们在 Builder 有一个 18,000 行的 React 组件。（别因为代码组织问题 @ 我，我知道。）除了 Claude Code，没有任何 AI 代理成功更新过这个文件。</p><p>使用 Cursor 时，我仍然会遇到很多小问题。它难以解决补丁，经常需要重写文件，并且在更新极大的文件时真的很困难。</p><p>这不仅仅是文件大小的问题，Claude Code 在复杂任务方面表现出色。我发现它极少卡住（我甚至不确定是否注意到过）。使用 Cursor 时，我感觉必须更多地照顾它，当它卡住时，我必须停止它并意识到也许这不是一个好的任务。</p><p>Claude 在导航大型代码库、搜索模式、理解代码不同部分之间的关系、组件、共享状态等方面也非常出色。这真的很不可思议。</p><h2 id="经济学很合理" tabindex="-1">经济学很合理 </h2><p>—</p><p>想想看：Cursor 构建了一个支持多种模型的通用代理。他们需要一个完整的团队，加上他们训练自定义模型，加上他们需要在向 Anthropic 支付底层模型费用的基础上获得利润。</p><p>Anthropic 绝对制造最好的编码模型，他们让 Claude Code 最好地使用这些模型。当他们在 Claude Code 上遇到挑战时，他们会去改进模型。</p><p>他们了解模型如何工作、如何训练以及如何深入使用的一切。他们继续训练模型以便与他们对 Claude Code 的需求良好配合。</p><p>这也意味着 Anthropic 可以为你提供最大的价值和最低的价格，因为你只需要担心向他们付费。</p><p>他们可以在给你最大的模型（如 Opus）访问权限方面竞争，而不会出现像 Cursor 那样的情况，因为 Cursor 也需要赚钱。</p><p>这就像直接从制造商购买而不是通过经销商。当然更好。</p><h2 id="定价合理" tabindex="-1">定价合理 </h2><p>—</p><p>我支付最高计划每月 100 美元。如果你认为一个令人震惊的智能编码者 24/7 工作不值 100 美元/月，你需要看看你自己的时间收费多少。看看世界任何地方工程师每小时的人工成本，都比这个数量级高得多。</p><p>任何经理做这个数学计算都会看到它绝对值得，即使在最高可能的定价层级。</p><h2 id="排队系统很方便" tabindex="-1">排队系统很方便 </h2><p>—</p><p>一个我离不开的功能：消息排队。你可以输入多个提示，Claude 会智能地处理它们。</p><p>我过去会创建一个记事本并开始起草我想要做的其他提示。然后当我看到一个完成时，我会去粘贴下一个并按回车。这就是我用 Cursor 做的，这真的很烦人，因为我通常会继续我的一天，回答 Slack 消息，回答邮件，做其他事情，然后回来看到代理已经闲置了不知道多长时间。</p><p>现在我只是把所有东西排队："添加更多注释"，"实际上也..."，"还有...也是。"Claude 在知道何时应该实际运行这些事情方面真的很聪明。如果它需要你的反馈，它不会自动运行排队的消息。这是一个非常智能的系统，但当它完成某些事情时，会在合适的时候开始处理它们。</p><p>你可以排队很多，继续你的一天，在很多情况下，只需回来就能看到大量以良好和聪明方式完成的工作。但要时不时检查，因为它可能需要你的输入。</p><h2 id="自定义相当深入" tabindex="-1">自定义相当深入 </h2><p>—</p><p>Claude Code 支持自定义钩子、斜杠命令和项目特定配置。很酷的部分？你可以让 Claude 为你构建这些。</p><p>我要求 Claude 添加几个默认钩子、命令和设置。它查看了我的项目并创建了一个我可以轻松编辑的设置文件，有几个值得注意的亮点：</p><p>它添加了一个 CLAUDE.md 文件，提供了一些项目概述和一些它应该知道的关键命令。这防止它每次都必须搞清楚这些并扫描代码库寻找"是否有构建命令或 lint 命令？"它总是意识到这些。</p><p>它添加了一些钩子，用于在接受编辑之前应该运行什么代码，比如在特定文件上运行 Prettier，或在编辑后，比如在特定文件上进行类型检查以确保它只接受良好和正确的文件。</p><p>你可以通过 .claude/hooks.mjs 文件创建自己的钩子，例如：</p><pre><code>// .claude/hooks.mjs
+import { execSync } from 'child_process';
+import path from 'path';
+
+// 编辑文件前运行的钩子
+export async function preEdit({ filePath, oldContent, newContent }) {
+  // 检查是否编辑 TypeScript/JavaScript 文件
+  if (filePath.match(/\.(ts|tsx|js|jsx)$/)) {
+    // 确保文件在编辑前格式正确
+    try {
+      execSync(`yarn prettier --check "${filePath}"`, { stdio: 'pipe' });
+    } catch (e) {
+      console.log('⚠️  文件需要格式化 - 将在编辑后格式化');
+    }
+  }
+
+  // 防止编辑某些受保护的文件
+  const protectedFiles = ['yarn.lock', 'package-lock.json', '.env.production', 'firebase.json'];
+  const fileName = path.basename(filePath);
+  if (protectedFiles.includes(fileName)) {
+    throw new Error(`❌ 无法编辑受保护的文件：${fileName}`);
+  }
+  return { proceed: true };
+}
+
+// 编辑文件后运行的钩子
+export async function postEdit({ filePath, oldContent, newContent, success }) {
+  if (!success) return;
+
+  // 对 TypeScript 文件运行类型检查
+  if (filePath.match(/\.(ts|tsx)$/)) {
+    try {
+      execSync(`npx tsc --noEmit --skipLibCheck "${filePath}"`, { stdio: 'pipe' });
+    } catch (e) {
+      console.log('⚠️  检测到 TypeScript 错误 - 请审查');
+    }
+  }
+}</code></pre><h3 id="创建自定义斜杠命令" tabindex="-1">创建自定义斜杠命令 </h3><p>你也可以很容易地添加自定义斜杠命令。要添加命令，只需创建一个 .claude/commands 文件夹，添加命令名称作为带有 .md 扩展名的文件。你只需用自然语言编写这些，并且可以使用 $ARGUMENTS 字符串将参数放入提示中。</p><p>例如，如果我想输出一个测试，我可以创建 .claude/commands/test.md：</p><pre><code># .claude/hooks/test.md
+请为以下内容创建全面的测试：$ARGUMENTS
+
+测试要求：
+- 使用 Jest 和 React Testing Library
+- 将测试放在 __tests__ 目录中
+- 模拟 Firebase/Firestore 依赖项
+- 测试所有主要功能
+- 包括边缘情况和错误场景
+- 测试 MobX 可观察状态变化
+- 验证计算值正确更新
+- 测试用户交互
+- 确保在 afterEach 中进行适当清理
+- 目标是高代码覆盖率</code></pre><p>然后 /test MyButton 做的就是你期望的事情。你甚至可以有子文件夹 - 我们可以像 /builder/plugin 这样访问它们，这将匹配一个 builder 文件夹中的 plugin.md 文件。这就是我们如何轻松创建新的 Builder 插件。</p><h2 id="记忆系统" tabindex="-1">记忆系统 </h2><p>—</p><p>另一个很酷的功能是你可以使用 # 符号超快地添加记忆。比如"新东西总是使用 MUI 组件"，它会自动保存到最相关的文件中。</p><p>CLAUDE.md 文件可以是分层的，所以你可以有一个项目级别的，也可以在嵌套目录中有一个。它会查看所有这些，并在相关时优先考虑最具体的、最嵌套的。</p><p>你也可以将其保存到你想要在任何地方应用的全局用户记忆偏好中，或者特定于你并被 git 忽略的本地项目记忆。添加到任何这些文件中，它会为你编写。</p><h2 id="当你想要正常的-ui-时" tabindex="-1">当你想要正常的 UI 时 </h2><p>—</p><p>终端界面并不总是理想的。有时你只想像正常人一样点击和高亮文本。</p><p>这就是我们的 Builder.io 扩展的用途。你可以从你的 IDE 启动一个可视界面，它在底层与 Claude Code 完全一样工作。我们尽可能接近地逆向工程了它。你得到一个正常的聊天界面、实时预览，甚至可以切换到 Figma 风格的设计模式进行可视编辑。</p><p>你的整个团队都可以使用它——设计师、产品经理，任何人。他们可以创建原型、清理 UI，并提交 PR，而无需理解终端界面。</p><p>在 Builder 内部，我们一直在使用这个让我们的工程师专注于困难的工程工作，而其他团队处理 UI 细节和像素完美的实现。</p><p>然后，当我们的工程团队需要更新 PR 时，我们可以直接使用 @builderio-bot，Claude 会自动解决反馈并推送提交来解决问题。</p><p>（完）</p><p>字节笔记本微信公众号读者群限时免费开放，加微信iweico。</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

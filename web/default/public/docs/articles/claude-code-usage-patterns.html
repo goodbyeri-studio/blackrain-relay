@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用规律深度解析 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">使用规律深度解析</h1>
+<p>(限制期限制并发和数量):</p><ul><li>10点-15点 5个小时顺畅</li><li>15点-17点 下午限制期</li><li>17点-22点 5个小时顺畅</li><li>22点-0点 晚上限制期</li></ul><h1 id="claude-code-使用规律深度解析" tabindex="-1">Claude Code 使用规律深度解析 </h1><p>Claude Code 作为强大的 AI 编程助手，其使用受到一定的限制规律。理解这些规律对于合理规划开发工作、提高使用效率至关重要。本文将深入解析 Claude Code 的各种使用限制。</p><hr/><h2 id="🕐-每日限制周期" tabindex="-1">🕐 每日限制周期 </h2><h3 id="限制重置时间" tabindex="-1">限制重置时间 </h3><p>Claude Code 的使用限制采用<strong>滚动24小时制</strong>，而非固定的每日重置：</p><ul><li><strong>重置规则</strong>：从首次使用开始计算24小时周期</li><li><strong>时区影响</strong>：基于用户本地时区计算</li><li><strong>无固定时点</strong>：不是在每天特定时间（如午夜）重置</li></ul><h3 id="示例说明" tabindex="-1">示例说明 </h3><pre><code>首次使用：2024年1月1日 上午10:00
+限制重置：2024年1月2日 上午10:00
+
+如果在下午2:00使用了大量请求：
+部分限制重置：2024年1月2日 下午2:00</code></pre><h3 id="监控限制状态" tabindex="-1">监控限制状态 </h3><p>可以通过以下方式查看当前限制状态：</p><pre><code class="language-bash"># 在 Claude Code 中查看使用情况
+&gt; /usage
+
+# 或在对话中询问
+"请告诉我当前的使用限制状态"</code></pre><h2 id="📊-订阅类型与限制差异" tabindex="-1">📊 订阅类型与限制差异 </h2><h3 id="pro-订阅用户" tabindex="-1">Pro 订阅用户 </h3><p><strong>每日请求限制</strong>：</p><ul><li><strong>消息数量</strong>：约 1000-1500 条消息/24小时</li><li><strong>上下文tokens</strong>：每次对话最大 200K tokens</li><li><strong>文件处理</strong>：支持大文件读取和批量操作</li></ul><p><strong>并发限制</strong>：</p><ul><li><strong>同时会话</strong>：最多 5 个并发会话</li><li><strong>工具调用</strong>：支持批量工具调用</li><li><strong>响应速度</strong>：优先处理，响应更快</li></ul><h3 id="免费用户" tabindex="-1">免费用户 </h3><p><strong>每日请求限制</strong>：</p><ul><li><strong>消息数量</strong>：约 50-100 条消息/24小时</li><li><strong>上下文tokens</strong>：每次对话最大 100K tokens</li><li><strong>文件处理</strong>：有大小和数量限制</li></ul><p><strong>并发限制</strong>：</p><ul><li><strong>同时会话</strong>：最多 2 个并发会话</li><li><strong>工具调用</strong>：有频率限制</li><li><strong>响应速度</strong>：在高峰期可能需要排队</li></ul><h2 id="⚡-并发使用限制" tabindex="-1">⚡ 并发使用限制 </h2><h3 id="会话并发" tabindex="-1">会话并发 </h3><p>Claude Code 限制同时进行的会话数量：</p><pre><code class="language-bash"># 查看当前活跃会话
+claude --list-sessions
+
+# 结束特定会话以释放并发槽位
+claude --end-session &lt;session-id&gt;</code></pre><h3 id="工具调用并发" tabindex="-1">工具调用并发 </h3><p>在单次请求中，工具调用有并发限制：</p><ul><li><strong>最大并发工具</strong>：同时最多调用 10 个工具</li><li><strong>批量操作</strong>：支持批量文件读取、编辑等</li><li><strong>优化建议</strong>：合理组织工具调用顺序</li></ul><h3 id="实际使用建议" tabindex="-1">实际使用建议 </h3><pre><code class="language-bash"># ✅ 推荐：批量处理
+"请同时读取 src/components/ 目录下的所有 .tsx 文件"
+
+# ❌ 不推荐：逐个处理
+"请读取 Button.tsx"
+"请读取 Input.tsx"
+"请读取 Modal.tsx"</code></pre><h2 id="🔢-请求数量与复杂度" tabindex="-1">🔢 请求数量与复杂度 </h2><h3 id="消息计费规则" tabindex="-1">消息计费规则 </h3><p>Claude Code 的限制不仅基于消息数量，还考虑复杂度：</p><p><strong>简单消息</strong>（消耗较少配额）：</p><ul><li>纯文本对话</li><li>简单代码查询</li><li>基础文件操作</li></ul><p><strong>复杂消息</strong>（消耗较多配额）：</p><ul><li>大型文件分析</li><li>复杂代码重构</li><li>批量工具调用</li><li>图片处理</li></ul><h3 id="上下文长度影响" tabindex="-1">上下文长度影响 </h3><pre><code>短上下文（&lt; 10K tokens）：消耗 1 配额单位
+中等上下文（10K-50K tokens）：消耗 2-3 配额单位
+长上下文（50K-200K tokens）：消耗 5-10 配额单位</code></pre><h3 id="优化策略" tabindex="-1">优化策略 </h3><p><strong>减少配额消耗</strong>：</p><pre><code class="language-bash"># 及时清理上下文
+&gt; /clear
+
+# 压缩长对话
+&gt; /compact
+
+# 使用文件引用而非粘贴代码
+@src/components/Button.tsx</code></pre><h2 id="📈-使用模式建议" tabindex="-1">📈 使用模式建议 </h2><h3 id="高效使用模式" tabindex="-1">高效使用模式 </h3><p><strong>1. 批量处理模式</strong></p><pre><code class="language-bash"># 一次性处理多个相关任务
+"请分析项目架构，然后优化性能瓶颈，最后生成文档"</code></pre><p><strong>2. 分阶段开发模式</strong></p><pre><code class="language-bash"># 阶段1：探索和规划
+"请分析现有代码但不要修改"
+
+# 阶段2：实现功能
+"请按照之前的分析实现功能"
+
+# 阶段3：测试和优化
+"请编写测试并优化代码"</code></pre><p><strong>3. 上下文管理模式</strong></p><pre><code class="language-bash"># 定期清理
+每完成一个大任务后使用 /clear
+
+# 重要信息记录到 CLAUDE.md
+将关键决定和规范写入配置文件</code></pre><h3 id="避免的使用模式" tabindex="-1">避免的使用模式 </h3><p><strong>❌ 频繁小请求</strong></p><pre><code class="language-bash">"修改这一行"
+"再修改那一行"
+"检查语法"</code></pre><p><strong>❌ 重复性问题</strong></p><pre><code class="language-bash">"这个错误怎么解决？"
+"还是这个错误，怎么办？"
+"为什么还是报错？"</code></pre><p><strong>❌ 无计划的探索</strong></p><pre><code class="language-bash">"看看这个文件"
+"再看看那个文件"
+"这个目录有什么？"</code></pre><h2 id="🚫-限制触发与恢复" tabindex="-1">🚫 限制触发与恢复 </h2><h3 id="限制触发情况" tabindex="-1">限制触发情况 </h3><p><strong>软限制</strong>（警告但继续服务）：</p><ul><li>接近每日配额上限</li><li>频繁的复杂请求</li><li>长时间持续使用</li></ul><p><strong>硬限制</strong>（暂停服务）：</p><ul><li>超过每日配额</li><li>滥用检测触发</li><li>并发数超限</li></ul><h3 id="限制恢复策略" tabindex="-1">限制恢复策略 </h3><p><strong>等待自然恢复</strong>：</p><pre><code class="language-bash"># 24小时滚动窗口，最早的使用会逐步释放配额
+等待时间 = 24小时 - 从首次使用的经过时间</code></pre><p><strong>优化使用方式</strong>：</p><pre><code class="language-bash"># 减少单次请求复杂度
+# 使用更精确的提示词
+# 合理规划任务优先级</code></pre><p><strong>升级订阅计划</strong>：</p><pre><code class="language-bash"># Pro 订阅获得更高限制
+# 企业用户可申请定制限制</code></pre><h2 id="📊-监控与优化工具" tabindex="-1">📊 监控与优化工具 </h2><h3 id="使用情况监控" tabindex="-1">使用情况监控 </h3><p><strong>内置命令</strong>：</p><pre><code class="language-bash">&gt; /usage          # 查看当前使用情况
+&gt; /limits         # 查看限制详情
+&gt; /sessions       # 查看活跃会话</code></pre><p><strong>自建监控脚本</strong>：</p><pre><code class="language-bash">#!/bin/bash
+# claude-monitor.sh
+echo "=== Claude Code 使用监控 ==="
+echo "当前时间: $(date)"
+claude --usage --json &gt; usage.json
+echo "详细信息已保存到 usage.json"</code></pre><h3 id="使用优化建议" tabindex="-1">使用优化建议 </h3><p><strong>1. 时间分布优化</strong></p><ul><li>避开高峰期（工作日上午）</li><li>分散大任务到不同时间段</li><li>预留配额用于紧急修复</li></ul><p><strong>2. 任务优先级管理</strong></p><pre><code class="language-markdown"># 优先级分类
+P0: 生产环境bug修复
+P1: 核心功能开发
+P2: 代码优化重构
+P3: 文档和注释</code></pre><p><strong>3. 团队协作策略</strong></p><ul><li>避免多人同时使用同一账号</li><li>合理分配开发任务</li><li>建立代码审查流程减少返工</li></ul><h2 id="🔄-最佳实践总结" tabindex="-1">🔄 最佳实践总结 </h2><h3 id="规划使用策略" tabindex="-1">规划使用策略 </h3><p><strong>每日规划</strong>：</p><pre><code class="language-markdown">上午（高配额）: 复杂功能开发
+下午（中配额）: 代码审查和优化
+晚上（低配额）: 文档编写和学习</code></pre><p><strong>周期规划</strong>：</p><pre><code class="language-markdown">周一-周三: 新功能开发
+周四-周五: 测试和修复
+周末: 学习和实验</code></pre><h3 id="应急预案" tabindex="-1">应急预案 </h3><p><strong>配额不足时</strong>：</p><ol><li>优先处理P0级别任务</li><li>使用本地开发工具补充</li><li>寻求团队成员协助</li><li>考虑临时升级订阅</li></ol><p><strong>限制恢复后</strong>：</p><ol><li>总结限制触发原因</li><li>调整使用模式</li><li>更新团队使用规范</li></ol><hr/><p>💡 <strong>关键提示</strong>：理解和遵循 Claude Code 的使用规律不仅能避免限制，更能帮助您建立高效的 AI 辅助开发工作流。合理规划、批量处理、及时清理是三个核心原则。</p><p>通过掌握这些使用规律，您将能够最大化 Claude Code 的价值，提升开发效率的同时避免不必要的限制困扰。</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

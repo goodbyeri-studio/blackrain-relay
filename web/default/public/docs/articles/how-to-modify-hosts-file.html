@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>修改 hosts 文件指南 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">修改 hosts 文件指南</h1>
+<p>hosts 文件是操作系统中一个重要的系统文件，用于将域名映射到 IP 地址。通过修改 hosts 文件，您可以实现域名解析重定向、屏蔽恶意网站、加速访问等功能。</p><h2 id="什么是-hosts-文件" tabindex="-1">什么是 hosts 文件？ </h2><p>hosts 文件是一个纯文本文件，用于存储主机名和 IP 地址的对应关系。当您在浏览器中输入一个域名时，系统会首先查找 hosts 文件，如果找到对应的条目，就会直接使用该 IP 地址，而不再通过 DNS 服务器查询。</p><h3 id="常见用途" tabindex="-1">常见用途 </h3><ul><li><strong>开发测试</strong>：将域名指向本地服务器</li><li><strong>网站加速</strong>：绕过某些 DNS 解析问题</li><li><strong>广告拦截</strong>：将广告域名指向无效 IP</li><li><strong>网络调试</strong>：测试不同服务器环境</li></ul><h2 id="macos-系统修改-hosts-文件" tabindex="-1">macOS 系统修改 hosts 文件 </h2><h3 id="方法一-使用终端命令行-推荐" tabindex="-1">方法一：使用终端命令行（推荐） </h3><h4 id="第一步-打开终端" tabindex="-1">第一步：打开终端 </h4><ol><li>按下 <code>Command + 空格键</code> 打开 Spotlight 搜索</li><li>输入 <code>Terminal</code> 或 <code>终端</code></li><li>按回车键打开终端应用</li></ol><h4 id="第二步-备份原始-hosts-文件" tabindex="-1">第二步：备份原始 hosts 文件 </h4><pre><code class="language-bash">sudo cp /etc/hosts /etc/hosts.backup</code></pre><h4 id="第三步-编辑-hosts-文件" tabindex="-1">第三步：编辑 hosts 文件 </h4><p>使用 nano 编辑器：</p><pre><code class="language-bash">sudo nano /etc/hosts</code></pre><p>或使用 vim 编辑器：</p><pre><code class="language-bash">sudo vim /etc/hosts</code></pre><h4 id="第四步-添加域名映射" tabindex="-1">第四步：添加域名映射 </h4><p>在文件末尾添加您的域名映射，格式为：</p><pre><code>IP地址    域名</code></pre><p>例如：</p><pre><code>127.0.0.1    test.local
+192.168.1.100    myserver.local
+127.0.0.1    ads.example.com</code></pre><h4 id="第五步-保存并退出" tabindex="-1">第五步：保存并退出 </h4><ul><li><strong>nano 编辑器</strong>：按 <code>Ctrl + X</code>，然后按 <code>Y</code>，最后按回车键</li><li><strong>vim 编辑器</strong>：按 <code>Esc</code> 键，输入 <code>:wq</code>，按回车键</li></ul><h4 id="第六步-刷新-dns-缓存" tabindex="-1">第六步：刷新 DNS 缓存 </h4><pre><code class="language-bash">sudo dscacheutil -flushcache
+sudo killall -HUP mDNSResponder</code></pre><h3 id="方法二-使用图形界面" tabindex="-1">方法二：使用图形界面 </h3><h4 id="第一步-在-finder-中打开文件" tabindex="-1">第一步：在 Finder 中打开文件 </h4><ol><li>打开 Finder</li><li>按下 <code>Command + Shift + G</code></li><li>输入 <code>/etc/hosts</code></li><li>点击"前往"</li></ol><h4 id="第二步-复制到桌面编辑" tabindex="-1">第二步：复制到桌面编辑 </h4><ol><li>将 hosts 文件复制到桌面</li><li>使用文本编辑器打开桌面上的副本</li><li>进行必要的修改</li><li>保存文件</li></ol><h4 id="第三步-替换原文件" tabindex="-1">第三步：替换原文件 </h4><ol><li>将修改后的文件拖回 <code>/etc/</code> 目录</li><li>系统会要求输入管理员密码</li><li>选择"替换"</li></ol><h3 id="验证修改结果" tabindex="-1">验证修改结果 </h3><pre><code class="language-bash"># 查看 hosts 文件内容
+cat /etc/hosts
+
+# 测试域名解析
+ping test.local</code></pre><h2 id="windows-系统修改-hosts-文件" tabindex="-1">Windows 系统修改 hosts 文件 </h2><h3 id="文件位置" tabindex="-1">文件位置 </h3><p>Windows 系统的 hosts 文件位于：</p><pre><code>C:\Windows\System32\drivers\etc\hosts</code></pre><h3 id="方法一-使用记事本-管理员权限" tabindex="-1">方法一：使用记事本（管理员权限） </h3><h4 id="第一步-以管理员身份运行记事本" tabindex="-1">第一步：以管理员身份运行记事本 </h4><ol><li>点击开始菜单</li><li>搜索 <code>notepad</code> 或 <code>记事本</code></li><li>右键点击记事本</li><li>选择"以管理员身份运行"</li></ol><h4 id="第二步-打开-hosts-文件" tabindex="-1">第二步：打开 hosts 文件 </h4><ol><li>在记事本中，点击"文件" &gt; "打开"</li><li>导航到 <code>C:\Windows\System32\drivers\etc\</code></li><li>在文件类型下拉菜单中选择"所有文件(<em>.</em>)"</li><li>选择 <code>hosts</code> 文件并打开</li></ol><h4 id="第三步-编辑文件" tabindex="-1">第三步：编辑文件 </h4><p>在文件末尾添加您的域名映射：</p><pre><code>127.0.0.1    test.local
+192.168.1.100    myserver.local
+127.0.0.1    ads.example.com</code></pre><h4 id="第四步-保存文件" tabindex="-1">第四步：保存文件 </h4><p>按 <code>Ctrl + S</code> 保存文件</p><h4 id="第五步-刷新-dns-缓存" tabindex="-1">第五步：刷新 DNS 缓存 </h4><ol><li>以管理员身份打开命令提示符</li><li>执行以下命令：</li></ol><pre><code class="language-cmd">ipconfig /flushdns</code></pre><h3 id="方法二-使用-powershell-管理员权限" tabindex="-1">方法二：使用 PowerShell（管理员权限） </h3><h4 id="第一步-打开-powershell" tabindex="-1">第一步：打开 PowerShell </h4><ol><li>右键点击开始按钮</li><li>选择"Windows PowerShell (管理员)"</li></ol><h4 id="第二步-备份原文件" tabindex="-1">第二步：备份原文件 </h4><pre><code class="language-powershell">Copy-Item C:\Windows\System32\drivers\etc\hosts C:\Windows\System32\drivers\etc\hosts.backup</code></pre><h4 id="第三步-编辑文件-1" tabindex="-1">第三步：编辑文件 </h4><pre><code class="language-powershell">notepad C:\Windows\System32\drivers\etc\hosts</code></pre><h4 id="第四步-添加映射并保存" tabindex="-1">第四步：添加映射并保存 </h4><p>在打开的记事本中添加所需的域名映射，然后保存文件。</p><h4 id="第五步-刷新-dns-缓存-1" tabindex="-1">第五步：刷新 DNS 缓存 </h4><pre><code class="language-powershell">ipconfig /flushdns</code></pre><h3 id="验证修改结果-1" tabindex="-1">验证修改结果 </h3><pre><code class="language-cmd"># 查看 hosts 文件内容
+type C:\Windows\System32\drivers\etc\hosts
+
+# 测试域名解析
+ping test.local
+nslookup test.local</code></pre><h2 id="常用配置示例" tabindex="-1">常用配置示例 </h2><h3 id="本地开发环境" tabindex="-1">本地开发环境 </h3><pre><code>127.0.0.1    localhost
+127.0.0.1    dev.mysite.com
+127.0.0.1    api.mysite.com
+127.0.0.1    admin.mysite.com</code></pre><h3 id="屏蔽广告域名" tabindex="-1">屏蔽广告域名 </h3><pre><code>0.0.0.0    ads.google.com
+0.0.0.0    doubleclick.net
+0.0.0.0    googleadservices.com</code></pre><h3 id="指向特定服务器" tabindex="-1">指向特定服务器 </h3><pre><code>192.168.1.100    staging.mysite.com
+192.168.1.101    testing.mysite.com
+10.0.0.50       internal.company.com</code></pre><h2 id="安全注意事项" tabindex="-1">安全注意事项 </h2><h3 id="重要警告" tabindex="-1">重要警告 </h3><ul><li><strong>谨慎修改</strong>：错误的配置可能导致网络访问问题</li><li><strong>备份原文件</strong>：修改前务必备份原始 hosts 文件</li><li><strong>避免恶意修改</strong>：定期检查 hosts 文件是否被恶意软件篡改</li></ul><h3 id="安全最佳实践" tabindex="-1">安全最佳实践 </h3><ol><li><strong>定期检查</strong>：定期查看 hosts 文件内容</li><li><strong>权限控制</strong>：修改完成后检查文件权限</li><li><strong>记录变更</strong>：记录每次修改的目的和内容</li><li><strong>测试验证</strong>：修改后及时测试相关功能</li></ol><h2 id="故障排除" tabindex="-1">故障排除 </h2><h3 id="常见问题" tabindex="-1">常见问题 </h3><h4 id="修改不生效" tabindex="-1">修改不生效 </h4><p><strong>解决方案：</strong></p><ol><li>确认使用管理员权限保存文件</li><li>刷新 DNS 缓存</li><li>重启浏览器或应用程序</li><li>检查文件格式是否正确</li></ol><h4 id="权限不足" tabindex="-1">权限不足 </h4><p><strong>Windows 解决方案：</strong></p><ul><li>确保以管理员身份运行编辑器</li><li>检查文件是否被设置为只读</li></ul><p><strong>macOS 解决方案：</strong></p><ul><li>使用 <code>sudo</code> 命令</li><li>确认输入的管理员密码正确</li></ul><h4 id="语法错误" tabindex="-1">语法错误 </h4><p><strong>检查要点：</strong></p><ul><li>IP 地址和域名之间用空格或制表符分隔</li><li>每行一个映射关系</li><li>注释行以 <code>#</code> 开头</li><li>不要有多余的空行或特殊字符</li></ul><h3 id="恢复原始设置" tabindex="-1">恢复原始设置 </h3><p><strong>macOS：</strong></p><pre><code class="language-bash">sudo cp /etc/hosts.backup /etc/hosts</code></pre><p><strong>Windows：</strong></p><pre><code class="language-cmd">copy C:\Windows\System32\drivers\etc\hosts.backup C:\Windows\System32\drivers\etc\hosts</code></pre><h2 id="高级技巧" tabindex="-1">高级技巧 </h2><h3 id="使用通配符-仅某些系统支持" tabindex="-1">使用通配符（仅某些系统支持） </h3><pre><code>127.0.0.1    *.dev.local</code></pre><h3 id="注释和组织" tabindex="-1">注释和组织 </h3><pre><code># 开发环境
+127.0.0.1    dev.mysite.com
+127.0.0.1    api.dev.mysite.com
+
+# 测试环境
+192.168.1.100    test.mysite.com
+
+# 广告拦截
+0.0.0.0    ads.example.com  # 拦截广告服务器</code></pre><h3 id="临时禁用条目" tabindex="-1">临时禁用条目 </h3><p>在行首添加 <code>#</code> 来注释掉某个条目：</p><pre><code># 127.0.0.1    temp.local  (已禁用)</code></pre><h2 id="总结" tabindex="-1">总结 </h2><p>修改 hosts 文件是网络管理和开发中的常用技巧。通过本指南，您可以：</p><ul><li>在 macOS 和 Windows 系统上安全地修改 hosts 文件</li><li>了解常见的应用场景和配置方法</li><li>掌握故障排除和安全最佳实践</li><li>使用高级技巧提高配置效率</li></ul><p>记住始终以管理员权限进行修改，并在修改前备份原始文件。如果遇到问题，可以随时恢复备份文件来解决。</p><hr/><p><strong>相关链接：</strong></p><ul><li><a href="claude-code-setup-ctok.html">Claude Code 安装指南</a></li><li><a href="claude-code-best-practices.html">网络配置最佳实践</a></li></ul>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

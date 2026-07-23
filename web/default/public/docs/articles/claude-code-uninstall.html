@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何卸载 Claude Code - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">如何卸载 Claude Code</h1>
+<p>适用于：npm 全局或本地安装的 @anthropic-ai/claude-code 包</p><hr/><h2 id="🧭-第一步-检查安装位置" tabindex="-1">🧭 第一步：检查安装位置 </h2><hr/><h2 id="检查是否在本地项目中安装" tabindex="-1">检查是否在本地项目中安装 </h2><p>npm ls @anthropic-ai/claude-code</p><p>检查是否被全局安装 npm ls -g @anthropic-ai/claude-code</p><h2 id="🧹-第二步-执行卸载操作" tabindex="-1">🧹 第二步：执行卸载操作 </h2><hr/><p>卸载本地安装的包 npm uninstall @anthropic-ai/claude-code</p><p>卸载全局安装的包 npm uninstall -g @anthropic-ai/claude-code</p><h2 id="📁-第三步-清理残留文件夹" tabindex="-1">📁 第三步：清理残留文件夹 </h2><hr/><p>查看 node_modules 中是否还有空目录 ls -la ~/node_modules/@anthropic-ai</p><p>删除本地残留目录（如存在） rm -rf ~/node_modules/@anthropic-ai</p><p>查看全局模块目录 npm root -g 示例结果：/opt/homebrew/lib/node_modules</p><p>删除全局残留目录（如存在） sudo rm -rf /opt/homebrew/lib/node_modules/@anthropic-ai</p><h2 id="🧼-第四步-清理-npm-缓存-可选" tabindex="-1">🧼 第四步：清理 npm 缓存（可选） </h2><hr/><p>npm cache clean --force</p><p>##🔍 第五步：检查是否还有引用</p><hr/><p>查找用户目录下是否仍有配置引用该包 grep -r "@anthropic-ai/claude-code" ~</p><p>查找整个系统是否有残留目录（可选，较慢） sudo find / -name "claude-code" 2&gt;/dev/null</p><p>✅ 清理完成后确认</p><hr/><ul><li>本地依赖无残留</li><li>全局依赖无残留</li><li>node_modules/@anthropic-ai 目录已删除</li><li>npm 缓存已清</li><li>grep 与 find 查无引用</li></ul><p>🎉 你的系统现在已经彻底清除了 @anthropic-ai/claude-code</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

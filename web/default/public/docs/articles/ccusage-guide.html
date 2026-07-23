@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ccusage 用量统计神器 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">ccusage 用量统计神器</h1>
+<p><img alt="ccusage logo" loading="lazy" src="https://cdn.jsdelivr.net/gh/ryoppippi/ccusage@main/docs/public/logo.svg"/></p><p>ccusage 是一个用于分析 Claude Code Token 使用量和成本的强大工具，能够从本地 JSONL 文件快速读取并生成详细的使用报告。</p><h2 id="🚀-快速开始" tabindex="-1">🚀 快速开始 </h2><h3 id="推荐方式-直接运行-无需安装" tabindex="-1">推荐方式：直接运行（无需安装） </h3><p>得益于 ccusage 极小的包体积，您可以直接运行，无需安装：</p><pre><code class="language-bash"># 使用 bunx（推荐，速度更快）
+bunx ccusage
+
+# 使用 npx
+npx ccusage@latest
+
+# 使用 deno（需要权限标志）
+deno run -E -R=$HOME/.claude/projects/ -S=homedir -N='raw.githubusercontent.com:443' npm:ccusage@latest</code></pre><blockquote><p>💡 <strong>提示</strong>: 我们推荐使用 <code>bunx</code> 而非 <code>npx</code>，能显著提升运行速度！</p></blockquote><h3 id="可选-全局安装" tabindex="-1">可选：全局安装 </h3><p>由于包体积很小，安装也是可选的：</p><pre><code class="language-bash">npm install -g ccusage</code></pre><h2 id="📊-主要功能" tabindex="-1">📊 主要功能 </h2><h3 id="报告类型" tabindex="-1">报告类型 </h3><pre><code class="language-bash"># 基础用法
+ccusage          # 显示每日报告（默认）
+ccusage daily    # 每日 Token 使用量和成本
+ccusage monthly  # 按月汇总报告
+ccusage session  # 按对话会话统计用量
+ccusage blocks   # 5小时计费窗口统计
+ccusage statusline  # 状态栏的紧凑显示模式（Beta）</code></pre><h3 id="实时监控" tabindex="-1">实时监控 </h3><pre><code class="language-bash">ccusage blocks --live  # 实时使用量仪表板</code></pre><h3 id="筛选和选项" tabindex="-1">筛选和选项 </h3><pre><code class="language-bash"># 日期范围筛选
+ccusage daily --since 20250525 --until 20250530
+
+# JSON 格式输出
+ccusage daily --json
+
+# 按模型成本细分
+ccusage daily --breakdown
+
+# 时区设置
+ccusage daily --timezone UTC
+
+# 本地化设置
+ccusage daily --locale ja-JP</code></pre><h3 id="项目分析" tabindex="-1">项目分析 </h3><pre><code class="language-bash"># 按项目/实例分组
+ccusage daily --instances
+
+# 筛选特定项目
+ccusage daily --project myproject
+
+# 组合使用
+ccusage daily --instances --project myproject --json</code></pre><h3 id="紧凑模式" tabindex="-1">紧凑模式 </h3><pre><code class="language-bash"># 强制紧凑表格模式（适合截图分享）
+ccusage --compact
+ccusage monthly --compact</code></pre><h2 id="📸-界面预览" tabindex="-1">📸 界面预览 </h2><p><picture><source srcset="/images/ccusage-guide.png" type="image/avif"/><source srcset="/images/ccusage-guide.webp" type="image/webp"/><img alt="ccusage 界面预览" decoding="async" loading="lazy" src="../images/ccusage-guide.png"/></picture></p><h2 id="✨-核心特性" tabindex="-1">✨ 核心特性 </h2><ul><li>📊 <strong>每日报告</strong>: 按日期汇总显示 Token 使用量和成本</li><li>📅 <strong>月度报告</strong>: 按月汇总显示 Token 使用量和成本</li><li>💬 <strong>会话报告</strong>: 按对话会话分组显示使用量</li><li>⏰ <strong>5小时区块报告</strong>: 跟踪 Claude 计费窗口内的使用量，支持活跃区块监控</li><li>📈 <strong>实时监控</strong>: 通过 <code>blocks --live</code> 提供实时仪表板，显示活跃会话进度、Token 消耗率和成本预测</li><li>🚀 <strong>状态栏集成</strong>: 为 Claude Code 状态栏钩子提供紧凑的使用量显示（Beta）</li><li>🤖 <strong>模型跟踪</strong>: 查看您正在使用的 Claude 模型（Opus、Sonnet 等）</li><li>📊 <strong>模型细分</strong>: 通过 <code>--breakdown</code> 标志查看各模型的成本细分</li><li>📅 <strong>日期筛选</strong>: 使用 <code>--since</code> 和 <code>--until</code> 按日期范围筛选报告</li><li>📁 <strong>自定义路径</strong>: 支持自定义 Claude 数据目录位置</li><li>🎨 <strong>美观输出</strong>: 彩色表格格式显示，自动响应式布局</li><li>📱 <strong>智能表格</strong>: 在窄终端（&lt; 100字符）下自动启用紧凑模式，显示核心列</li><li>📸 <strong>紧凑模式</strong>: 使用 <code>--compact</code> 标志强制紧凑表格布局，非常适合截图和分享</li><li>📋 <strong>增强模型显示</strong>: 模型名称以项目符号列表显示，提升可读性</li><li>📄 <strong>JSON 输出</strong>: 通过 <code>--json</code> 导出结构化 JSON 格式数据</li><li>💰 <strong>成本跟踪</strong>: 显示每日/月/会话的美元成本</li><li>🔄 <strong>缓存 Token 支持</strong>: 分别跟踪和显示缓存创建和缓存读取 Token</li><li>🌐 <strong>离线模式</strong>: 通过 <code>--offline</code> 使用预缓存的定价数据，无需网络连接（仅限 Claude 模型）</li><li>🔌 <strong>MCP 集成</strong>: 内置模型上下文协议服务器，可与其他工具集成</li><li>🏗️ <strong>多实例支持</strong>: 通过 <code>--instances</code> 标志按项目分组使用量，并筛选特定项目</li><li>🌍 <strong>时区支持</strong>: 通过 <code>--timezone</code> 选项配置日期分组的时区</li><li>🌐 <strong>本地化支持</strong>: 通过 <code>--locale</code> 选项自定义日期/时间格式（如 en-US、ja-JP、de-DE）</li><li>⚙️ <strong>配置文件</strong>: 使用 JSON 配置文件设置默认值，支持 IDE 自动完成和验证</li><li>🚀 <strong>超小包体积</strong>: 与其他 CLI 工具不同，我们极其注重包体积 - 即使不经过压缩也非常小巧！</li></ul><h2 id="💡-使用场景" tabindex="-1">💡 使用场景 </h2><h3 id="_1-监控日常使用量" tabindex="-1">1. 监控日常使用量 </h3><pre><code class="language-bash"># 查看今天的使用情况
+ccusage daily
+
+# 查看本月使用情况
+ccusage monthly</code></pre><h3 id="_2-项目成本分析" tabindex="-1">2. 项目成本分析 </h3><pre><code class="language-bash"># 查看各个项目的成本
+ccusage daily --instances
+
+# 分析特定项目
+ccusage daily --project myproject --breakdown</code></pre><h3 id="_3-实时监控" tabindex="-1">3. 实时监控 </h3><pre><code class="language-bash"># 启动实时监控面板
+ccusage blocks --live</code></pre><h3 id="_4-数据导出" tabindex="-1">4. 数据导出 </h3><pre><code class="language-bash"># 导出 JSON 格式数据进行进一步分析
+ccusage daily --json &gt; usage_data.json</code></pre><h2 id="📖-完整文档" tabindex="-1">📖 完整文档 </h2><p>更详细的文档请访问：<strong><a href="https://ccusage.com/" rel="noopener" target="_blank">ccusage.com</a></strong></p><h2 id="🤔-为什么选择-ccusage" tabindex="-1">🤔 为什么选择 ccusage？ </h2><ol><li><strong>零安装开销</strong>: 直接运行，无需全局安装</li><li><strong>超快启动</strong>: 极小的包体积确保快速启动</li><li><strong>功能全面</strong>: 从基础统计到实时监控，应有尽有</li><li><strong>输出美观</strong>: 彩色表格显示，数据清晰易读</li><li><strong>灵活配置</strong>: 支持多种输出格式和筛选选项</li><li><strong>离线工作</strong>: 支持离线模式，无需网络连接</li></ol><p>ccusage 是每个 Claude Code 用户必备的工具，帮助您更好地了解和控制 AI 编程的成本。立即试用，让您的 Claude Code 使用更加透明和高效！</p><h2 id="🔗-相关链接" tabindex="-1">🔗 相关链接 </h2><ul><li><a href="https://github.com/ryoppippi/ccusage" rel="noopener" target="_blank">GitHub 仓库</a></li><li><a href="https://ccusage.com/" rel="noopener" target="_blank">官方文档</a></li><li><a href="https://npmjs.com/package/ccusage" rel="noopener" target="_blank">NPM 包</a></li></ul>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

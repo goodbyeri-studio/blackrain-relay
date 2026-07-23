@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windows 设置环境变量 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">Windows 设置环境变量</h1>
+<h2 id="方法1-powershell命令-推荐" tabindex="-1">方法1：PowerShell命令（推荐） </h2><pre><code class="language-powershell">$env:ANTHROPIC_BASE_URL = "https://goodbyeri.cc"
+$env:ANTHROPIC_AUTH_TOKEN = "你的API密钥"</code></pre><h2 id="方法2-命令提示符-cmd" tabindex="-1">方法2：命令提示符（CMD） </h2><pre><code class="language-cmd">set ANTHROPIC_BASE_URL=https://goodbyeri.cc
+set ANTHROPIC_AUTH_TOKEN=你的API密钥</code></pre><h2 id="方法3-永久设置-通过setx命令" tabindex="-1">方法3：永久设置（通过setx命令） </h2><pre><code class="language-cmd">setx ANTHROPIC_BASE_URL "https://goodbyeri.cc"
+setx ANTHROPIC_AUTH_TOKEN "你的API密钥"</code></pre><h2 id="方法4-图形化界面设置" tabindex="-1">方法4：图形化界面设置 </h2><ol><li>右键"此电脑" → "属性"</li><li>点击"高级系统设置"</li><li>点击"环境变量"</li><li>在"用户变量"或"系统变量"中点击"新建"</li><li>分别添加两个变量</li></ol><h2 id="验证设置" tabindex="-1">验证设置 </h2><p>设置完成后，可以通过以下命令验证：</p><p><strong>PowerShell：</strong></p><pre><code class="language-powershell">echo $env:ANTHROPIC_BASE_URL
+echo $env:ANTHROPIC_AUTH_TOKEN</code></pre><p><strong>CMD：</strong></p><pre><code class="language-cmd">echo %ANTHROPIC_BASE_URL%
+echo %ANTHROPIC_AUTH_TOKEN%</code></pre><p><strong>注意：</strong></p><ul><li>方法1和2只在当前会话有效</li><li>方法3和4会永久保存</li><li>使用setx后需要重新打开命令行窗口才能生效</li></ul>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>
