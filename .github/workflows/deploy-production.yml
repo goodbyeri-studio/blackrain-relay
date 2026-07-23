@@ -253,7 +253,20 @@ jobs:
           PROD_APP_ROOT: ${{ vars.PROD_APP_ROOT }}
         run: |
           ssh_args=(-i "$HOME/.ssh/meimei-api-deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
-          ssh "${ssh_args[@]}" "$PROD_DEPLOY_USER@$PROD_HOST" "mkdir -p '$PROD_APP_ROOT'"
+          # DigitalOcean Firewall attachment can take a short time to propagate.
+          # Retry the first SSH connection instead of failing during that window.
+          connected=false
+          for attempt in {1..24}; do
+            if ssh "${ssh_args[@]}" -o ConnectTimeout=10 "$PROD_DEPLOY_USER@$PROD_HOST" "mkdir -p '$PROD_APP_ROOT'"; then
+              connected=true
+              break
+            fi
+            sleep 5
+          done
+          [[ "$connected" == true ]] || {
+            echo '::error::production SSH endpoint did not become reachable after temporary firewall creation'
+            exit 1
+          }
           scp "${ssh_args[@]}" deploy/production/deploy.sh deploy/production/docker-compose.yml \
             "$PROD_DEPLOY_USER@$PROD_HOST:$PROD_APP_ROOT/"
       - name: Authenticate production host to DOCR
