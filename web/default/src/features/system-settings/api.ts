@@ -20,6 +20,7 @@ import { api } from '@/lib/api'
 
 import type {
   ConfirmPaymentComplianceResponse,
+  DeepKeyGroupSyncResponse,
   FetchUpstreamRatiosRequest,
   LogCleanupTask,
   SystemOptionsResponse,
@@ -87,6 +88,13 @@ export async function listSystemTasks(limit = 20) {
 export async function resetModelRatios() {
   const res = await api.post<UpdateOptionResponse>(
     '/api/option/rest_model_ratio'
+  )
+  return res.data
+}
+
+export async function syncDeepKeyGroups() {
+  const res = await api.post<DeepKeyGroupSyncResponse>(
+    '/api/ratio_sync/deepkey/groups'
   )
   return res.data
 }

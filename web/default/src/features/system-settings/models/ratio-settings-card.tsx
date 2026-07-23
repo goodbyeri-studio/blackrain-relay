@@ -27,7 +27,7 @@ import * as z from 'zod'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-import { resetModelRatios } from '../api'
+import { resetModelRatios, syncDeepKeyGroups } from '../api'
 import { SettingsPageTitleStatusPortal } from '../components/settings-page-context'
 import { SettingsSection } from '../components/settings-section'
 import { useUpdateOption } from '../hooks/use-update-option'
@@ -162,6 +162,7 @@ export function RatioSettingsCard({
   const updateOption = useUpdateOption()
   const queryClient = useQueryClient()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deepKeyGroupConfirmOpen, setDeepKeyGroupConfirmOpen] = useState(false)
 
   const resetMutation = useMutation({
     mutationFn: resetModelRatios,
@@ -245,6 +246,41 @@ export function RatioSettingsCard({
       GroupSpecialUsableGroup: formatJsonForTextarea(
         groupDefaults.GroupSpecialUsableGroup
       ),
+    },
+  })
+
+  const deepKeyGroupSyncMutation = useMutation({
+    mutationFn: syncDeepKeyGroups,
+    onSuccess: (response) => {
+      if (!response.success || !response.data) {
+        toast.error(response.message || t('Failed to sync DeepKey groups'))
+        return
+      }
+
+      const groupRatio = JSON.stringify(response.data.group_ratio)
+      const userUsableGroups = JSON.stringify(response.data.user_usable_groups)
+      const autoGroups = JSON.stringify(response.data.auto_groups)
+      groupNormalizedDefaults.current = {
+        ...groupNormalizedDefaults.current,
+        GroupRatio: groupRatio,
+        UserUsableGroups: userUsableGroups,
+        AutoGroups: autoGroups,
+      }
+      groupForm.reset({
+        ...groupForm.getValues(),
+        GroupRatio: formatJsonForTextarea(groupRatio),
+        UserUsableGroups: formatJsonForTextarea(userUsableGroups),
+        AutoGroups: formatJsonForTextarea(autoGroups),
+      })
+      queryClient.invalidateQueries({ queryKey: ['system-options'] })
+      queryClient.invalidateQueries({ queryKey: ['user-groups'] })
+      setDeepKeyGroupConfirmOpen(false)
+      toast.success(
+        t('Synced {{count}} DeepKey groups', { count: response.data.count })
+      )
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to sync DeepKey groups'))
     },
   })
 
@@ -431,7 +467,9 @@ export function RatioSettingsCard({
         <GroupRatioForm
           form={groupForm}
           onSave={saveGroupRatios}
+          onSyncDeepKeyGroups={() => setDeepKeyGroupConfirmOpen(true)}
           isSaving={updateOption.isPending}
+          isSyncingDeepKeyGroups={deepKeyGroupSyncMutation.isPending}
         />
       )
     }
@@ -499,6 +537,17 @@ export function RatioSettingsCard({
         isLoading={resetMutation.isPending}
         handleConfirm={handleConfirmReset}
         confirmText={t('Reset')}
+      />
+      <ConfirmDialog
+        open={deepKeyGroupConfirmOpen}
+        onOpenChange={setDeepKeyGroupConfirmOpen}
+        title={t('Sync DeepKey groups')}
+        desc={t(
+          'Replace the current group ratios, selectable groups, and auto assignment order with the latest DeepKey catalog? You can edit them after syncing.'
+        )}
+        confirmText={t('Sync groups')}
+        handleConfirm={() => deepKeyGroupSyncMutation.mutate()}
+        isLoading={deepKeyGroupSyncMutation.isPending}
       />
     </>
   )

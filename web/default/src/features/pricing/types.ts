@@ -56,6 +56,9 @@ export type PricingModel = {
   billing_expr?: string
   /** Pricing version returned by backend, useful for cache busting */
   pricing_version?: string
+  /** Present in the upstream catalog but not enabled by a local channel. */
+  catalog_only?: boolean
+  catalog_source?: string
   /**
    * Optional model metadata fields reserved for backend-provided catalog data.
    * Keep them data-driven; do not synthesize display values on the client.
@@ -94,7 +97,7 @@ export type PricingData = {
   data: PricingModel[]
   vendors: PricingVendor[]
   group_ratio: Record<string, number>
-  usable_group: Record<string, { desc: string; ratio: number }>
+  usable_group: Record<string, string | { desc: string; ratio: number }>
   supported_endpoint: Record<string, string>
   auto_groups: string[]
 }

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>添加 MCP 服务器完整指南 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">添加 MCP 服务器完整指南</h1>
+<blockquote><p>🔥 <strong>2025年1月更新</strong>：本文包含最新的MCP配置方法、常见错误解决方案，以及10个经过测试的实用MCP服务器推荐。解决了90%以上的配置问题！</p></blockquote><p>你是否在使用Claude Code时想要扩展更多功能？是否遇到过"MCP服务器添加失败"的错误？本文将手把手教你如何正确添加和配置MCP服务器，让你的Claude Code功能提升10倍！</p><blockquote><p>⚡ <strong>快速提示</strong>：如果你只想快速添加一个MCP服务器，直接跳到"30秒快速上手"部分。如果你想深入了解并避免所有可能的错误，请完整阅读本文。</p></blockquote><hr/><h2 id="什么是mcp-model-context-protocol" tabindex="-1">什么是MCP（Model Context Protocol）？ </h2><p>MCP是Anthropic推出的开源通信标准，它就像是AI助手的"瑞士军刀"，让Claude Code可以：</p><ul><li>📁 直接访问和操作本地文件系统</li><li>🌐 连接各种API和网络服务</li><li>🗄️ 查询和操作数据库</li><li>🛠️ 集成各种开发工具</li><li>🔧 自动化日常任务</li></ul><h2 id="_30秒快速上手" tabindex="-1">30秒快速上手 </h2><p>如果你赶时间，这是最快的添加方法：</p><pre><code class="language-bash"># 添加文件系统访问（最常用）
+claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/Documents ~/Desktop
+
+# 验证是否成功
+claude mcp list</code></pre><p>就这么简单！但如果遇到错误，请继续阅读详细指南。</p><h2 id="详细添加步骤-3种方法" tabindex="-1">详细添加步骤（3种方法） </h2><h3 id="方法1-命令行添加-推荐新手" tabindex="-1">方法1：命令行添加（推荐新手） </h3><p>Claude Code提供了简单的命令行工具来添加MCP服务器：</p><pre><code class="language-bash"># 基本语法
+claude mcp add &lt;名称&gt; &lt;命令&gt; [参数...]
+
+# 实际例子：添加本地文件系统访问
+claude mcp add my-filesystem -- npx -y @modelcontextprotocol/server-filesystem ~/Documents
+
+# 带环境变量的例子
+claude mcp add api-server -e API_KEY=your-key-here -- /path/to/server</code></pre><h3 id="方法2-直接编辑配置文件-推荐高级用户" tabindex="-1">方法2：直接编辑配置文件（推荐高级用户） </h3><p>很多开发者觉得CLI向导太繁琐，特别是输错了要重来。直接编辑配置文件更高效：</p><p><strong>1. 找到配置文件位置：</strong></p><ul><li>macOS/Linux: <code>~/.claude.json</code></li><li>Windows: <code>%USERPROFILE%\.claude.json</code></li></ul><p><strong>2. 编辑配置文件：</strong></p><pre><code class="language-json">{
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/username/Documents"],
+      "env": {}
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "your-github-token"
+      }
+    }
+  }
+}</code></pre><p><strong>3. 重启Claude Code生效</strong></p><h3 id="方法3-项目级配置-推荐团队协作" tabindex="-1">方法3：项目级配置（推荐团队协作） </h3><p>如果你想让团队成员都能使用相同的MCP配置：</p><pre><code class="language-bash"># 添加项目级MCP服务器
+claude mcp add shared-tools -s project -- npx -y @your-team/mcp-tools</code></pre><p>这会在项目根目录创建<code>.mcp.json</code>文件：</p><pre><code class="language-json">{
+  "mcpServers": {
+    "shared-tools": {
+      "command": "npx",
+      "args": ["-y", "@your-team/mcp-tools"],
+      "env": {}
+    }
+  }
+}</code></pre><h2 id="mcp服务器作用域详解" tabindex="-1">MCP服务器作用域详解 </h2><p>理解作用域对于避免"找不到服务器"的错误至关重要：</p><h3 id="_1-local作用域-默认" tabindex="-1">1. Local作用域（默认） </h3><ul><li>只在当前目录可用</li><li>配置存储在<code>~/.claude.json</code>的projects部分</li><li>适合：个人项目特定工具</li></ul><h3 id="_2-user作用域-全局" tabindex="-1">2. User作用域（全局） </h3><ul><li>在所有项目中都可用</li><li>使用<code>-s user</code>标志添加</li><li>适合：常用工具如文件系统、数据库客户端</li></ul><h3 id="_3-project作用域-团队共享" tabindex="-1">3. Project作用域（团队共享） </h3><ul><li>通过<code>.mcp.json</code>文件共享</li><li>使用<code>-s project</code>标志添加</li><li>适合：团队共享的项目特定工具</li></ul><h2 id="_10个最实用的mcp服务器推荐" tabindex="-1">10个最实用的MCP服务器推荐 </h2><p>基于社区反馈和实际使用经验，这是最值得安装的MCP服务器列表：</p><h3 id="_1-文件系统访问" tabindex="-1">1. 文件系统访问 </h3><pre><code class="language-bash">claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/Documents ~/Projects ~/Desktop</code></pre><p>用途：让Claude直接读写文件，修改代码</p><h3 id="_2-github集成" tabindex="-1">2. GitHub集成 </h3><pre><code class="language-bash">claude mcp add github -s user -e GITHUB_TOKEN=your-token -- npx -y @modelcontextprotocol/server-github</code></pre><p>用途：管理issues、PRs、代码审查</p><h3 id="_3-网页浏览器控制" tabindex="-1">3. 网页浏览器控制 </h3><pre><code class="language-bash">claude mcp add puppeteer -s user -- npx -y @modelcontextprotocol/server-puppeteer</code></pre><p>用途：自动化网页操作、爬虫、测试</p><h3 id="_4-数据库连接-postgresql" tabindex="-1">4. 数据库连接（PostgreSQL） </h3><pre><code class="language-bash">claude mcp add postgres -s user -e DATABASE_URL=your-db-url -- npx -y @modelcontextprotocol/server-postgres</code></pre><p>用途：直接查询和操作数据库</p><h3 id="_5-fetch工具-api调用" tabindex="-1">5. Fetch工具（API调用） </h3><pre><code class="language-bash">claude mcp add fetch -s user -- npx -y @kazuph/mcp-fetch</code></pre><p>用途：调用各种REST API</p><h3 id="_6-搜索引擎" tabindex="-1">6. 搜索引擎 </h3><pre><code class="language-bash">claude mcp add search -s user -e BRAVE_API_KEY=your-key -- npx -y @modelcontextprotocol/server-brave-search</code></pre><p>用途：搜索最新信息</p><h3 id="_7-slack集成" tabindex="-1">7. Slack集成 </h3><pre><code class="language-bash">claude mcp add slack -s user -e SLACK_TOKEN=your-token -- npx -y @modelcontextprotocol/server-slack</code></pre><p>用途：发送消息、管理频道</p><h3 id="_8-时间管理" tabindex="-1">8. 时间管理 </h3><pre><code class="language-bash">claude mcp add time -s user -- npx -y @modelcontextprotocol/server-time</code></pre><p>用途：时区转换、日期计算</p><h3 id="_9-内存存储" tabindex="-1">9. 内存存储 </h3><pre><code class="language-bash">claude mcp add memory -s user -- npx -y @modelcontextprotocol/server-memory</code></pre><p>用途：跨对话保存信息</p><h3 id="_10-sequential-thinking-思维链" tabindex="-1">10. Sequential Thinking（思维链） </h3><pre><code class="language-bash">claude mcp add thinking -s user -- npx -y @modelcontextprotocol/server-sequential-thinking</code></pre><p>用途：复杂问题分步骤思考</p><h2 id="常见错误及解决方案" tabindex="-1">常见错误及解决方案 </h2><h3 id="错误1-工具名称验证失败" tabindex="-1">错误1：工具名称验证失败 </h3><pre><code>API Error 400: "tools.11.custom.name: String should match pattern '^[a-zA-Z0-9_-]{1,64}$'"</code></pre><p><strong>解决方案</strong>：</p><ul><li>确保服务器名称只包含字母、数字、下划线和连字符</li><li>名称长度不超过64个字符</li><li>不要使用特殊字符或空格</li></ul><h3 id="错误2-找不到mcp服务器" tabindex="-1">错误2：找不到MCP服务器 </h3><pre><code>MCP server 'my-server' not found</code></pre><p><strong>解决方案</strong>：</p><ol><li>检查作用域设置是否正确</li><li>运行<code>claude mcp list</code>确认服务器已添加</li><li>确保在正确的目录下（对于local作用域）</li><li>重启Claude Code</li></ol><h3 id="错误3-协议版本错误" tabindex="-1">错误3：协议版本错误 </h3><pre><code>"protocolVersion": "Required"</code></pre><p><strong>解决方案</strong>： 这是Claude Code的已知bug，临时解决方案：</p><ol><li>使用包装脚本</li><li>确保MCP服务器返回正确的协议版本</li><li>更新到最新版本的Claude Code</li></ol><h3 id="错误4-windows路径问题" tabindex="-1">错误4：Windows路径问题 </h3><pre><code>Error: Cannot find module 'C:UsersusernameDocuments'</code></pre><p><strong>解决方案</strong>： Windows路径需要使用正斜杠或双反斜杠：</p><pre><code class="language-bash"># 错误
+claude mcp add fs -- npx -y @modelcontextprotocol/server-filesystem C:\Users\username\Documents
+
+# 正确
+claude mcp add fs -- npx -y @modelcontextprotocol/server-filesystem C:/Users/username/Documents
+# 或
+claude mcp add fs -- npx -y @modelcontextprotocol/server-filesystem C:\\Users\\username\\Documents</code></pre><h3 id="错误5-权限问题" tabindex="-1">错误5：权限问题 </h3><pre><code>Permission denied</code></pre><p><strong>解决方案</strong>：</p><ol><li>macOS/Linux：使用<code>sudo</code>（不推荐）或修改文件权限</li><li>Windows：以管理员身份运行</li><li>最好的方法：将MCP服务器安装在用户目录</li></ol><h2 id="调试技巧" tabindex="-1">调试技巧 </h2><p>当遇到问题时，这些调试方法可以帮你快速定位：</p><h3 id="_1-启用调试模式" tabindex="-1">1. 启用调试模式 </h3><pre><code class="language-bash">claude --mcp-debug</code></pre><h3 id="_2-查看mcp状态" tabindex="-1">2. 查看MCP状态 </h3><p>在Claude Code中输入：</p><pre><code>/mcp</code></pre><h3 id="_3-查看日志文件" tabindex="-1">3. 查看日志文件 </h3><p><strong>macOS/Linux:</strong></p><pre><code class="language-bash">tail -f ~/Library/Logs/Claude/mcp*.log</code></pre><p><strong>Windows:</strong></p><pre><code class="language-cmd">type "%APPDATA%\Claude\logs\mcp*.log"</code></pre><h3 id="_4-手动测试服务器" tabindex="-1">4. 手动测试服务器 </h3><pre><code class="language-bash"># 直接运行服务器命令，看是否有输出
+npx -y @modelcontextprotocol/server-filesystem ~/Documents</code></pre><h2 id="中文用户特别注意事项" tabindex="-1">中文用户特别注意事项 </h2><h3 id="_1-中文路径问题" tabindex="-1">1. 中文路径问题 </h3><p>避免在路径中使用中文字符：</p><pre><code class="language-bash"># 避免
+claude mcp add fs -- npx -y @modelcontextprotocol/server-filesystem ~/文档
+
+# 推荐
+claude mcp add fs -- npx -y @modelcontextprotocol/server-filesystem ~/Documents</code></pre><h3 id="_2-代理配置" tabindex="-1">2. 代理配置 </h3><p>如果你在使用代理：</p><pre><code class="language-bash"># 设置npm代理
+npm config set proxy http://your-proxy:port
+npm config set https-proxy http://your-proxy:port
+
+# 然后再添加MCP服务器
+claude mcp add ...</code></pre><h3 id="_3-国内镜像源" tabindex="-1">3. 国内镜像源 </h3><p>使用淘宝npm镜像加速下载：</p><pre><code class="language-bash"># 临时使用
+claude mcp add fs -- npx -y --registry=https://registry.npmmirror.com @modelcontextprotocol/server-filesystem ~/Documents
+
+# 或永久设置
+npm config set registry https://registry.npmmirror.com</code></pre><h2 id="最佳实践建议" tabindex="-1">最佳实践建议 </h2><ol><li><strong>按需添加</strong>：不要一次性添加太多MCP服务器，会影响性能</li><li><strong>定期清理</strong>：使用<code>claude mcp remove &lt;name&gt;</code>删除不用的服务器</li><li><strong>安全第一</strong>：只添加可信的MCP服务器，特别是需要网络访问的</li><li><strong>备份配置</strong>：定期备份<code>~/.claude.json</code>文件</li><li><strong>团队协作</strong>：使用project作用域共享常用配置</li></ol><h2 id="进阶技巧" tabindex="-1">进阶技巧 </h2><h3 id="_1-创建自定义mcp服务器" tabindex="-1">1. 创建自定义MCP服务器 </h3><p>如果现有的MCP服务器不能满足需求，可以创建自己的：</p><pre><code class="language-javascript">// my-mcp-server.js
+import { Server } from '@modelcontextprotocol/sdk';
+
+const server = new Server({
+  name: 'my-custom-server',
+  version: '1.0.0',
+});
+
+server.setRequestHandler('tools/list', async () =&gt; {
+  return {
+    tools: [{
+      name: 'my_custom_tool',
+      description: '自定义工具',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          input: { type: 'string' }
+        }
+      }
+    }]
+  };
+});
+
+server.start();</code></pre><h3 id="_2-批量配置脚本" tabindex="-1">2. 批量配置脚本 </h3><p>创建一个脚本一次性配置所有常用MCP服务器：</p><pre><code class="language-bash">#!/bin/bash
+# setup-mcp.sh
+
+echo "正在配置常用MCP服务器..."
+
+# 文件系统
+claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/Documents ~/Projects
+
+# GitHub
+read -p "请输入GitHub Token: " github_token
+claude mcp add github -s user -e GITHUB_TOKEN=$github_token -- npx -y @modelcontextprotocol/server-github
+
+# 其他服务器...
+
+echo "配置完成！"
+claude mcp list</code></pre><h2 id="总结" tabindex="-1">总结 </h2><p>通过本文，你应该已经掌握了：</p><ol><li>✅ 三种添加MCP服务器的方法</li><li>✅ 作用域的概念和使用场景</li><li>✅ 10个最实用的MCP服务器</li><li>✅ 常见错误的解决方案</li><li>✅ 调试和优化技巧</li></ol><p>MCP让Claude Code从一个简单的AI助手变成了强大的开发伙伴。正确配置MCP服务器后，你的开发效率将会大幅提升。</p><blockquote><p>💡 <strong>下一步行动</strong>：立即尝试添加filesystem MCP服务器，体验Claude Code直接操作文件的强大功能！</p></blockquote><h2 id="相关资源" tabindex="-1">相关资源 </h2><ul><li><a href="https://modelcontextprotocol.io" rel="noopener" target="_blank">MCP官方文档</a></li><li><a href="https://docs.anthropic.com/claude-code" rel="noopener" target="_blank">Claude Code文档</a></li><li><a href="https://github.com/yzfly/Awesome-MCP-ZH" rel="noopener" target="_blank">MCP服务器列表</a></li><li><a href="https://github.com/anthropics/claude-code/discussions" rel="noopener" target="_blank">社区讨论</a></li></ul><hr/><p><strong>最后更新</strong>：2025年1月 | <strong>Claude Code版本</strong>：最新 | <strong>适用平台</strong>：Windows/macOS/Linux</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

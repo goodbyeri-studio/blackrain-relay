@@ -45,6 +45,38 @@ make dev-frontend
 
 Go 代码未变化时可用 `make dev-api` 直接复用本地 dev 镜像。
 
+## 本地完整镜像验证
+
+需要从当前检出源码构建包含前后端产物的完整镜像时，必须同时加载基础 Compose 文件和本地构建 override；`docker-compose.local.yml` 不是独立的 Compose 项目：
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml config
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+```
+
+默认路径不读取任何支付 Secret，可在 Windows、macOS 和 Linux 上使用。它会复用 `docker-compose.yml` 中的端口、PostgreSQL、Redis、网络和持久化卷。不要与 `docker-compose.dev.yml` 管理的开发容器同时启动，避免容器名和端口冲突。
+
+需要联调微信支付时，再显式加载可选 override。`WECHAT_PAY_ENV_FILE` 必须指向支付环境变量文件，`WECHAT_PAY_SECRET_DIR` 必须指向包含商户私钥和微信支付公钥的目录；两者都应使用当前宿主机可解析的绝对路径：
+
+```bash
+export WECHAT_PAY_ENV_FILE=/absolute/path/to/wechatpay.env
+export WECHAT_PAY_SECRET_DIR=/absolute/path/to/wechatpay-secrets
+
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.local.yml \
+  -f docker-compose.wechat-pay.local.yml \
+  config
+
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.local.yml \
+  -f docker-compose.wechat-pay.local.yml \
+  up -d --build
+```
+
+PowerShell 使用 `$env:WECHAT_PAY_ENV_FILE` 和 `$env:WECHAT_PAY_SECRET_DIR` 设置相同变量。支付 override 未被加载时无需配置这两个变量；加载后若变量缺失，Compose 会在启动前给出明确错误。
+
 ## 常用命令
 
 ```bash

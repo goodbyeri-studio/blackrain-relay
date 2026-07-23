@@ -62,11 +62,27 @@ export function usePricingData() {
     })
   }, [data])
 
+  const usableGroup = useMemo(() => {
+    const groups = data?.usable_group ?? {}
+    return Object.fromEntries(
+      Object.entries(groups).map(([group, value]) => {
+        if (typeof value !== 'string') return [group, value]
+        return [
+          group,
+          {
+            desc: value,
+            ratio: data?.group_ratio?.[group] ?? 1,
+          },
+        ]
+      })
+    ) as Record<string, { desc: string; ratio: number }>
+  }, [data?.group_ratio, data?.usable_group])
+
   return {
     models,
     vendors: data?.vendors ?? [],
     groupRatio: data?.group_ratio ?? {},
-    usableGroup: data?.usable_group ?? {},
+    usableGroup,
     endpointMap: data?.supported_endpoint ?? {},
     autoGroups: data?.auto_groups ?? [],
     isLoading,

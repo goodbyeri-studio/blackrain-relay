@@ -2,6 +2,7 @@ package dto
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"regexp"
 	"strings"
@@ -52,7 +53,25 @@ type ChannelOtherSettings struct {
 	UpstreamModelUpdateLastDetectedModels []string              `json:"upstream_model_update_last_detected_models,omitempty"` // 上次检测到的可加入模型
 	UpstreamModelUpdateLastRemovedModels  []string              `json:"upstream_model_update_last_removed_models,omitempty"`  // 上次检测到的可删除模型
 	UpstreamModelUpdateIgnoredModels      []string              `json:"upstream_model_update_ignored_models,omitempty"`       // 手动忽略的模型
+	ModelRatios                           map[string]float64    `json:"model_ratios,omitempty"`                               // 渠道模型倍率，优先于全局模型倍率
 	AdvancedCustom                        *AdvancedCustomConfig `json:"advanced_custom,omitempty"`
+}
+
+const MaxChannelModelRatio = 1_000_000
+
+func (s *ChannelOtherSettings) ValidateModelRatios() error {
+	if s == nil {
+		return nil
+	}
+	for modelName, ratio := range s.ModelRatios {
+		if strings.TrimSpace(modelName) == "" {
+			return fmt.Errorf("model_ratios contains an empty model name")
+		}
+		if math.IsNaN(ratio) || math.IsInf(ratio, 0) || ratio < 0 || ratio > MaxChannelModelRatio {
+			return fmt.Errorf("model_ratios[%q] must be between 0 and %g", modelName, float64(MaxChannelModelRatio))
+		}
+	}
+	return nil
 }
 
 func (s *ChannelOtherSettings) IsOpenRouterEnterprise() bool {

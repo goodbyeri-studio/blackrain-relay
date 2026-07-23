@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code 安装配置 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">Claude Code 安装配置</h1>
+<h3 id="_1️⃣-安装-node-js-已安装可跳过" tabindex="-1">1️⃣ 安装 Node.js（已安装可跳过） </h3><p>确保 Node.js 版本 ≥ 18.0</p><pre><code class="language-bash"># Ubuntu / Debian 用户
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo bash -
+sudo apt-get install -y nodejs
+node --version
+
+# macOS 用户
+sudo xcode-select --install
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install node
+node --version</code></pre><h3 id="_2️⃣-安装-claude-code" tabindex="-1">2️⃣ 安装 Claude Code </h3><h4 id="claude-code-原生版本安装" tabindex="-1">Claude Code 原生版本安装 </h4><pre><code class="language-bash"># Install with Homebrew on macOS, Linux
+brew install --cask claude-code
+# Install via script on macOS, Linux, WSL
+curl -fsSL https://claude.ai/install.sh | bash
+# Install on Windows
+PowerShellirm https://claude.ai/install.psliex</code></pre><h4 id="claude-code-npm-安装" tabindex="-1">Claude Code npm 安装 </h4><pre><code class="language-bash">npm install -g @anthropic-ai/claude-code
+claude --version</code></pre><h3 id="_3️⃣-开始使用" tabindex="-1">3️⃣ 开始使用 </h3><p>获取 Auth Token： ANTHROPIC_AUTH_TOKEN ：会单独发给你，类似格式： "你的API密钥"</p><p>API地址： ANTHROPIC_BASE_URL：https://goodbyeri.cc 是本站的 API 服务地址，与主站地址相同</p><p>在您的项目目录下运行：</p><pre><code class="language-bash">cd your-project-folder
+export ANTHROPIC_AUTH_TOKEN=你的API密钥
+export ANTHROPIC_BASE_URL=https://goodbyeri.cc
+claude 你是什么大模型</code></pre><p>运行后 选择你喜欢的主题 + Enter 确认安全须知 + Enter 使用默认 Terminal 配置 + Enter 信任工作目录 + Enter</p><p>开始在终端里和你的 AI 编程搭档一起写代码吧！🚀</p><h2 id="_4️⃣-配置环境变量-推荐" tabindex="-1">4️⃣ 配置环境变量（推荐） </h2><h3 id="环境变量" tabindex="-1">环境变量 </h3><pre><code class="language-bash">#Mac和Linux 环境变量
+export ANTHROPIC_BASE_URL="https://goodbyeri.cc"
+export ANTHROPIC_AUTH_TOKEN="你的API密钥"
+cd your-project-folder
+claude</code></pre><h3 id="windows-cmd命令行环境变量" tabindex="-1">Windows cmd命令行环境变量 </h3><pre><code class="language-bash">set ANTHROPIC_BASE_URL=https://goodbyeri.cc
+set ANTHROPIC_AUTH_TOKEN=你的API密钥
+cd your-project-folder
+claude</code></pre><h3 id="windows-powershell环境变量" tabindex="-1">Windows PowerShell环境变量 </h3><pre><code class="language-bash">$env:ANTHROPIC_BASE_URL="https://goodbyeri.cc";
+$env:ANTHROPIC_AUTH_TOKEN="你的API密钥"
+cd your-project-folder
+claude</code></pre><p>即可使用 Claude Code</p><h3 id="为避免每次重复输入-可将环境变量写入-bash-profile-和-bashrc" tabindex="-1">为避免每次重复输入，可将环境变量写入 bash_profile 和 bashrc： </h3><h3 id="mac或者linux写到配置文件里面" tabindex="-1">Mac或者Linux写到配置文件里面： </h3><pre><code class="language-bash">echo -e '\n export ANTHROPIC_AUTH_TOKEN=你的API密钥' &gt;&gt; ~/.bash_profile
+echo -e '\n export ANTHROPIC_BASE_URL=https://goodbyeri.cc' &gt;&gt; ~/.bash_profile
+echo -e '\n export ANTHROPIC_AUTH_TOKEN=你的API密钥' &gt;&gt; ~/.bashrc
+echo -e '\n export ANTHROPIC_BASE_URL=https://goodbyeri.cc' &gt;&gt; ~/.bashrc
+echo -e '\n export ANTHROPIC_AUTH_TOKEN=你的API密钥' &gt;&gt; ~/.zshrc
+echo -e '\n export ANTHROPIC_BASE_URL=https://goodbyeri.cc' &gt;&gt; ~/.zshrc</code></pre><p>重启终端后，直接使用：</p><pre><code class="language-bash">cd your-project-folder
+claude</code></pre><p>即可使用 Claude Code</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

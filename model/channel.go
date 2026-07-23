@@ -983,6 +983,9 @@ func (channel *Channel) ValidateSettings() error {
 			return err
 		}
 	}
+	if err := channelOtherSettings.ValidateModelRatios(); err != nil {
+		return err
+	}
 	return nil
 }
 

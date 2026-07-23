@@ -105,6 +105,12 @@ export function Pricing() {
     [usableGroup]
   )
 
+  const catalogModelCount = useMemo(
+    () => models.filter((model) => model.catalog_only).length,
+    [models]
+  )
+  const enabledModelCount = models.length - catalogModelCount
+
   const handleClearAll = useCallback(() => {
     clearFilters()
     clearSearch()
@@ -182,9 +188,17 @@ export function Pricing() {
               {t('Model Square')}
             </h1>
             <p className='text-muted-foreground/80 mt-3 text-sm sm:mt-4 sm:text-base'>
-              {t('This site currently has {{count}} models enabled', {
-                count: models?.length || 0,
-              })}
+              {catalogModelCount > 0
+                ? t(
+                    '{{total}} models in catalog, {{enabled}} enabled locally',
+                    {
+                      total: models.length,
+                      enabled: enabledModelCount,
+                    }
+                  )
+                : t('This site currently has {{count}} models enabled', {
+                    count: models.length,
+                  })}
             </p>
             <p className='text-muted-foreground/60 mx-auto mt-2 max-w-2xl text-xs leading-relaxed sm:text-sm'>
               {t(

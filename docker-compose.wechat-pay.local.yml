@@ -1,0 +1,12 @@
+# Optional WeChat Pay override for local integration testing.
+# Use with docker-compose.yml and docker-compose.local.yml. Both variables are
+# required so the generic local stack never depends on a host-specific path.
+services:
+  new-api:
+    env_file:
+      - "${WECHAT_PAY_ENV_FILE:?Set WECHAT_PAY_ENV_FILE to the WeChat Pay env file}"
+    volumes:
+      - type: bind
+        source: "${WECHAT_PAY_SECRET_DIR:?Set WECHAT_PAY_SECRET_DIR to the WeChat Pay secret directory}"
+        target: /run/secrets/wechatpay
+        read_only: true

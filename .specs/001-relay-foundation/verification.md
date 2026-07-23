@@ -17,11 +17,14 @@
 | 2026-07-12 | 本地 dev 环境 | `make dev-bootstrap`; `make dev-infra-up`; `make dev-backend`; `make dev-api-rebuild`; `make dev-frontend` | 通过 | 宿主机/容器后端均通过；PostgreSQL/Redis healthy，API 直连与 `3001` proxy 成功 |
 | 2026-07-12 | default 页面 smoke | Browser：`/setup` 首屏、console、下一步交互 | 通过 | 检测 PostgreSQL，进入管理员账户步骤，无 console error/warn |
 | 2026-07-13 | 直销 token 生命周期 | `go test ./controller -count=1` | 通过 | 覆盖签发、额度、过期、模型白名单、禁用和删除 |
+| 2026-07-23 | Relay production infrastructure | `doctl` resource, VPC, database, load balancer, firewall and Cloudflare DNS read-only checks | 通过 | `BlackRain Relay` Project；独立 `10.200.0.0/20` VPC；双 App + Load Balancer；PostgreSQL/Valkey 单节点成本方案；未记录 Secret |
 | 2026-07-23 | 支付事务 PostgreSQL 15 | `PAYMENT_TEST_DB=postgres PAYMENT_TEST_DSN=... go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUpQuota' -count=1` | 通过 | 独立 `payment_test` 数据库，容器端口 54329 |
 | 2026-07-23 | 支付事务 MySQL 8.0 | `PAYMENT_TEST_DB=mysql PAYMENT_TEST_DSN=... go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUpQuota' -count=1` | 通过 | 临时 MySQL 8 容器，端口 33306；测试后销毁 |
 | 2026-07-23 | 支付事务 SQLite | `go test ./model -run 'TestCompleteWechatPayTopUp|TestCreditUserTopUp' -count=1` | 通过 | 默认内存 SQLite |
 | 2026-07-23 | 支付三数据库事务 | `PAYMENT_TEST_DIALECT=... PAYMENT_TEST_DSN=... go test ./model -run TestPaymentTransactionDatabaseMatrix -count=1` | 自动化矩阵 | GitHub Actions 覆盖 SQLite、MySQL 8.0、PostgreSQL 15；保护并发通知、额度上限、邀请奖励和状态一致性 |
 | 2026-07-23 | default 用量日志界面 | `tsgo -b`; `npx tsx --tsconfig tsconfig.app.json --test ...`; `rsbuild build` | 通过 | 覆盖普通用户/管理员列、实际 quota、订阅扣费标记与移动端字段恢复；4 个回归场景通过 |
+| 2026-07-23 | 本地完整镜像 Compose | Windows Docker Compose 与 Linux `docker:27-cli` 执行基础/微信支付 override 的 `config --quiet` | 通过 | 基础组合无需支付 Secret；支付组合显式要求 `WECHAT_PAY_ENV_FILE` 和 `WECHAT_PAY_SECRET_DIR` |
+| 2026-07-23 | 本地完整镜像构建 | `docker compose -f docker-compose.yml -f docker-compose.local.yml build new-api` | 通过 | default/classic 前端产物与 Go 后端均构建完成，生成 `blackrain-relay:local` |
 | YYYY-MM-DD | Cloud/Relay contract | token + usage integration tests | 未跑 | 尚无 BlackRain 实现 |
 | YYYY-MM-DD | WORK/CODE E2E | 真实授权模型渠道 | 未跑 | 发布门槛 |
 
@@ -36,6 +39,6 @@
 ## 未验证风险
 
 - 尚未测试最低支持版本 PostgreSQL 9.6 与 MySQL 5.7.8，也未执行 migration rollback/backup restore。
-- 尚未配置任何生产数据库、Redis、域名、Secret、模型渠道、备份或监控。
+- 生产基础设施已建立，但尚未完成生产 Secret、TLS 监听、模型渠道、应用部署、restore 演练和真实流量压测。
 - Cloud 企业客户、scoped token、usage 对账和 BlackRain 双引擎 E2E 尚未实现。
 - AGPL、模型厂商转售条款、支付、税务、备案、内容安全和日志留存尚未正式审查。

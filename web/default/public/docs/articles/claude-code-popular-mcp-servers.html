@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>常用 MCP 服务器推荐 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">常用 MCP 服务器推荐</h1>
+<p><img alt="Claude Code MCP 服务器推荐" loading="lazy" src="../images/claude-code-mcp-servers.png"/></p><p>MCP (Model Context Protocol) 是 Anthropic 推出的开源协议，通过添加 MCP 服务器可以大幅扩展 Claude Code 的功能。本文精选了最受欢迎和最实用的 MCP 服务器，帮助你快速提升开发效率。</p><h2 id="我的常用配置" tabindex="-1">我的常用配置： </h2><p>配置写到 ~/.claude.json 最下面的 mcpServers 那部分</p><pre><code class="language-json">"mcpServers": {
+    "browser-tools-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@agentdeskai/[email protected]"
+      ],
+      "env": {}
+    },
+    "iterm-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "iterm-mcp"
+      ],
+      "env": {}
+    },
+    "mcp-server-sqlite": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-server-sqlite",
+        "--db-path",
+        "/Users/gump/code/sqlite/test.db"
+      ],
+      "env": {}
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "super-shell": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "super-shell-mcp"
+      ],
+      "env": {}
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/arben-adm/mcp-sequential-thinking",
+        "--with",
+        "portalocker",
+        "mcp-sequential-thinking"
+      ],
+      "env": {}
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp@latest"
+      ]
+    }
+  },</code></pre><h2 id="🔥-最热门的-mcp-服务器-下面是ai写的-可以酌情阅读" tabindex="-1">🔥 最热门的 MCP 服务器 （下面是AI写的，可以酌情阅读） </h2><h3 id="_1-filesystem-文件系统访问" tabindex="-1">1. Filesystem - 文件系统访问 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐⭐ <strong>使用场景</strong>: 让 Claude 读写本地文件，进行代码重构、批量修改等</p><h4 id="快速安装" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 添加对 Documents 和 Desktop 的访问权限
+claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/Documents ~/Desktop
+
+# 添加整个用户目录（谨慎使用）
+claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~</code></pre><h4 id="典型用途" tabindex="-1">典型用途 </h4><ul><li>📝 批量重命名文件</li><li>🔍 搜索和分析代码库</li><li>📊 生成项目报告</li><li>🛠️ 自动化代码重构</li></ul><h4 id="注意事项" tabindex="-1">注意事项 </h4><div class="warning custom-block"><p class="custom-block-title">安全提示</p><p>只授权 Claude 访问必要的目录，避免授予对整个文件系统的访问权限。</p></div><hr/><h3 id="_2-github-代码仓库管理" tabindex="-1">2. GitHub - 代码仓库管理 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐⭐ <strong>使用场景</strong>: 管理 GitHub 仓库、创建 PR、查看 Issues</p><h4 id="快速安装-1" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 需要先安装 GitHub MCP 服务器
+npm install -g @modelcontextprotocol/server-github
+
+# 添加 GitHub MCP（需要 GitHub Token）
+claude mcp add github -s user -- npx -y @modelcontextprotocol/server-github</code></pre><h4 id="配置-github-token" tabindex="-1">配置 GitHub Token </h4><ol><li>访问 <a href="https://github.com/settings/tokens" rel="noopener" target="_blank">GitHub Settings &gt; Developer settings &gt; Personal access tokens</a></li><li>创建新 token，选择权限：<code>repo</code>, <code>read:org</code>, <code>read:user</code></li><li>设置环境变量：</li></ol><pre><code class="language-bash"># macOS/Linux
+export GITHUB_TOKEN="ghp_your_token_here"
+
+# Windows PowerShell
+$env:GITHUB_TOKEN="ghp_your_token_here"</code></pre><h4 id="典型用途-1" tabindex="-1">典型用途 </h4><ul><li>📋 查看和管理 Issues</li><li>🔀 创建和审查 Pull Requests</li><li>📝 更新 README 和文档</li><li>🔍 搜索代码和提交历史</li></ul><hr/><h3 id="_3-postgresql-数据库操作" tabindex="-1">3. PostgreSQL - 数据库操作 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐⭐ <strong>使用场景</strong>: 查询和管理 PostgreSQL 数据库</p><h4 id="快速安装-2" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 安装 PostgreSQL MCP 服务器
+npm install -g @modelcontextprotocol/server-postgres
+
+# 添加 PostgreSQL MCP
+claude mcp add postgres -s user -- npx -y @modelcontextprotocol/server-postgres postgresql://user:password@localhost:5432/dbname</code></pre><h4 id="典型用途-2" tabindex="-1">典型用途 </h4><ul><li>📊 数据查询和分析</li><li>🔧 数据库 schema 优化</li><li>📝 生成 SQL 查询</li><li>🔍 问题诊断和性能调优</li></ul><h4 id="安全建议" tabindex="-1">安全建议 </h4><div class="tip custom-block"><p class="custom-block-title">最佳实践</p><ul><li>使用只读账户进行查询</li><li>避免在生产环境直接使用</li><li>定期审查数据库访问日志</li></ul></div><hr/><h3 id="_4-brave-search-网络搜索" tabindex="-1">4. Brave Search - 网络搜索 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐ <strong>使用场景</strong>: 实时搜索网络信息，获取最新数据</p><h4 id="快速安装-3" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 需要先获取 Brave Search API Key
+# 访问: https://brave.com/search/api/
+
+# 添加 Brave Search MCP
+claude mcp add brave-search -s user -- npx -y @modelcontextprotocol/server-brave-search</code></pre><h4 id="配置-api-key" tabindex="-1">配置 API Key </h4><pre><code class="language-bash"># 设置 Brave Search API Key
+export BRAVE_API_KEY="your_api_key_here"</code></pre><h4 id="典型用途-3" tabindex="-1">典型用途 </h4><ul><li>🔍 研究最新技术趋势</li><li>📰 获取实时新闻和信息</li><li>🌐 查找解决方案和文档</li><li>💡 获取编程问题答案</li></ul><hr/><h3 id="_5-sqlite-轻量级数据库" tabindex="-1">5. SQLite - 轻量级数据库 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐ <strong>使用场景</strong>: 本地数据存储和分析</p><h4 id="快速安装-4" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 添加 SQLite MCP
+claude mcp add sqlite -s user -- npx -y @modelcontextprotocol/server-sqlite /path/to/database.db</code></pre><h4 id="典型用途-4" tabindex="-1">典型用途 </h4><ul><li>📊 本地数据分析</li><li>🗄️ 应用数据管理</li><li>📝 数据导入导出</li><li>🔍 数据迁移和转换</li></ul><hr/><h3 id="_6-memory-对话记忆" tabindex="-1">6. Memory - 对话记忆 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐ <strong>使用场景</strong>: 跨会话保存重要信息</p><h4 id="快速安装-5" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 添加 Memory MCP
+claude mcp add memory -s user -- npx -y @modelcontextprotocol/server-memory</code></pre><h4 id="典型用途-5" tabindex="-1">典型用途 </h4><ul><li>📝 保存项目上下文</li><li>🎯 记住用户偏好</li><li>📊 跟踪任务进度</li><li>💡 积累知识库</li></ul><hr/><h3 id="_7-puppeteer-浏览器自动化" tabindex="-1">7. Puppeteer - 浏览器自动化 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐ <strong>使用场景</strong>: 网页抓取、自动化测试</p><h4 id="快速安装-6" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 安装 Puppeteer MCP
+npm install -g @modelcontextprotocol/server-puppeteer
+
+# 添加 Puppeteer MCP
+claude mcp add puppeteer -s user -- npx -y @modelcontextprotocol/server-puppeteer</code></pre><h4 id="典型用途-6" tabindex="-1">典型用途 </h4><ul><li>🌐 网页内容抓取</li><li>🧪 自动化测试</li><li>📸 网页截图</li><li>🔍 数据采集</li></ul><hr/><h3 id="_8-slack-团队协作" tabindex="-1">8. Slack - 团队协作 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐ <strong>使用场景</strong>: 发送消息、管理频道</p><h4 id="快速安装-7" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 需要 Slack Bot Token
+# 访问: https://api.slack.com/apps
+
+# 添加 Slack MCP
+claude mcp add slack -s user -- npx -y @modelcontextprotocol/server-slack</code></pre><h4 id="配置" tabindex="-1">配置 </h4><pre><code class="language-bash">export SLACK_BOT_TOKEN="xoxb-your-token"
+export SLACK_TEAM_ID="T01234567"</code></pre><h4 id="典型用途-7" tabindex="-1">典型用途 </h4><ul><li>💬 发送通知和提醒</li><li>📊 生成团队报告</li><li>🔔 事件监控告警</li><li>📝 自动化工作流</li></ul><hr/><h3 id="_9-google-drive-云存储" tabindex="-1">9. Google Drive - 云存储 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐ <strong>使用场景</strong>: 访问和管理 Google Drive 文件</p><h4 id="快速安装-8" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 需要 Google OAuth 凭据
+# 访问: https://console.cloud.google.com
+
+# 添加 Google Drive MCP
+claude mcp add gdrive -s user -- npx -y @modelcontextprotocol/server-gdrive</code></pre><h4 id="典型用途-8" tabindex="-1">典型用途 </h4><ul><li>📁 文档管理</li><li>📊 数据分析</li><li>🔄 文件同步</li><li>📝 协作编辑</li></ul><hr/><h3 id="_10-git-版本控制" tabindex="-1">10. Git - 版本控制 </h3><p><strong>推荐指数</strong>: ⭐⭐⭐⭐⭐ <strong>使用场景</strong>: Git 仓库操作</p><h4 id="快速安装-9" tabindex="-1">快速安装 </h4><pre><code class="language-bash"># 添加 Git MCP
+claude mcp add git -s user -- npx -y @modelcontextprotocol/server-git /path/to/repo</code></pre><h4 id="典型用途-9" tabindex="-1">典型用途 </h4><ul><li>📝 提交代码变更</li><li>🌿 分支管理</li><li>🔀 合并和冲突解决</li><li>📊 查看提交历史</li></ul><hr/><h2 id="🎯-按使用场景分类" tabindex="-1">🎯 按使用场景分类 </h2><h3 id="开发者必备" tabindex="-1">开发者必备 </h3><ol><li><strong>Filesystem</strong> - 文件操作</li><li><strong>Git</strong> - 版本控制</li><li><strong>GitHub</strong> - 代码托管</li><li><strong>PostgreSQL/SQLite</strong> - 数据库管理</li></ol><h3 id="数据分析" tabindex="-1">数据分析 </h3><ol><li><strong>SQLite</strong> - 本地数据分析</li><li><strong>PostgreSQL</strong> - 数据库查询</li><li><strong>Puppeteer</strong> - 网页数据抓取</li><li><strong>Google Drive</strong> - 云端数据访问</li></ol><h3 id="内容创作" tabindex="-1">内容创作 </h3><ol><li><strong>Filesystem</strong> - 文件管理</li><li><strong>Memory</strong> - 知识积累</li><li><strong>Brave Search</strong> - 信息研究</li><li><strong>Google Drive</strong> - 文档协作</li></ol><h3 id="团队协作" tabindex="-1">团队协作 </h3><ol><li><strong>Slack</strong> - 团队沟通</li><li><strong>GitHub</strong> - 代码协作</li><li><strong>Memory</strong> - 共享知识库</li><li><strong>Git</strong> - 版本管理</li></ol><hr/><h2 id="🚀-快速开始指南" tabindex="-1">🚀 快速开始指南 </h2><h3 id="第一步-安装-node-js" tabindex="-1">第一步：安装 Node.js </h3><p>MCP 服务器大多需要 Node.js 环境：</p><pre><code class="language-bash"># 检查是否已安装
+node --version
+npm --version
+
+# 如果没有，访问 https://nodejs.org 下载安装</code></pre><h3 id="第二步-选择你需要的-mcp" tabindex="-1">第二步：选择你需要的 MCP </h3><p>根据你的使用场景，从上面的列表中选择 2-3 个最需要的 MCP 服务器。</p><h3 id="第三步-依次安装" tabindex="-1">第三步：依次安装 </h3><pre><code class="language-bash"># 示例：安装文件系统和 Git 支持
+claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/Documents
+claude mcp add git -s user -- npx -y @modelcontextprotocol/server-git ~/projects</code></pre><h3 id="第四步-验证安装" tabindex="-1">第四步：验证安装 </h3><pre><code class="language-bash"># 查看已安装的 MCP
+claude mcp list
+
+# 测试功能
+claude "帮我列出 Documents 目录下的所有文件"</code></pre><hr/><h2 id="🔧-常见问题" tabindex="-1">🔧 常见问题 </h2><h3 id="q1-mcp-服务器添加失败怎么办" tabindex="-1">Q1: MCP 服务器添加失败怎么办？ </h3><p><strong>A:</strong> 常见原因和解决方案：</p><ol><li><strong>Node.js 未安装</strong>：安装 Node.js 18 或更高版本</li><li><strong>权限不足</strong>：使用 <code>sudo</code> 或管理员权限</li><li><strong>网络问题</strong>：配置 npm 镜像源</li><li><strong>路径错误</strong>：检查文件路径是否存在</li></ol><h3 id="q2-如何卸载-mcp-服务器" tabindex="-1">Q2: 如何卸载 MCP 服务器？ </h3><pre><code class="language-bash"># 列出所有 MCP
+claude mcp list
+
+# 删除指定 MCP
+claude mcp remove &lt;mcp-name&gt;</code></pre><h3 id="q3-mcp-服务器占用太多内存" tabindex="-1">Q3: MCP 服务器占用太多内存？ </h3><p><strong>A:</strong> 可以：</p><ul><li>只保留常用的 MCP</li><li>重启 Claude Code</li><li>检查 MCP 服务器日志</li></ul><h3 id="q4-如何更新-mcp-服务器" tabindex="-1">Q4: 如何更新 MCP 服务器？ </h3><pre><code class="language-bash"># 先删除旧版本
+claude mcp remove &lt;mcp-name&gt;
+
+# 重新安装最新版本
+claude mcp add &lt;mcp-name&gt; -s user -- npx -y @modelcontextprotocol/server-&lt;name&gt;</code></pre><h3 id="q5-mcp-安全吗" tabindex="-1">Q5: MCP 安全吗？ </h3><p><strong>A:</strong> 安全建议：</p><ul><li>✅ 只安装官方或可信来源的 MCP</li><li>✅ 最小化权限原则</li><li>✅ 定期审查已安装的 MCP</li><li>❌ 不要随意授予文件系统完整访问权限</li></ul><hr/><h2 id="📚-进阶使用" tabindex="-1">📚 进阶使用 </h2><h3 id="自定义-mcp-服务器" tabindex="-1">自定义 MCP 服务器 </h3><p>如果现有的 MCP 不满足需求，可以创建自己的 MCP 服务器。</p><h4 id="基础结构" tabindex="-1">基础结构 </h4><pre><code class="language-typescript">import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+
+const server = new Server(
+  {
+    name: 'my-custom-mcp',
+    version: '1.0.0',
+  },
+  {
+    capabilities: {
+      tools: {},
+    },
+  }
+);
+
+// 实现你的工具
+server.setRequestHandler(ListToolsRequestSchema, async () =&gt; ({
+  tools: [
+    {
+      name: 'my_tool',
+      description: '我的自定义工具',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          param: { type: 'string' }
+        }
+      }
+    }
+  ]
+}));
+
+// 启动服务器
+const transport = new StdioServerTransport();
+await server.connect(transport);</code></pre><p>详细文档：<a href="https://github.com/anthropics/mcp" rel="noopener" target="_blank">MCP SDK 官方文档</a></p><hr/><h2 id="🌟-推荐的-mcp-组合" tabindex="-1">🌟 推荐的 MCP 组合 </h2><h3 id="组合-1-全栈开发者" tabindex="-1">组合 1: 全栈开发者 </h3><pre><code class="language-bash">claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/projects
+claude mcp add git -s user -- npx -y @modelcontextprotocol/server-git ~/projects
+claude mcp add github -s user -- npx -y @modelcontextprotocol/server-github
+claude mcp add postgres -s user -- npx -y @modelcontextprotocol/server-postgres postgresql://localhost/mydb</code></pre><h3 id="组合-2-数据分析师" tabindex="-1">组合 2: 数据分析师 </h3><pre><code class="language-bash">claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/data
+claude mcp add sqlite -s user -- npx -y @modelcontextprotocol/server-sqlite ~/data/analysis.db
+claude mcp add puppeteer -s user -- npx -y @modelcontextprotocol/server-puppeteer</code></pre><h3 id="组合-3-内容创作者" tabindex="-1">组合 3: 内容创作者 </h3><pre><code class="language-bash">claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/Documents
+claude mcp add memory -s user -- npx -y @modelcontextprotocol/server-memory
+claude mcp add brave-search -s user -- npx -y @modelcontextprotocol/server-brave-search</code></pre><hr/><h2 id="📊-mcp-性能对比" tabindex="-1">📊 MCP 性能对比 </h2><table tabindex="0"><thead><tr><th>MCP 服务器</th><th>启动速度</th><th>内存占用</th><th>稳定性</th><th>推荐度</th></tr></thead><tbody><tr><td>Filesystem</td><td>⚡⚡⚡</td><td>低</td><td>⭐⭐⭐⭐⭐</td><td>必装</td></tr><tr><td>Git</td><td>⚡⚡⚡</td><td>低</td><td>⭐⭐⭐⭐⭐</td><td>必装</td></tr><tr><td>GitHub</td><td>⚡⚡</td><td>中</td><td>⭐⭐⭐⭐</td><td>推荐</td></tr><tr><td>PostgreSQL</td><td>⚡⚡</td><td>中</td><td>⭐⭐⭐⭐⭐</td><td>推荐</td></tr><tr><td>SQLite</td><td>⚡⚡⚡</td><td>低</td><td>⭐⭐⭐⭐⭐</td><td>推荐</td></tr><tr><td>Puppeteer</td><td>⚡</td><td>高</td><td>⭐⭐⭐</td><td>按需</td></tr><tr><td>Memory</td><td>⚡⚡⚡</td><td>低</td><td>⭐⭐⭐⭐</td><td>推荐</td></tr><tr><td>Brave Search</td><td>⚡⚡</td><td>低</td><td>⭐⭐⭐⭐</td><td>推荐</td></tr></tbody></table><hr/><h2 id="🔗-相关资源" tabindex="-1">🔗 相关资源 </h2><ul><li><a href="claude-code-mcp-server-guide.html">Claude Code MCP 服务器完整指南</a> - 详细的配置和调试指南</li><li><a href="serena_mcp_integration.html">Serena MCP 集成指南</a> - 特定 MCP 的使用教程</li><li><a href="https://github.com/anthropics/mcp" rel="noopener" target="_blank">MCP 官方仓库</a> - 最新的 MCP 服务器列表</li><li><a href="https://github.com/punkpeye/awesome-mcp-servers" rel="noopener" target="_blank">MCP Awesome List</a> - 社区推荐的 MCP 服务器</li></ul><hr/><h2 id="💡-使用技巧" tabindex="-1">💡 使用技巧 </h2><h3 id="技巧-1-批量安装-mcp" tabindex="-1">技巧 1: 批量安装 MCP </h3><p>创建安装脚本 <code>install-mcps.sh</code>:</p><pre><code class="language-bash">#!/bin/bash
+
+echo "安装常用 MCP 服务器..."
+
+claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/Documents ~/Desktop
+claude mcp add git -s user -- npx -y @modelcontextprotocol/server-git ~/projects
+claude mcp add memory -s user -- npx -y @modelcontextprotocol/server-memory
+
+echo "安装完成！"
+claude mcp list</code></pre><h3 id="技巧-2-环境变量集中管理" tabindex="-1">技巧 2: 环境变量集中管理 </h3><p>创建 <code>.env.mcp</code> 文件：</p><pre><code class="language-bash"># API Keys
+export GITHUB_TOKEN="your_github_token"
+export BRAVE_API_KEY="your_brave_api_key"
+export SLACK_BOT_TOKEN="your_slack_token"
+
+# Database
+export DATABASE_URL="postgresql://user:pass@localhost:5432/db"</code></pre><p>使用时：</p><pre><code class="language-bash">source .env.mcp
+claude</code></pre><h3 id="技巧-3-mcp-健康检查" tabindex="-1">技巧 3: MCP 健康检查 </h3><pre><code class="language-bash"># 创建检查脚本
+#!/bin/bash
+echo "检查 MCP 服务器状态..."
+claude mcp list
+echo "测试文件系统访问..."
+claude "列出当前目录的文件"</code></pre><hr/><h2 id="🎉-总结" tabindex="-1">🎉 总结 </h2><p>MCP 服务器是 Claude Code 的强大扩展机制，通过合理使用可以：</p><ul><li>✅ <strong>10倍提升效率</strong> - 自动化重复性任务</li><li>✅ <strong>扩展能力边界</strong> - 集成各种工具和服务</li><li>✅ <strong>定制化体验</strong> - 根据需求自由组合</li><li>✅ <strong>持续进化</strong> - 社区不断贡献新的 MCP</li></ul><p>推荐新手从 <strong>Filesystem</strong> 和 <strong>Memory</strong> 开始，逐步探索其他 MCP 服务器的强大功能。</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

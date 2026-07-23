@@ -209,6 +209,9 @@ export const channelFormSchema = z
     upstream_model_update_check_enabled: z.boolean().optional(),
     upstream_model_update_auto_sync_enabled: z.boolean().optional(),
     upstream_model_update_ignored_models: z.string().optional(),
+    model_ratios: z
+      .record(z.string(), z.number().finite().min(0).max(1000000))
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if ([3, 8, 36, 45].includes(data.type) && !data.base_url?.trim()) {
@@ -348,6 +351,7 @@ export const CHANNEL_FORM_DEFAULT_VALUES: ChannelFormValues = {
   upstream_model_update_check_enabled: false,
   upstream_model_update_auto_sync_enabled: false,
   upstream_model_update_ignored_models: '',
+  model_ratios: {},
   advanced_custom: '',
 }
 
@@ -404,6 +408,7 @@ export function transformChannelToFormDefaults(
   let upstreamModelUpdateCheckEnabled = false
   let upstreamModelUpdateAutoSyncEnabled = false
   let upstreamModelUpdateIgnoredModels = ''
+  let modelRatios: Record<string, number> = {}
   let advancedCustom = ''
 
   if (channel.settings) {
@@ -430,6 +435,18 @@ export function transformChannelToFormDefaults(
       )
         ? parsed.upstream_model_update_ignored_models.join(',')
         : ''
+      if (parsed.model_ratios && typeof parsed.model_ratios === 'object') {
+        modelRatios = Object.fromEntries(
+          Object.entries(parsed.model_ratios).filter(
+            ([model, ratio]) =>
+              model.trim().length > 0 &&
+              typeof ratio === 'number' &&
+              Number.isFinite(ratio) &&
+              ratio >= 0 &&
+              ratio <= 1000000
+          )
+        ) as Record<string, number>
+      }
       if (parsed.advanced_custom) {
         advancedCustom = stringifyAdvancedCustomConfig(parsed.advanced_custom)
       }
@@ -483,6 +500,7 @@ export function transformChannelToFormDefaults(
     upstream_model_update_check_enabled: upstreamModelUpdateCheckEnabled,
     upstream_model_update_auto_sync_enabled: upstreamModelUpdateAutoSyncEnabled,
     upstream_model_update_ignored_models: upstreamModelUpdateIgnoredModels,
+    model_ratios: modelRatios,
     advanced_custom: advancedCustom,
   }
 }
@@ -564,12 +582,15 @@ function buildSettingsJSON(formData: ChannelFormValues): string {
     settingsObj.allow_inference_geo = formData.allow_inference_geo === true
   } else {
     if ('disable_store' in settingsObj) delete settingsObj.disable_store
-    if ('allow_safety_identifier' in settingsObj)
+    if ('allow_safety_identifier' in settingsObj) {
       delete settingsObj.allow_safety_identifier
-    if ('allow_include_obfuscation' in settingsObj)
+    }
+    if ('allow_include_obfuscation' in settingsObj) {
       delete settingsObj.allow_include_obfuscation
-    if (formData.type !== 14 && 'allow_inference_geo' in settingsObj)
+    }
+    if (formData.type !== 14 && 'allow_inference_geo' in settingsObj) {
       delete settingsObj.allow_inference_geo
+    }
   }
 
   // Anthropic (type 14): claude_beta_query, allow_inference_geo, allow_speed
@@ -585,6 +606,22 @@ function buildSettingsJSON(formData: ChannelFormValues): string {
   settingsObj.disable_task_polling_sleep =
     formData.disable_task_polling_sleep === true
 
+  const modelRatios = Object.fromEntries(
+    Object.entries(formData.model_ratios || {}).filter(
+      ([model, ratio]) =>
+        model.trim().length > 0 &&
+        Number.isFinite(ratio) &&
+        ratio >= 0 &&
+        ratio <= 1000000 &&
+        parseModels(formData.models).includes(model)
+    )
+  )
+  if (Object.keys(modelRatios).length > 0) {
+    settingsObj.model_ratios = modelRatios
+  } else if ('model_ratios' in settingsObj) {
+    delete settingsObj.model_ratios
+  }
+
   // Upstream model update settings (for model-fetchable channel types)
   if (MODEL_FETCHABLE_TYPES.has(formData.type)) {
     settingsObj.upstream_model_update_check_enabled =
@@ -592,14 +629,14 @@ function buildSettingsJSON(formData: ChannelFormValues): string {
     settingsObj.upstream_model_update_auto_sync_enabled =
       settingsObj.upstream_model_update_check_enabled === true &&
       formData.upstream_model_update_auto_sync_enabled === true
-    settingsObj.upstream_model_update_ignored_models = Array.from(
-      new Set(
+    settingsObj.upstream_model_update_ignored_models = [
+      ...new Set(
         String(formData.upstream_model_update_ignored_models || '')
           .split(',')
           .map((model) => model.trim())
           .filter(Boolean)
-      )
-    )
+      ),
+    ]
     if (
       !Array.isArray(settingsObj.upstream_model_update_last_detected_models) ||
       settingsObj.upstream_model_update_check_enabled !== true

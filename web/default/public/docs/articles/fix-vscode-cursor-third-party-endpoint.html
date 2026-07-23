@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>解决 Cursor / VSCode 第三方连接点问题 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">解决 Cursor / VSCode 第三方连接点问题</h1>
+<p><img alt="Cursor 和 VSCode 第三方连接点登录问题" loading="lazy" src="../images/vscode-cursor-need-login-problem.png"/></p><ol start="0"><li><a href="claude-code-setup-ctok.html">Claude Code Install</a> - Claude Code CLI 安装和环境变量配置完整指南</li><li>创建 ~/.claude/config.json 如果已经存在，直接编辑。</li><li>添加下面内容：(XXX可以不变，也可以改成你服务的名字或者你的API密钥)</li></ol><pre><code class="language-json">{
+    "primaryApiKey":"xxx"
+}</code></pre><ol start="3"><li>重启 VSCode 和 Cursor 即可</li></ol><h2 id="以下为测试方案-如上一步已经成功可跳过。" tabindex="-1">以下为测试方案，如上一步已经成功可跳过。 </h2><h3 id="使用-claude-code-cli-推荐" tabindex="-1">使用 Claude Code CLI（推荐） </h3><p>Claude Code CLI 是最灵活的方案，完全支持自定义 API 端点。</p><h4 id="第一步-安装-claude-code-cli" tabindex="-1">第一步：安装 Claude Code CLI </h4><pre><code class="language-bash">npm install -g @anthropic-ai/claude-code
+claude --version</code></pre><h4 id="第二步-配置环境变量" tabindex="-1">第二步：配置环境变量 </h4><p><strong>macOS / Linux：</strong></p><p>编辑 <code>~/.zshrc</code> 或 <code>~/.bashrc</code>：</p><pre><code class="language-bash"># 添加以下配置
+export ANTHROPIC_AUTH_TOKEN="你的认证令牌"
+export ANTHROPIC_BASE_URL="第三方连接点URL"</code></pre><p>刷新配置：</p><pre><code class="language-bash">source ~/.zshrc  # 或 source ~/.bashrc</code></pre><p><strong>Windows：</strong></p><p>使用 PowerShell（管理员权限）：</p><pre><code class="language-powershell">[System.Environment]::SetEnvironmentVariable('ANTHROPIC_AUTH_TOKEN', '你的认证令牌', 'User')
+[System.Environment]::SetEnvironmentVariable('ANTHROPIC_BASE_URL', '第三方连接点URL', 'User')</code></pre><div class="tip custom-block"><p class="custom-block-title">环境变量说明</p><ul><li><code>ANTHROPIC_AUTH_TOKEN</code>：你的 API 认证令牌（格式：<code>你的API密钥</code>）</li><li><code>ANTHROPIC_BASE_URL</code>：第三方连接点的完整 URL</li></ul></div><h4 id="第三步-验证配置" tabindex="-1">第三步：验证配置 </h4><pre><code class="language-bash">cd ~/your-project
+claude 你好</code></pre><p>如果配置正确，Claude 应该能够正常响应。</p><h3 id="日志和调试" tabindex="-1">日志和调试 </h3><p>启用详细日志以便排查问题：</p><pre><code class="language-bash"># 启用 Claude Code CLI 详细日志
+export DEBUG=claude:*
+claude 你好
+
+# 或使用 --verbose 标志
+claude --verbose 你好</code></pre><h2 id="相关资源" tabindex="-1">相关资源 </h2><ul><li><a href="claude-code-setup-ctok.html">Claude Code Install</a> - CLI 安装完整指南</li><li><a href="opcode-guide.html">Opcode 使用指南</a> - 桌面客户端使用</li><li><a href="claude-code-complete-guide.html">Claude Code 完整使用指南</a> - 全面功能介绍</li><li><a href="claude-code-windows-env-setup.html">Windows 环境变量设置</a> - Windows 配置详解</li></ul><h2 id="总结" tabindex="-1">总结 </h2><p>解决 VSCode 和 Cursor 无法使用第三方连接点的问题，关键在于：</p><ol><li>✅ <strong>优先使用 Claude Code CLI</strong>，它提供最完整的自定义端点支持</li><li>✅ <strong>正确配置环境变量</strong>，包括 <code>ANTHROPIC_AUTH_TOKEN</code> 和 <code>ANTHROPIC_BASE_URL</code></li></ol><p>如果你在配置过程中遇到问题，欢迎查看我们的其他教程或联系技术支持。</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
+	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/pkg/billingexpr"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/QuantumNous/new-api/setting/billing_setting"
@@ -271,4 +273,38 @@ func TestModelPriceHelperRequestBillingRatiosOnlyApplyToFixedPrice(t *testing.T)
 	require.Equal(t, "QuotaFromFloat", clamp.Op)
 	require.Equal(t, common.QuotaClampOverflow, clamp.Kind)
 	require.Nil(t, info.Billing)
+}
+
+func TestModelPriceHelperUsesSelectedChannelModelRatio(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	savedModelPrices := ratio_setting.ModelPrice2JSONString()
+	savedModelRatios := ratio_setting.ModelRatio2JSONString()
+	t.Cleanup(func() {
+		require.NoError(t, ratio_setting.UpdateModelPriceByJSONString(savedModelPrices))
+		require.NoError(t, ratio_setting.UpdateModelRatioByJSONString(savedModelRatios))
+	})
+
+	modelPrices, err := common.Marshal(map[string]float64{})
+	require.NoError(t, err)
+	require.NoError(t, ratio_setting.UpdateModelPriceByJSONString(string(modelPrices)))
+	modelRatios, err := common.Marshal(map[string]float64{"channel-ratio-model": 1})
+	require.NoError(t, err)
+	require.NoError(t, ratio_setting.UpdateModelRatioByJSONString(string(modelRatios)))
+
+	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+	ctx.Set("group", "default")
+	common.SetContextKey(ctx, constant.ContextKeyChannelOtherSetting, dto.ChannelOtherSettings{
+		ModelRatios: map[string]float64{"channel-ratio-model": 2.5},
+	})
+	info := &relaycommon.RelayInfo{
+		OriginModelName: "channel-ratio-model",
+		UserGroup:       "default",
+		UsingGroup:      "default",
+	}
+
+	priceData, err := ModelPriceHelper(ctx, info, 1000, &types.TokenCountMeta{})
+
+	require.NoError(t, err)
+	require.Equal(t, 2.5, priceData.ModelRatio)
+	require.Equal(t, 2500, priceData.QuotaToPreConsume)
 }

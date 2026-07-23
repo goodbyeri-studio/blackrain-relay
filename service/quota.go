@@ -87,7 +87,7 @@ func calculateAudioQuota(info QuotaInfo) (int, *common.QuotaClamp) {
 }
 
 func PreWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usage *dto.RealtimeUsage) error {
-	if relayInfo.UsePrice {
+	if relayInfo.PriceData.UsePrice {
 		return nil
 	}
 	userQuota, err := model.GetUserQuota(relayInfo.UserId, false)
@@ -106,7 +106,7 @@ func PreWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usag
 	audioInputTokens := usage.InputTokenDetails.AudioTokens
 	audioOutTokens := usage.OutputTokenDetails.AudioTokens
 	groupRatio := ratio_setting.GetGroupRatio(relayInfo.UsingGroup)
-	modelRatio, _, _ := ratio_setting.GetModelRatio(modelName)
+	modelRatio := relayInfo.PriceData.ModelRatio
 
 	autoGroup, exists := common.GetContextKey(ctx, constant.ContextKeyAutoGroup)
 	if exists {
@@ -131,7 +131,7 @@ func PreWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usag
 			AudioTokens: audioOutTokens,
 		},
 		ModelName:  modelName,
-		UsePrice:   relayInfo.UsePrice,
+		UsePrice:   relayInfo.PriceData.UsePrice,
 		ModelRatio: modelRatio,
 		GroupRatio: actualGroupRatio,
 	}

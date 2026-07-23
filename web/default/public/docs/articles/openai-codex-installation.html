@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAI Codex 安装配置指南 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">OpenAI Codex 安装配置指南</h1>
+<hr/><p>OpenAI Codex 是一个强大的AI代码生成工具，能够理解自然语言并生成高质量的代码。本指南将帮助您完成 Codex 的安装和配置。</p><h2 id="什么是-openai-codex" tabindex="-1">什么是 OpenAI Codex？ </h2><p>OpenAI Codex 是 OpenAI 开发的AI编程助手，基于GPT模型训练，专门用于：</p><ul><li>代码生成和补全</li><li>代码解释和文档生成</li><li>编程问题解答</li><li>多种编程语言支持</li></ul><h2 id="系统要求" tabindex="-1">系统要求 </h2><h3 id="基础要求" tabindex="-1">基础要求 </h3><ul><li><strong>操作系统</strong>: Windows 10/11, macOS 10.14+, Linux Ubuntu 18.04+</li><li><strong>Python</strong>: 3.7 或更高版本</li><li><strong>网络连接</strong>: 需要稳定的互联网连接</li><li><strong>API访问权限</strong>: OpenAI API 账户</li></ul><h3 id="推荐配置" tabindex="-1">推荐配置 </h3><ul><li>8GB+ 内存</li><li>稳定的网络环境</li><li>现代代码编辑器（VS Code, PyCharm 等）</li></ul><h2 id="安装步骤" tabindex="-1">安装步骤 </h2><h3 id="_1-安装-openai-codex-cli" tabindex="-1">1. 安装 OpenAI Codex CLI </h3><h4 id="方法一-npm-全局安装-推荐" tabindex="-1">方法一：npm 全局安装（推荐） </h4><pre><code class="language-bash">npm install -g @openai/codex</code></pre><h4 id="方法二-homebrew-安装-macos" tabindex="-1">方法二：Homebrew 安装（macOS） </h4><pre><code class="language-bash">brew install codex</code></pre><h4 id="方法三-直接下载二进制文件" tabindex="-1">方法三：直接下载二进制文件 </h4><p>访问 <a href="https://github.com/openai/codex/releases" rel="noopener" target="_blank">GitHub Releases</a> 页面，下载适合您系统的二进制文件：</p><p><strong>支持的平台：</strong></p><ul><li>macOS (Apple Silicon/arm64 和 x86_64)</li><li>Linux (x86_64 和 arm64)</li></ul><p><strong>安装步骤：</strong></p><ol><li>下载对应平台的二进制文件</li><li>解压到系统 PATH 目录</li><li>确保文件具有执行权限</li></ol><pre><code class="language-bash"># 示例：Linux/macOS
+chmod +x codex
+sudo mv codex /usr/local/bin/</code></pre><h3 id="_2-验证安装" tabindex="-1">2. 验证安装 </h3><pre><code class="language-bash"># 检查版本
+codex --version
+
+# 启动 CLI
+codex
+
+# 绕过审批和沙盒模式启动（高级用法）
+codex --dangerously-bypass-approvals-and-sandbox</code></pre><p><strong>注意</strong>: <code>--dangerously-bypass-approvals-and-sandbox</code> 参数会绕过安全审批和沙盒限制，请谨慎使用。</p><h2 id="_2-环境配置" tabindex="-1">2. 环境配置 </h2><h3 id="方法1-powershell命令-推荐" tabindex="-1">方法1：PowerShell命令（推荐） </h3><pre><code class="language-powershell">$env:OPENAI_BASE_URL = "https://goodbyeri.cc/v1"
+$env:OPENAI_API_KEY = "你的API密钥"</code></pre><h2 id="方法2-命令提示符-cmd" tabindex="-1">方法2：命令提示符（CMD） </h2><pre><code class="language-cmd">set OPENAI_BASE_URL=https://goodbyeri.cc/v1
+set OPENAI_API_KEY=你的API密钥</code></pre><h2 id="方法3-永久设置-通过setx命令" tabindex="-1">方法3：永久设置（通过setx命令） </h2><pre><code class="language-cmd">setx OPENAI_BASE_URL "https://goodbyeri.cc/v1"
+setx OPENAI_API_KEY "你的API密钥"</code></pre><h3 id="永久设置-添加到系统环境变量" tabindex="-1">永久设置（添加到系统环境变量） </h3><pre><code>
+**macOS/Linux:**
+```bash
+# 临时设置
+export OPENAI_BASE_URL="https://goodbyeri.cc/v1"
+export OPENAI_API_KEY="你的API密钥"
+
+# 永久设置（添加到 ~/.bashrc 或 ~/.zshrc）
+echo 'export OPENAI_BASE_URL="https://goodbyeri.cc/v1"' &gt;&gt; ~/.bashrc
+echo 'export OPENAI_API_KEY="你的API密钥"' &gt;&gt; ~/.bashrc
+
+source ~/.bashrc</code></pre><h3 id="codex-配置文件" tabindex="-1">Codex 配置文件 </h3><p>在 ~/.codex/config.toml 文件中添加以下配置：</p><pre><code class="language-toml">model_provider = "OpenAI"
+model = "gpt-5.5"
+review_model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+disable_response_storage = true
+network_access = "enabled"
+windows_wsl_setup_acknowledged = true
+
+[model_providers.OpenAI]
+name = "OpenAI"
+base_url = "连接点URL"
+wire_api = "responses"
+requires_openai_auth = true
+
+[features]
+goals = true</code></pre><p>在 ~/.codex/auth.json 文件中配置API密钥：</p><pre><code class="language-json">{
+"OPENAI_API_KEY": "你的API密钥"
+}</code></pre><p>💡 使用与 Claude Code 相同的 API 密钥即可，格式如 cr_xxxxxxxxxx。</p><h2 id="相关资源" tabindex="-1">相关资源 </h2><ul><li><a href="https://platform.openai.com/docs" rel="noopener" target="_blank">OpenAI 官方文档</a></li><li><a href="https://platform.openai.com/docs/guides/code" rel="noopener" target="_blank">Codex 使用指南</a></li><li><a href="https://platform.openai.com/docs/api-reference" rel="noopener" target="_blank">API 参考</a></li><li><a href="https://community.openai.com/" rel="noopener" target="_blank">社区论坛</a></li></ul><h2 id="下一步" tabindex="-1">下一步 </h2><p>安装完成后，您可以：</p><ol><li>探索不同的编程语言支持</li><li>尝试更复杂的代码生成任务</li><li>集成到您的开发工具链中</li><li>学习高级提示工程技巧</li></ol>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc/v1</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

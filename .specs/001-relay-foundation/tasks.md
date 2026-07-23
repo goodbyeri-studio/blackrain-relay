@@ -35,6 +35,7 @@
 ## 阶段 4：生产运营
 
 - [x] 本地开发环境和仅限开发的 Secret 模板
+- [x] 建立 BlackRain Relay 独立 DigitalOcean 生产基础设施（VPC、双 App、Load Balancer、托管 PostgreSQL/Valkey、Firewall、Registry）
 - [ ] production 环境和独立 Secret 管理
 - [ ] 内部账户与 BlackRain Cloud 测试租户小流量发布
 - [ ] 数据库 migration/rollback、备份、恢复和灾难演练

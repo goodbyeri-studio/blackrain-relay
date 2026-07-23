@@ -17,22 +17,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import {
-  Activity,
   Box,
   CreditCard,
   FileText,
-  FlaskConical,
   Key,
   LayoutDashboard,
-  ListTodo,
-  MessageSquare,
   Radio,
   ServerCog,
   Settings,
   Ticket,
   User,
   Users,
-  Wallet,
+  WalletCards,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -51,65 +47,37 @@ export function useSidebarData(): SidebarData {
   return {
     navGroups: [
       {
-        id: 'chat',
-        title: t('Chat'),
+        id: 'console',
+        title: t('Console'),
         items: [
           {
-            title: t('Playground'),
-            url: '/playground',
-            icon: FlaskConical,
-          },
-          {
-            title: t('Chat'),
-            icon: MessageSquare,
-            type: 'chat-presets',
-          },
-        ],
-      },
-      {
-        id: 'general',
-        title: t('General'),
-        items: [
-          {
-            title: t('Overview'),
-            url: '/dashboard/overview',
-            icon: Activity,
-          },
-          {
-            title: t('Dashboard'),
+            title: t('Data Overview'),
             url: '/dashboard/models',
             icon: LayoutDashboard,
           },
           {
-            title: t('API Keys'),
-            url: '/keys',
-            icon: Key,
-          },
-          {
-            title: t('Usage Logs'),
+            title: t('Billing Details'),
             url: '/usage-logs/common',
             icon: FileText,
-          },
-          {
-            title: t('Task Logs'),
-            url: '/usage-logs/task',
-            activeUrls: ['/usage-logs/drawing'],
-            configUrls: ['/usage-logs/drawing', '/usage-logs/task'],
-            icon: ListTodo,
           },
         ],
       },
       {
         id: 'personal',
-        title: t('Personal'),
+        title: t('Personal Center'),
         items: [
           {
-            title: t('Wallet'),
+            title: t('My Account'),
             url: '/wallet',
-            icon: Wallet,
+            icon: WalletCards,
           },
           {
-            title: t('Profile'),
+            title: t('API Management'),
+            url: '/keys',
+            icon: Key,
+          },
+          {
+            title: t('Account Settings'),
             url: '/profile',
             icon: User,
           },

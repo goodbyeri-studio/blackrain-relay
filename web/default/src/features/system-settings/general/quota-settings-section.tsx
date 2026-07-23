@@ -58,6 +58,7 @@ const quotaSchema = z.object({
   TopUpLink: z.string(),
   general_setting: z.object({
     docs_link: z.string(),
+    monitor_link: z.string(),
   }),
   quota_setting: z.object({
     enable_free_model_pre_consume: z.boolean(),
@@ -297,6 +298,26 @@ export function QuotaSettingsSection({
                   </FormControl>
                   <FormDescription>
                     {t('Link to your documentation site')}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='general_setting.monitor_link'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Group Monitor Link')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t('https://monitor.example.com')}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t('External link to the group availability status page')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -20,6 +20,14 @@ type Option struct {
 	Value string `json:"value"`
 }
 
+const defaultNotice = `本站所有用户必须遵守《生成式人工智能服务管理暂行办法》，禁止一切违法违规行为。
+禁止用于非法用途，如若发现本站将全力配合有关部门进行调查!
+违法用户请绕道，本站恕不接待，请不要以身试法!
+本网站仅用于合法合规测试使用，使用者一切导致不良后果的行为与本站无关。
+遇到任何问题，请先联系管理员或客服！感谢合作!
+根据《生成式人工智能服务管理暂行办法》，本站点不允许中国境内用户使用!
+According to the "Interim Measures for the Administration of Generative Artificial Intelligence Services," Chinese users are not allowed to use this site!`
+
 func AllOption() ([]*Option, error) {
 	var options []*Option
 	var err error
@@ -66,7 +74,7 @@ func InitOptionMap() {
 	common.OptionMap["SMTPStartTLSEnabled"] = strconv.FormatBool(common.SMTPStartTLSEnabled)
 	common.OptionMap["SMTPInsecureSkipVerify"] = strconv.FormatBool(common.SMTPInsecureSkipVerify)
 	common.OptionMap["SMTPForceAuthLogin"] = strconv.FormatBool(common.SMTPForceAuthLogin)
-	common.OptionMap["Notice"] = ""
+	common.OptionMap["Notice"] = defaultNotice
 	common.OptionMap["About"] = ""
 	common.OptionMap["HomePageContent"] = ""
 	common.OptionMap["Footer"] = common.Footer
@@ -256,6 +264,9 @@ func UpdateOptionsBulk(values map[string]string) error {
 func updateOptionMap(key string, value string) (err error) {
 	common.OptionMapRWMutex.Lock()
 	defer common.OptionMapRWMutex.Unlock()
+	if key == "Notice" && strings.TrimSpace(value) == "" {
+		value = defaultNotice
+	}
 	common.OptionMap[key] = value
 
 	// 检查是否是模型配置 - 使用更规范的方式处理

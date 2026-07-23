@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windows 安装保姆级教程 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">Windows 安装保姆级教程</h1>
+<p>大家好，我是 Immerse，一名独立开发者、内容创作者、AGI实践者。</p><ul><li><p>关注公众号：#沉浸式趣谈<br/> ，获取最新文章（更多内容只在公众号更新)</p></li><li><p>个人网站：<a href="https://yaolifeng.com" rel="noopener" target="_blank">https://yaolifeng.com</a><br/>  也同步更新。</p></li><li><p>转载请在文章开头注明出处和版权信息。</p></li></ul><p>我会在这里分享关于编程 、独立开发 、AI 、出海 、个人思考 等内容。</p><p>如果本文对你有帮助，欢迎动动小手指一键三连(点赞 、评论 、转发 )，给我一些支持和鼓励，谢谢！</p><p>上篇文章Windows 上安装使用 Claude Code 指南<br/> 聊到 Windows 安装 Claude Code 方式，必须安装 wsl，过程中会出现一个不可控的因素，劝退了很多人。</p><p>这几天发现了一种新方式，可以不用安装 wsl, 便捷快速使用。</p><blockquote><p>可以不用安装 WSL 客户端, 直接在 Windows 里面的 Shell 操作就好</p></blockquote><ol><li>安装 Node.js</li></ol><p>访问 Node 官网[1] , 选择正确的芯片结构，直接下载</p><p><picture><img alt="安装 Node.js" decoding="async" loading="lazy" src="../images/41b212542cc50911158a8ab840b0460e.png"/></picture></p><p>安装 Node.js<br/> 2. 安装 Claude Code 包</p><pre><code>npm install -g @anthropic-ai/claude-code --registry=https://registry.npmmirror.com</code></pre><ol start="3"><li>设置系统环境变量</li></ol><p>3.1 按 Win + R ，输入 sysdm.cpl ，点 确定<br/><picture><img alt="3.1" decoding="async" loading="lazy" src="../images/5ba5af3fffc9834ea885b91342b53ea7.png"/></picture></p><p>3.2 选择的 高级  菜单，点击下面的 环境变量</p><p><picture><img alt="3.2" decoding="async" loading="lazy" src="../images/f0313b921217beb19a7f501cb0e15fd7.png"/></picture></p><p>3.3 选择 系统变量  类型的 新建</p><p><picture><img alt="3.3" decoding="async" loading="lazy" src="../images/c8338e96104f21d68a0357e720232038.png"/></picture></p><p>3.4 创建两个环境变量: ANTHROPIC_AUTH_TOKEN  和 ANTHROPIC_BASE_URL</p><p><picture><img alt="3.4" decoding="async" loading="lazy" src="../images/a9ca19e9817a5b27a65ef081cf4cf431.png"/></picture></p><p>3.5 确认创建好环境变量，关闭相关对话框</p><ol start="4"><li>电脑打开 CMD  或 Power Shell ，输入 claude  即可开始</li></ol><pre><code>claude</code></pre><p><picture><img alt="Claude Code" decoding="async" loading="lazy" src="../images/036d0d3aadf9da0583adf8072146d37e.png"/></picture></p><p></p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

@@ -187,6 +187,7 @@ import {
   ChannelAuthSection,
   ChannelBasicSection,
   ChannelEditorLoadingState,
+  ChannelModelRatiosEditor,
   ChannelModelsSection,
 } from './sections'
 
@@ -297,6 +298,7 @@ const SENSITIVE_FORM_FIELDS = [
   'upstream_model_update_check_enabled',
   'upstream_model_update_auto_sync_enabled',
   'upstream_model_update_ignored_models',
+  'model_ratios',
 ] satisfies (keyof ChannelFormValues)[]
 
 function readAdvancedSettingsPreference(): boolean {
@@ -719,6 +721,7 @@ export function ChannelMutateDrawer({
   const currentKey = form.watch('key')
   const currentOther = form.watch('other')
   const currentModels = form.watch('models')
+  const currentModelRatios = form.watch('model_ratios') || {}
   const currentName = form.watch('name')
   const currentModelMapping = form.watch('model_mapping')
   const awsKeyType = form.watch('aws_key_type')
@@ -951,7 +954,10 @@ export function ChannelMutateDrawer({
     formErrors.azure_responses_version
   )
   const modelsHaveErrors = Boolean(
-    formErrors.models || formErrors.group || formErrors.model_mapping
+    formErrors.models ||
+    formErrors.group ||
+    formErrors.model_mapping ||
+    formErrors.model_ratios
   )
   const advancedHaveErrors =
     hasAdvancedSettingsErrors(formErrors) || Boolean(formErrors.advanced_custom)
@@ -1402,6 +1408,14 @@ export function ChannelMutateDrawer({
         ? formatModelsArray([...currentModelsArray, ...newModels])
         : formatModelsArray(newModels)
       form.setValue('models', finalModels)
+      const allowedModels = new Set(parseModelsString(finalModels))
+      const currentRatios = form.getValues('model_ratios') || {}
+      const nextRatios = Object.fromEntries(
+        Object.entries(currentRatios).filter(([model]) =>
+          allowedModels.has(model)
+        )
+      )
+      form.setValue('model_ratios', nextRatios)
       return newModels.length
     },
     [currentModelsArray, form]
@@ -3407,6 +3421,18 @@ export function ChannelMutateDrawer({
                               )}
                             </div>
                           </div>
+
+                          <ChannelModelRatiosEditor
+                            models={currentModelsArray}
+                            value={currentModelRatios}
+                            onChange={(value) =>
+                              form.setValue('model_ratios', value, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              })
+                            }
+                            disabled={isSubmitting || sensitiveLocked}
+                          />
 
                           <div className='border-border/60 rounded-lg border p-4'>
                             <FormField

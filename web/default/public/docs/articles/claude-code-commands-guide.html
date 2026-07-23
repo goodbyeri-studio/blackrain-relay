@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10 分钟掌握所有命令 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">10 分钟掌握所有命令</h1>
+<hr/><p>很多人用 Claude Code 只是当聊天工具，白白浪费了它 90% 的能力。本文提供保姆级教程，让你 10 分钟掌握所有核心命令！</p><p><picture><img alt="Claude Code 命令指南" decoding="async" loading="lazy" src="../images/458d35493043984fc249fc849214b344.png"/></picture></p><div class="tip custom-block"><p class="custom-block-title">📖 在线参考</p><p>可以收藏这个页面作为命令参考：<a href="https://cc-cli-help.pages.dev" rel="noopener" target="_blank">https://cc-cli-help.pages.dev</a></p></div><h2 id="_1️⃣-基础命令-5分钟上手" tabindex="-1">1️⃣ 基础命令 - 5分钟上手 </h2><p>先从最简单的开始，这5个命令能满足你80%的需求。</p><h3 id="_1-1-claude-启动交互模式" tabindex="-1">1.1 claude - 启动交互模式 </h3><p>最基础但最常用的命令：</p><pre><code class="language-bash">claude</code></pre><p><picture><img alt="启动交互模式" decoding="async" loading="lazy" src="../images/25a9657c9e091081092fc44699e42046.png"/></picture></p><p>就这么简单，敲完回车就进入对话模式了。想退出？输入 <code>/exit</code> 或 <code>/quit</code> 就可以了。</p><p><picture><img alt="退出交互模式" decoding="async" loading="lazy" src="../images/0f4f262b23da5ee43a9ff91637b901fc.png"/></picture></p><h3 id="_1-2-claude-问题-一次性回答" tabindex="-1">1.2 claude "问题" - 一次性回答 </h3><p>不想进入交互模式？直接问：</p><pre><code class="language-bash">claude "这段代码有什么问题"
+claude "帮我写个快速排序"</code></pre><p>直接就进入问题模式：</p><p><picture><img alt="一次性回答" decoding="async" loading="lazy" src="../images/cd5efe05259c40081f5e9a98a2dde859.png"/></picture></p><p>写完以后还可以继续在命令行输入问题：</p><p><picture><img alt="继续提问" decoding="async" loading="lazy" src="../images/98fe5e3888171d8f753a4b2fc1e58c3e.png"/></picture></p><h3 id="_1-3-管道处理-这个功能绝了" tabindex="-1">1.3 管道处理 - 这个功能绝了 </h3><p>这是最实用的功能，可以直接处理文件内容：</p><pre><code class="language-bash"># 优化代码文件
+cat quicksort.py | claude "优化这段代码"
+
+# 翻译文档
+cat README.md | claude "翻译成中文"</code></pre><p>直接就可以开始优化代码了：</p><p><picture><img alt="管道处理代码" decoding="async" loading="lazy" src="../images/376335ed27f68627f53a9324d044044d.png"/></picture></p><p>甚至可以这样玩：</p><pre><code class="language-bash">git diff | claude "解释这次改动"</code></pre><p>看到结果没有，不用自己傻乎乎看密密麻麻的代码，一次性帮你总结好：</p><p><picture><img alt="Git diff 分析" decoding="async" loading="lazy" src="../images/3e49267d59cf6a4fa70b86b16bb4425c.png"/></picture></p><p><picture><img alt="改动总结" decoding="async" loading="lazy" src="../images/a3cd7c3a5a3a79ca5a382ec6da5c2eaf.png"/></picture></p><h3 id="_1-4-claude-p-输出结果" tabindex="-1">1.4 claude -p - 输出结果 </h3><p>默认输出会有 Markdown 格式，加上 <code>-p</code> 就是纯文本，并且执行完后会直接退出：</p><pre><code class="language-bash">claude -p "生成MySQL的SQL的JOIN语句案例" &gt; query.sql</code></pre><p>可以看到，上面的命令执行完后，就直接退出了。没有交互的地方。并且输出内容：</p><p><picture><img alt="纯文本输出" decoding="async" loading="lazy" src="../images/436be28bdd2d936bd8f9e512c00db2a5.png"/></picture></p><h3 id="_1-5-claude-help-查看帮助" tabindex="-1">1.5 claude --help - 查看帮助 </h3><p>忘记命令了？一个 help 搞定：</p><pre><code class="language-bash">claude --help</code></pre><p><picture><img alt="查看帮助" decoding="async" loading="lazy" src="../images/fb43f6d6cc6f81fcd8097a31cfc58e01.png"/></picture></p><h2 id="_2️⃣-配置管理-个性化你的claude" tabindex="-1">2️⃣ 配置管理 - 个性化你的Claude </h2><h3 id="_2-1-查看当前配置" tabindex="-1">2.1 查看当前配置 </h3><p>会显示当前使用的模型、API密钥等信息：</p><pre><code class="language-bash">claude config list</code></pre><p><picture><img alt="配置列表" decoding="async" loading="lazy" src="../images/3873f506600a3f5d0d654b38de9b8c85.png"/></picture></p><h3 id="_2-2-修改配置" tabindex="-1">2.2 修改配置 </h3><pre><code class="language-bash"># 设置默认模型
+claude config set model claude-3-sonnet
+
+# 设置最大tokens
+claude config set max-tokens 4000
+
+# 设置温度参数
+claude config set temperature 0.7</code></pre><h3 id="_2-3-重置配置" tabindex="-1">2.3 重置配置 </h3><pre><code class="language-bash">claude config reset</code></pre><h2 id="_3️⃣-mcp命令-让claude-code开挂" tabindex="-1">3️⃣ MCP命令 - 让Claude Code开挂 </h2><p>MCP (Model Context Protocol) 是 Claude Code 的杀手锏，能连接各种外部工具。</p><h3 id="_3-1-查看mcp列表" tabindex="-1">3.1 查看MCP列表 </h3><pre><code class="language-bash">claude mcp list</code></pre><p><picture><img alt="MCP 列表" decoding="async" loading="lazy" src="../images/33f4cadef0fb56ed57da3dbb3c209fdd.png"/></picture></p><h3 id="_3-2-查看某个mcp的详细配置" tabindex="-1">3.2 查看某个MCP的详细配置 </h3><pre><code class="language-bash">claude mcp get playwright</code></pre><p><picture><img alt="MCP 详细配置" decoding="async" loading="lazy" src="../images/dd8ed5a5c277781c94201ae3647a1208.png"/></picture></p><h3 id="_3-3-删除某个mcp" tabindex="-1">3.3 删除某个MCP </h3><pre><code class="language-bash">claude mcp remove "playwright" -s user</code></pre><h3 id="_3-4-查看mcp状态" tabindex="-1">3.4 查看MCP状态 </h3><p>在交互模式中使用：</p><pre><code class="language-bash">/mcp</code></pre><p><picture><img alt="MCP 状态查看" decoding="async" loading="lazy" src="../images/64ba8c95cbfe20cf2495f850d6256416.png"/></picture></p><p>就会显示 MCP 的状态：</p><p><picture><img alt="MCP 状态显示" decoding="async" loading="lazy" src="../images/cfef3a623cfc954f0b8a877c5df1f160.png"/></picture></p><h3 id="_3-5-安装mcp" tabindex="-1">3.5 安装MCP </h3><h4 id="安装-playwright" tabindex="-1">安装 Playwright </h4><pre><code class="language-bash">claude mcp add playwright -s user -- npx @playwright/mcp@latest</code></pre><h4 id="其他常用mcp安装" tabindex="-1">其他常用MCP安装 </h4><pre><code class="language-bash"># Sequential Thinking
+claude mcp add sequential-thinking -s user -- npx -y @modelcontextprotocol/server-sequential-thinking
+
+# 文件系统
+claude mcp add filesystem -s user -- npx -y @modelcontextprotocol/server-filesystem ~/Documents ~/Desktop ~/Downloads
+
+# Puppeteer
+claude mcp add puppeteer -s user -- npx -y @modelcontextprotocol/server-puppeteer
+
+# Firecrawl (需要替换为实际的API Key)
+claude mcp add firecrawl -s user -e FIRECRAWL_API_KEY=fc-YOUR_API_KEY -- npx -y firecrawl-mcp</code></pre><h2 id="_4️⃣-实战案例-连接github" tabindex="-1">4️⃣ 实战案例 - 连接GitHub </h2><h3 id="_4-1-安装github-mcp" tabindex="-1">4.1 安装GitHub MCP </h3><pre><code class="language-bash">claude mcp add github-server -e GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_TOKEN -- npx "@modelcontextprotocol/server-github"</code></pre><p>⚠️ <strong>注意</strong>：分配 token 的时候，要给适当的权限：</p><p><picture><img alt="GitHub Token 权限" decoding="async" loading="lazy" src="../images/68f7f66a4987db2a7694a3c6bbef12a3.png"/></picture></p><p>不然就会报错：</p><p><picture><img alt="GitHub 权限错误" decoding="async" loading="lazy" src="../images/20583c59720ecc78f29abbb1e0bf6bcd.png"/></picture></p><h3 id="_4-2-使用github-mcp" tabindex="-1">4.2 使用GitHub MCP </h3><p>安装完成后，可以直接询问：</p><pre><code class="language-bash">我的github仓库有哪些项目</code></pre><p>很精准的列举了仓库里的项目，并且还有中文解释和备注：</p><p><picture><img alt="GitHub 仓库列表" decoding="async" loading="lazy" src="../images/b680a3b6d4dd011834232f5be75a0468.png"/></picture></p><pre><code class="language-bash">github的gi-food-friend这个项目最近的提交有哪些</code></pre><p><picture><img alt="GitHub 提交历史" decoding="async" loading="lazy" src="../images/7b052712b0ee02455c3bff1da1445acf.png"/></picture></p><p>可以看到很详细的提交信息，包括：</p><ul><li>提交时间</li><li>提交者</li><li>提交信息</li><li>文件变更统计</li></ul><p><picture><img alt="提交详情" decoding="async" loading="lazy" src="../images/b8f15aca3e068f8453280c229c97a976.png"/></picture></p><h2 id="_5️⃣-高级命令和技巧" tabindex="-1">5️⃣ 高级命令和技巧 </h2><h3 id="_5-1-会话管理" tabindex="-1">5.1 会话管理 </h3><pre><code class="language-bash"># 继续上次会话
+claude --continue
+
+# 从历史会话中选择
+claude --resume
+
+# 在非交互模式下继续
+claude --continue --print "继续之前的任务"</code></pre><h3 id="_5-2-输出格式控制" tabindex="-1">5.2 输出格式控制 </h3><pre><code class="language-bash"># JSON 格式输出
+claude --output-format json "分析这个错误"
+
+# 流式 JSON 输出
+claude --output-format stream-json "处理大文件"
+
+# 纯文本输出（默认）
+claude --output-format text "生成代码"</code></pre><h3 id="_5-3-项目特定配置" tabindex="-1">5.3 项目特定配置 </h3><pre><code class="language-bash"># 在项目目录中设置
+claude config set --project model claude-sonnet-3.5
+
+# 查看项目配置
+claude config list --project</code></pre><h3 id="_5-4-批处理和自动化" tabindex="-1">5.4 批处理和自动化 </h3><pre><code class="language-bash"># 批处理多个文件
+for file in *.py; do
+  cat "$file" | claude "检查这个Python文件的代码质量" &gt; "${file%.py}_review.txt"
+done
+
+# 管道链式处理
+git diff | claude "总结改动" | claude "用中文解释"</code></pre><h2 id="_6️⃣-交互模式的特殊命令" tabindex="-1">6️⃣ 交互模式的特殊命令 </h2><p>在 <code>claude</code> 交互模式中，还有一些特殊的斜杠命令：</p><pre><code class="language-bash">/help              # 显示帮助信息
+/exit, /quit       # 退出交互模式
+/clear             # 清空当前对话历史
+/mcp               # 查看MCP状态
+/continue          # 继续之前的对话
+/reset             # 重置会话状态</code></pre><h2 id="_7️⃣-常见问题和解决方案" tabindex="-1">7️⃣ 常见问题和解决方案 </h2><h3 id="_7-1-连接问题" tabindex="-1">7.1 连接问题 </h3><pre><code class="language-bash"># 测试API连接
+claude "test connection"
+
+# 检查配置
+claude config get api-key
+claude config get model</code></pre><h3 id="_7-2-性能优化" tabindex="-1">7.2 性能优化 </h3><pre><code class="language-bash"># 启用缓存
+claude config set cache-enabled true
+
+# 设置并发限制
+claude config set max-concurrent 3
+
+# 调整超时时间
+claude config set timeout 30</code></pre><h3 id="_7-3-调试模式" tabindex="-1">7.3 调试模式 </h3><pre><code class="language-bash"># 启用详细日志
+claude --verbose "你的问题"
+
+# 调试模式
+claude --debug "测试命令"</code></pre><h2 id="_8️⃣-最佳实践建议" tabindex="-1">8️⃣ 最佳实践建议 </h2><ol><li><strong>合理使用管道</strong>：善用 <code>|</code> 将其他命令的输出传给 Claude 处理</li><li><strong>配置MCP扩展</strong>：根据需要安装相应的MCP来扩展功能</li><li><strong>保存配置</strong>：为不同项目设置专门的配置文件</li><li><strong>批处理自动化</strong>：将 Claude Code 集成到脚本中处理重复任务</li><li><strong>合理分段</strong>：对于长文本，分段处理效果更好</li></ol><h2 id="_9️⃣-命令速查表" tabindex="-1">9️⃣ 命令速查表 </h2><table tabindex="0"><thead><tr><th>命令</th><th>功能</th><th>示例</th></tr></thead><tbody><tr><td><code>claude</code></td><td>启动交互模式</td><td><code>claude</code></td></tr><tr><td><code>claude "问题"</code></td><td>一次性询问</td><td><code>claude "解释这段代码"</code></td></tr><tr><td><code>claude -p</code></td><td>纯文本输出</td><td><code>claude -p "生成SQL" &gt; query.sql</code></td></tr><tr><td><code>claude --help</code></td><td>查看帮助</td><td><code>claude --help</code></td></tr><tr><td><code>claude config list</code></td><td>查看配置</td><td><code>claude config list</code></td></tr><tr><td><code>claude mcp list</code></td><td>查看MCP列表</td><td><code>claude mcp list</code></td></tr><tr><td><code>claude mcp add</code></td><td>安装MCP</td><td><code>claude mcp add playwright -s user</code></td></tr><tr><td><code>claude --continue</code></td><td>继续会话</td><td><code>claude --continue</code></td></tr><tr><td><code>claude --resume</code></td><td>选择历史会话</td><td><code>claude --resume</code></td></tr></tbody></table><h2 id="🔟-总结" tabindex="-1">🔟 总结 </h2><p>通过这10分钟的学习，你已经掌握了 Claude Code 的所有核心命令：</p><ul><li><strong>基础命令</strong>：交互模式、一次性询问、管道处理</li><li><strong>配置管理</strong>：个性化设置、项目配置</li><li><strong>MCP扩展</strong>：连接外部工具，扩展功能</li><li><strong>高级技巧</strong>：会话管理、输出控制、自动化处理</li></ul><p>现在你可以充分发挥 Claude Code 的强大功能，而不仅仅是把它当作聊天工具使用了！</p><hr/><p>💡 <strong>建议</strong>：将这份指南保存为书签，在使用过程中随时查阅。随着使用经验的积累，你会发现更多有趣的玩法！</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

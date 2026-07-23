@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude-Code-Templates 组件库 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">Claude-Code-Templates 组件库</h1>
+<p>智猩猩AI整理</p><p>编辑：六一</p><p>在所有AI编程助手中，Claude Code的能力毋庸置疑，但若想真正投入日常使用，从零开始配置Agent、设置各类命令、集成MCP服务器等初始化工作，仍是一段绕不开的、相当耗时的准备过程。</p><p>而今天要介绍的Claude-Code-Templates项目，正是为此而生。它在GitHub上已收获11.7k star，提供了一个开箱即用的强大组件库，内含500+预配置的Agents、Commands、钩子脚本及热门的Claude Skills。开发者无需重复配置，即可快速搭建开发环境，从而将精力完全聚焦于业务逻辑的实现。</p><p><img alt="" loading="lazy" src="../images/e0bd9a17c943a6af88d7227a14d235d6.png"/></p><ul><li>项目链接：</li></ul><p><a href="https://github.com/davila7/claude-code-templates" rel="noopener" target="_blank">https://github.com/davila7/claude-code-templates</a></p><hr/><p>01</p><p><strong>项目介绍</strong></p><p>Claude-Code-Templates项目是Claude Code的开箱即用配置集。提供涵盖AI智能体、自定义指令、参数设置、钩子脚本、外部集成（MCP）及Skills的完整资源库，助力开发者提升工作效率。</p><p><img alt="" loading="lazy" src="../images/a242d6ce20543ab8266d66a7a688bba5.png"/></p><p>除上述资源外，Claude-Code-Templates还包含强大的开发工具：</p><ul><li><p>Analytics Dashboard：Claude Code会话的实时监控。</p></li><li><p>Conversation Monitor：实时查看Claude回复的界面，且支持安全的远程访问。</p></li><li><p>Health Check：全面的系统诊断。</p></li><li><p>Plugin Dashboard：管理插件和权限的统一界面。</p></li></ul><p>项目配备了可视化网站，对所有资源进行了细致的分类。</p><p><img alt="" loading="lazy" src="../images/84d1411b753f7e2a9df9d850e41c64ea.png"/></p><p>对于想要使用的组件，可以直接复制相关命令用于后续运行，也可以查看其详细信息。</p><p><img alt="" loading="lazy" src="../images/7f00ed257a2ebdd71c5f2d438d050e65.png"/></p><p>02</p><p><strong>如何使用</strong></p><p>由于项目的组件均采用npx进行管理，所以使用前需确保安装了Node.js。</p><p>使用方式非常简单，只需进入项目所在目录，在终端中运行一行代码即可。比如：</p><pre><code>#运行交互式安装程序（推荐）
+npx claude-code-templates@latest</code></pre><p><img alt="" loading="lazy" src="../images/932becc3ab4384613b363d01cb3942e3.png"/></p><p>这个命令会提供一个交互式的界面，可以通过键盘移动选择想要进行的操作。</p><p>除此以外，也可以直接安装特定组件：</p><pre><code># 安装完整开发组件
+npx claude-code-templates@latest --agent development-team/frontend-developer --command testing/generate-tests --mcp development/github-integration --yes
+
+# 安装指定功能组件
+npx claude-code-templates@latest --agent development-tools/code-reviewer --yes
+npx claude-code-templates@latest --command performance/optimize-bundle --yes
+npx claude-code-templates@latest --setting performance/mcp-timeouts --yes
+npx claude-code-templates@latest --hook git/pre-commit-validation --yes
+npx claude-code-templates@latest --mcp database/postgresql-integration --yes</code></pre><p>小技巧：可以在可视化网站中把想安装的组件逐个添加到购物车，然后复制生成的命令进行一键安装，非常方便。</p><p><img alt="" loading="lazy" src="../images/064cabbb8d17a6b3e7494aacba1be4c7.png"/></p><p><img alt="" loading="lazy" src="../images/bc0115e64a2a6af584b5b0401e367387.png"/></p><p>03</p><p><strong>总结</strong></p><p>Claude-Code-Templates不仅仅是一个“一键配置神器”，更是一个经过验证的最佳实践集合。以往需要反复查阅文档、手动调试的配置流程，现在几分钟内就能高质量完成，让开发者能够将宝贵的时间和精力从环境搭建中彻底解放出来，完全投入到创造性的编码工作中。无论你是Claude Code的新用户希望平滑起步，还是资深开发者寻求进一步提效，这个项目都值得你立刻尝试。</p><p><strong>END</strong></p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

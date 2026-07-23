@@ -20,14 +20,14 @@ import { getStatus } from '@/lib/api'
 
 export type ModuleAccess = { enabled: boolean; requireAuth: boolean }
 
-export type HeaderNavModule = 'rankings' | 'pricing'
+export type HeaderNavModule = 'pricing'
 
 export type HeaderNavModules = {
   home: boolean
   console: boolean
   pricing: ModuleAccess
-  rankings: ModuleAccess
   docs: boolean
+  monitor: boolean
   about: boolean
   [key: string]: boolean | ModuleAccess
 }
@@ -36,21 +36,19 @@ const DEFAULT_HEADER_NAV_MODULES: HeaderNavModules = {
   home: true,
   console: true,
   pricing: { enabled: true, requireAuth: false },
-  rankings: { enabled: true, requireAuth: false },
   docs: true,
+  monitor: true,
   about: true,
 }
 
 const DEFAULTS: Record<HeaderNavModule, ModuleAccess> = {
   pricing: DEFAULT_HEADER_NAV_MODULES.pricing,
-  rankings: DEFAULT_HEADER_NAV_MODULES.rankings,
 }
 
 function cloneHeaderNavDefaults(): HeaderNavModules {
   return {
     ...DEFAULT_HEADER_NAV_MODULES,
     pricing: { ...DEFAULT_HEADER_NAV_MODULES.pricing },
-    rankings: { ...DEFAULT_HEADER_NAV_MODULES.rankings },
   }
 }
 
@@ -114,11 +112,6 @@ export function parseHeaderNavModules(raw: unknown): HeaderNavModules {
       result.pricing = parseAccess(value, result.pricing)
       return
     }
-    if (key === 'rankings') {
-      result.rankings = parseAccess(value, result.rankings)
-      return
-    }
-
     const fallback = result[key]
     if (
       typeof fallback === 'boolean' ||

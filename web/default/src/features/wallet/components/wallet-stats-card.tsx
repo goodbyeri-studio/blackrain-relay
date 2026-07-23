@@ -34,14 +34,18 @@ export function WalletStatsCard(props: WalletStatsCardProps) {
   const { t } = useTranslation()
   if (props.loading) {
     return (
-      <div className='grid grid-cols-3 divide-x rounded-lg border'>
-        {['balance', 'usage', 'requests'].map((key) => (
-          <div key={key} className='min-w-0 px-2.5 py-2.5 sm:px-5 sm:py-4'>
-            <Skeleton className='h-3.5 w-full' />
-            <Skeleton className='mt-2 h-6 w-full sm:h-7' />
-            <Skeleton className='mt-1.5 hidden h-3.5 w-24 md:block' />
-          </div>
-        ))}
+      <div className='border-y'>
+        <div className='px-3 py-3 sm:px-5'>
+          <Skeleton className='h-5 w-28' />
+        </div>
+        <div className='bg-primary/[0.06] grid grid-cols-3 divide-x px-1 py-4 sm:px-3 sm:py-6'>
+          {['balance', 'usage', 'requests'].map((key) => (
+            <div key={key} className='min-w-0 px-2 text-center sm:px-5'>
+              <Skeleton className='mx-auto h-7 w-20' />
+              <Skeleton className='mx-auto mt-2 h-4 w-24' />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -77,26 +81,27 @@ export function WalletStatsCard(props: WalletStatsCardProps) {
   ]
 
   return (
-    <div className='grid grid-cols-3 divide-x rounded-lg border'>
-      {stats.map((item) => (
-        <div key={item.label} className='min-w-0 px-2.5 py-2.5 sm:px-5 sm:py-4'>
-          <div className='flex items-center gap-1.5 sm:gap-2.5'>
-            <IconBadge tone={item.tone} size='stat'>
-              <item.icon />
-            </IconBadge>
-            <div className='text-muted-foreground truncate text-[11px] font-medium tracking-wider uppercase sm:text-xs'>
+    <div className='border-y'>
+      <div className='px-3 py-3 text-sm font-semibold sm:px-5'>
+        {t('Account Statistics')}
+      </div>
+      <div className='bg-primary/[0.06] grid grid-cols-3 divide-x px-1 py-4 sm:px-3 sm:py-6'>
+        {stats.map((item) => (
+          <div key={item.label} className='min-w-0 px-2 text-center sm:px-5'>
+            <div className='flex items-center justify-center gap-1.5 sm:gap-2'>
+              <IconBadge tone={item.tone} size='sm'>
+                <item.icon />
+              </IconBadge>
+              <div className='text-primary font-mono text-base font-bold break-all tabular-nums sm:text-2xl'>
+                {item.value}
+              </div>
+            </div>
+            <div className='text-muted-foreground mt-2 truncate text-xs sm:text-sm'>
               {item.label}
             </div>
           </div>
-
-          <div className='text-foreground mt-1.5 font-mono text-sm font-bold tracking-tight break-all tabular-nums sm:mt-2.5 sm:text-2xl'>
-            {item.value}
-          </div>
-          <div className='text-muted-foreground/60 mt-1 hidden text-xs md:block'>
-            {item.description}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }

@@ -57,51 +57,24 @@ export function SidebarModulesCard() {
 
   const sectionDefs: SectionDef[] = [
     {
-      key: 'chat',
-      title: t('Chat Area'),
-      description: t('Playground and chat functions'),
-      modules: [
-        {
-          key: 'playground',
-          title: t('Playground'),
-          description: t('AI model testing environment'),
-        },
-        {
-          key: 'chat',
-          title: t('Chat'),
-          description: t('Chat session management'),
-        },
-      ],
-    },
-    {
       key: 'console',
       title: t('Console Area'),
       description: t('Data management and log viewing'),
       modules: [
         {
           key: 'detail',
-          title: t('Dashboard'),
+          title: t('Data Overview'),
           description: t('System data statistics'),
         },
         {
           key: 'token',
-          title: t('Token Management'),
+          title: t('API Management'),
           description: t('API token management'),
         },
         {
           key: 'log',
-          title: t('Usage Logs'),
+          title: t('Billing Details'),
           description: t('API usage records'),
-        },
-        {
-          key: 'midjourney',
-          title: t('Drawing Logs'),
-          description: t('Drawing task records'),
-        },
-        {
-          key: 'task',
-          title: t('Task Logs'),
-          description: t('System task records'),
         },
       ],
     },
@@ -112,12 +85,12 @@ export function SidebarModulesCard() {
       modules: [
         {
           key: 'topup',
-          title: t('Wallet Management'),
+          title: t('My Account'),
           description: t('Balance and top-up management'),
         },
         {
           key: 'personal',
-          title: t('Personal Settings'),
+          title: t('Account Settings'),
           description: t('Personal info settings'),
         },
       ],

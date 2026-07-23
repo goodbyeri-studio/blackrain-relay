@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>推荐提示词大全 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">推荐提示词大全</h1>
+<hr/><p>Claude Code 的强大功能很大程度上取决于如何与它有效沟通。本文汇总了各种开发场景下的高效提示词模板，帮助开发者快速掌握 Claude Code 的使用技巧。</p><h2 id="🚀-项目初始化" tabindex="-1">🚀 项目初始化 </h2><h3 id="快速了解项目结构" tabindex="-1">快速了解项目结构 </h3><pre><code>请阅读项目的 README.md、package.json 和主要目录，帮我了解这个项目的架构和技术栈，但暂时不要编写任何代码。</code></pre><h3 id="创建项目配置文件" tabindex="-1">创建项目配置文件 </h3><pre><code>请帮我创建一个详细的 CLAUDE.md 文件，包含项目架构说明、常用命令、代码规范和开发环境配置。</code></pre><h3 id="项目环境配置" tabindex="-1">项目环境配置 </h3><pre><code>请检查项目的环境配置，确保所有依赖正确安装，并运行初始化脚本。如果有任何问题请告诉我如何解决。</code></pre><h2 id="🎯-功能开发" tabindex="-1">🎯 功能开发 </h2><h3 id="新功能开发流程" tabindex="-1">新功能开发流程 </h3><pre><code>我需要开发 [功能描述]。请按照以下步骤：
+1. 先阅读相关代码了解现有架构
+2. 制定详细的实现计划
+3. 实现核心功能
+4. 编写测试
+5. 更新文档
+每完成一步都要暂停等待我确认。</code></pre><h3 id="测试驱动开发" tabindex="-1">测试驱动开发 </h3><pre><code>我要实现 [功能描述]。请先基于期望的输入输出编写测试用例，确保测试会失败，然后再实现功能代码使测试通过。</code></pre><h3 id="api-接口开发" tabindex="-1">API 接口开发 </h3><pre><code>请帮我设计和实现 [API 描述] 接口，包括：
+- 路由定义
+- 请求参数验证
+- 业务逻辑实现
+- 响应格式定义
+- 错误处理
+- API 文档</code></pre><h3 id="组件开发" tabindex="-1">组件开发 </h3><pre><code>请帮我创建一个 [组件名称] 组件，要求：
+- 遵循项目现有的组件模式
+- 包含 TypeScript 类型定义
+- 支持 [具体功能需求]
+- 编写对应的测试文件</code></pre><h2 id="🔧-代码调试与优化" tabindex="-1">🔧 代码调试与优化 </h2><h3 id="错误诊断" tabindex="-1">错误诊断 </h3><pre><code>我遇到了这个错误：[错误信息]。请帮我分析错误原因，并提供修复方案。如果需要查看相关代码，请告诉我。</code></pre><h3 id="性能优化" tabindex="-1">性能优化 </h3><pre><code>请分析 [文件/功能] 的性能问题，并提供优化建议。重点关注：
+- 执行效率
+- 内存使用
+- 加载速度
+- 用户体验</code></pre><h3 id="代码重构" tabindex="-1">代码重构 </h3><pre><code>请重构 [文件名] 中的 [函数/类] ，目标是：
+- 提高代码可读性
+- 减少重复代码
+- 遵循最佳实践
+- 保持功能不变
+请先分析现有代码，然后提供重构计划。</code></pre><h3 id="代码审查" tabindex="-1">代码审查 </h3><pre><code>请对 [文件/功能] 进行代码审查，重点检查：
+- 代码规范
+- 安全问题
+- 性能问题
+- 最佳实践
+- 潜在 bug</code></pre><h2 id="🧪-测试相关" tabindex="-1">🧪 测试相关 </h2><h3 id="测试用例编写" tabindex="-1">测试用例编写 </h3><pre><code>请为 [函数/类/组件] 编写全面的测试用例，包括：
+- 正常情况测试
+- 边界条件测试
+- 错误情况测试
+- 模拟依赖项</code></pre><h3 id="测试修复" tabindex="-1">测试修复 </h3><pre><code>有几个测试失败了，请分析失败原因并修复。运行测试命令是：[测试命令]</code></pre><h3 id="测试覆盖率提升" tabindex="-1">测试覆盖率提升 </h3><pre><code>请分析当前的测试覆盖率，并为覆盖率不足的部分补充测试用例。</code></pre><h2 id="📱-前端开发" tabindex="-1">📱 前端开发 </h2><h3 id="ui-组件实现" tabindex="-1">UI 组件实现 </h3><pre><code>请根据这个设计图实现 UI 组件：[上传设计图]
+要求：
+- 响应式设计
+- 支持深色模式
+- 无障碍性支持
+- 符合设计规范</code></pre><h3 id="样式调整" tabindex="-1">样式调整 </h3><pre><code>请优化 [组件/页面] 的样式，实现以下效果：
+- [具体样式需求]
+- 保持与整体设计一致
+- 确保在不同设备上显示正常</code></pre><h3 id="状态管理" tabindex="-1">状态管理 </h3><pre><code>请为 [功能] 实现状态管理，包括：
+- 状态结构设计
+- Action 定义
+- Reducer 实现
+- 异步操作处理</code></pre><h2 id="⚡-后端开发" tabindex="-1">⚡ 后端开发 </h2><h3 id="数据库设计" tabindex="-1">数据库设计 </h3><pre><code>请为 [功能] 设计数据库表结构，包括：
+- 表结构定义
+- 索引设计
+- 关系约束
+- 迁移脚本</code></pre><h3 id="中间件开发" tabindex="-1">中间件开发 </h3><pre><code>请实现一个 [中间件名称] 中间件，功能包括：
+- [具体功能需求]
+- 错误处理
+- 日志记录
+- 性能监控</code></pre><h3 id="服务集成" tabindex="-1">服务集成 </h3><pre><code>请帮我集成 [第三方服务] ，包括：
+- SDK 配置
+- API 调用封装
+- 错误处理
+- 单元测试</code></pre><h2 id="📚-文档编写" tabindex="-1">📚 文档编写 </h2><h3 id="api-文档生成" tabindex="-1">API 文档生成 </h3><pre><code>请为项目生成 API 文档，包括：
+- 接口列表
+- 请求参数说明
+- 响应格式示例
+- 错误码说明</code></pre><h3 id="代码注释" tabindex="-1">代码注释 </h3><pre><code>请为 [文件/函数] 添加详细的代码注释，包括：
+- 功能描述
+- 参数说明
+- 返回值说明
+- 使用示例</code></pre><h3 id="readme-更新" tabindex="-1">README 更新 </h3><pre><code>请更新项目的 README.md 文件，确保包含：
+- 项目简介
+- 安装说明
+- 使用方法
+- 贡献指南</code></pre><h2 id="🔄-git-工作流" tabindex="-1">🔄 Git 工作流 </h2><h3 id="代码提交" tabindex="-1">代码提交 </h3><pre><code>请查看当前的修改，编写合适的提交信息并提交代码。提交信息要遵循项目的提交规范。</code></pre><h3 id="创建-pr" tabindex="-1">创建 PR </h3><pre><code>请创建一个 Pull Request，包括：
+- 清晰的标题和描述
+- 修改内容摘要
+- 测试计划
+- 相关 Issue 链接</code></pre><h3 id="分支管理" tabindex="-1">分支管理 </h3><pre><code>请帮我创建一个新的功能分支 [分支名称]，并切换到该分支开始开发。</code></pre><h2 id="🏗️-项目管理" tabindex="-1">🏗️ 项目管理 </h2><h3 id="任务分解" tabindex="-1">任务分解 </h3><pre><code>我需要实现 [大功能描述]。请帮我分解成多个小任务，每个任务包括：
+- 任务描述
+- 预估工时
+- 依赖关系
+- 验收标准</code></pre><h3 id="项目规划" tabindex="-1">项目规划 </h3><pre><code>请帮我制定项目开发计划，包括：
+- 功能模块划分
+- 开发优先级
+- 时间安排
+- 风险评估</code></pre><h3 id="技术选型" tabindex="-1">技术选型 </h3><pre><code>对于 [项目需求]，请帮我分析技术选型，比较不同方案的优缺点，并推荐最适合的技术栈。</code></pre><h2 id="🔍-代码分析" tabindex="-1">🔍 代码分析 </h2><h3 id="依赖分析" tabindex="-1">依赖分析 </h3><pre><code>请分析项目的依赖关系，检查：
+- 是否有冗余依赖
+- 是否有安全漏洞
+- 是否需要更新版本
+- 是否有替代方案</code></pre><h3 id="架构分析" tabindex="-1">架构分析 </h3><pre><code>请分析项目的整体架构，评估：
+- 模块职责是否清晰
+- 耦合度是否合理
+- 扩展性如何
+- 有哪些改进空间</code></pre><h3 id="代码统计" tabindex="-1">代码统计 </h3><pre><code>请统计项目的代码情况，包括：
+- 代码行数
+- 文件数量
+- 技术栈分布
+- 测试覆盖率</code></pre><h2 id="🛠️-环境配置" tabindex="-1">🛠️ 环境配置 </h2><h3 id="开发环境搭建" tabindex="-1">开发环境搭建 </h3><pre><code>请帮我配置开发环境，包括：
+- 安装必要的依赖
+- 配置环境变量
+- 设置开发工具
+- 验证环境是否正常</code></pre><h3 id="ci-cd-配置" tabindex="-1">CI/CD 配置 </h3><pre><code>请为项目配置 CI/CD 流程，包括：
+- 自动化测试
+- 代码质量检查
+- 自动部署
+- 通知机制</code></pre><h3 id="docker-配置" tabindex="-1">Docker 配置 </h3><pre><code>请为项目创建 Docker 配置，包括：
+- Dockerfile
+- docker-compose.yml
+- 环境变量配置
+- 部署说明</code></pre><h2 id="💡-高级技巧" tabindex="-1">💡 高级技巧 </h2><h3 id="批量处理" tabindex="-1">批量处理 </h3><pre><code>请对项目中所有的 [文件类型] 文件执行 [操作]，确保：
+- 操作的一致性
+- 不破坏现有功能
+- 符合项目规范</code></pre><h3 id="自动化脚本" tabindex="-1">自动化脚本 </h3><pre><code>请创建一个自动化脚本来 [任务描述]，脚本应该：
+- 支持命令行参数
+- 包含错误处理
+- 提供详细日志
+- 易于维护</code></pre><h3 id="代码生成" tabindex="-1">代码生成 </h3><pre><code>请根据 [配置/模板] 生成相应的代码文件，包括：
+- [具体文件类型]
+- 遵循项目约定
+- 包含必要注释
+- 通过基本测试</code></pre><h2 id="📋-使用建议" tabindex="-1">📋 使用建议 </h2><h3 id="提示词编写原则" tabindex="-1">提示词编写原则 </h3><ol><li><strong>明确具体</strong>：详细描述需求，避免模糊表达</li><li><strong>分步骤</strong>：复杂任务拆分为多个步骤</li><li><strong>设定边界</strong>：明确什么要做，什么不要做</li><li><strong>包含上下文</strong>：提供必要的背景信息</li><li><strong>验证确认</strong>：重要步骤要求确认再继续</li></ol><h3 id="常用修饰词" tabindex="-1">常用修饰词 </h3><ul><li><strong>"请先分析..."</strong>：要求 Claude 先理解再行动</li><li><strong>"暂时不要..."</strong>：设定明确的边界</li><li><strong>"每完成一步都要暂停"</strong>：控制执行节奏</li><li><strong>"遵循项目现有..."</strong>：保持一致性</li><li><strong>"如果需要...请告诉我"</strong>：主动沟通</li></ul><h3 id="效率提升技巧" tabindex="-1">效率提升技巧 </h3><ol><li><strong>使用 @ 引用文件</strong>：<code>@src/components/Button.tsx</code></li><li><strong>利用扩展思考</strong>：按两次 Shift+TAB 进入 PLAN 模式</li><li><strong>合理清理上下文</strong>：使用 <code>/clear</code> 和 <code>/compact</code></li><li><strong>创建自定义命令</strong>：在 <code>.claude/commands/</code> 目录下</li><li><strong>批量操作</strong>：一次性处理多个相似任务</li></ol><hr/><p>💡 <strong>提示</strong>：这些提示词模板可以根据具体项目需求进行调整。建议收藏本文作为日常开发参考，逐步熟练掌握与 Claude Code 的高效沟通方式。</p><p>通过使用这些精心设计的提示词，您将能够更好地发挥 Claude Code 的强大功能，显著提升开发效率和代码质量。</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

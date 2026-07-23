@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>升级 Claude Code / Codex / Gemini CLI - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">升级 Claude Code / Codex / Gemini CLI</h1>
+<hr/><p>三大主流 AI 编程 CLI 工具（Claude Code、OpenAI Codex CLI、Google Gemini CLI）迭代非常频繁，新版本会持续带来新功能、Bug 修复和性能改进。本文提供一条龙的 Bash 一键升级脚本，帮你保持工具始终处于最新版本。</p><h2 id="一键升级脚本" tabindex="-1">一键升级脚本 </h2><p>将以下内容保存为 <code>upgrade-ai-cli.sh</code>：</p><pre><code class="language-bash">#!/bin/bash
+
+# Claude Code
+npm i -g @anthropic-ai/claude-code
+
+# Codex
+npm i -g @openai/codex@latest
+
+# Gemini CLI
+#npm i -g @google/gemini-cli@latest
+npm i -g @google/gemini-cli@nightly</code></pre><p>赋予执行权限并运行：</p><pre><code class="language-bash">chmod +x upgrade-ai-cli.sh
+./upgrade-ai-cli.sh</code></pre><h2 id="分项说明" tabindex="-1">分项说明 </h2><h3 id="claude-code" tabindex="-1">Claude Code </h3><pre><code class="language-bash">npm i -g @anthropic-ai/claude-code</code></pre><ul><li>包名：<code>@anthropic-ai/claude-code</code></li><li>不带版本号时默认安装最新稳定版</li><li>升级后可运行 <code>claude --version</code> 验证</li></ul><h3 id="openai-codex-cli" tabindex="-1">OpenAI Codex CLI </h3><pre><code class="language-bash">npm i -g @openai/codex@latest</code></pre><ul><li>包名：<code>@openai/codex</code></li><li><code>@latest</code> 显式指定安装最新发布版本</li><li>升级后可运行 <code>codex --version</code> 验证</li></ul><h3 id="google-gemini-cli" tabindex="-1">Google Gemini CLI </h3><pre><code class="language-bash"># 稳定版
+npm i -g @google/gemini-cli@latest
+
+# Nightly 版（脚本默认使用这一行）
+npm i -g @google/gemini-cli@nightly</code></pre><ul><li>包名：<code>@google/gemini-cli</code></li><li>提供两个发布通道：<code>@latest</code>（稳定）和 <code>@nightly</code>（每日构建，功能更新快但可能不稳定）</li><li>想要尝鲜新功能选 <code>@nightly</code>，追求稳定选 <code>@latest</code></li></ul><h2 id="常见问题" tabindex="-1">常见问题 </h2><p><strong>Q：执行时提示权限不足（EACCES）怎么办？</strong></p><p>macOS / Linux 下如果 npm 全局目录在系统路径，可能需要 <code>sudo</code>，但更推荐配置 npm 的全局目录到用户目录以避免权限问题：</p><pre><code class="language-bash">mkdir -p ~/.npm-global
+npm config set prefix '~/.npm-global'
+export PATH=~/.npm-global/bin:$PATH</code></pre><p><strong>Q：国内下载非常慢怎么办？</strong></p><p>参考 <a href="npm-china-acceleration-config.html">NPM 中国加速配置指南</a> 切换国内镜像源。</p><p><strong>Q：如何确认是否升级成功？</strong></p><p>分别运行：</p><pre><code class="language-bash">claude --version
+codex --version
+gemini --version</code></pre><p>对比输出版本号是否为最新。</p><h2 id="相关文章" tabindex="-1">相关文章 </h2><ul><li><a href="claude-code-setup-ctok.html">Claude Code 安装指南</a></li><li><a href="openai-codex-installation.html">OpenAI Codex 安装配置指南</a></li><li><a href="claude-code-cleanup.html">如何清理本地 Claude Code 缓存和数据</a></li></ul>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

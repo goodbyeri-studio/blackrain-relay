@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subagents 子智能体详解 - goodbyeri.cc 文档</title>
+  <link rel="stylesheet" href="../article.css">
+</head>
+<body class="article-body">
+  <article class="doc">
+    <h1 class="doc-title">Subagents 子智能体详解</h1>
+<p>Claude Code 1.0.60 版本推出了革命性的子代理（Sub Agents）功能，让AI编程从个人工具升级为专业团队！本文将全面解析这一功能的核心优势、配置方法和实战应用。</p><hr/><h2 id="什么是子代理功能" tabindex="-1">什么是子代理功能 </h2><p>想象你正在管理一个开发团队，每个成员都有自己的专长：有人擅长代码审查，有人精通调试，还有人专注于数据分析。Claude Code的子代理功能正是基于这样的理念——让AI助手也能像团队协作一样，针对不同任务调用专门的"AI专家"。</p><p><picture><img alt="Claude Code子代理界面概览" decoding="async" loading="lazy" src="../images/c9bdd910be4712a446c0bcb5ec8676e1.png"/></picture></p><p>根据官方文档，子代理是预配置的AI助手，它们：</p><ul><li><strong>拥有特定的专业领域和任务类型</strong></li><li><strong>使用独立的上下文窗口</strong>，与主对话完全隔离</li><li><strong>可以配置特定的工具访问权限</strong></li><li><strong>通过自定义系统提示词来引导其行为</strong></li></ul><p><picture><img alt="版本更新信息" decoding="async" loading="lazy" src="../images/00dcd4e7ecdc5d615870495a1f7c8d1d.png"/></picture></p><p>当Claude Code遇到适合某个子代理处理的任务时，它会智能地将任务委派给相应的专家，就像一个优秀的项目经理分配任务一样。</p><h2 id="四大核心优势" tabindex="-1">四大核心优势 </h2><h3 id="_1-上下文保护-context-preservation" tabindex="-1">1. 上下文保护（Context Preservation） </h3><p>每个子代理都在独立的上下文中运行，这意味着处理复杂任务时不会污染主对话。主线程可以保持专注于高层次的目标，而具体的实现细节由子代理在各自的"工作空间"中完成。</p><h3 id="_2-专业化能力-specialized-expertise" tabindex="-1">2. 专业化能力（Specialized Expertise） </h3><p>通过为特定领域定制详细的指令，子代理能够在其专长领域达到更高的成功率。比如，一个专门的"代码审查"子代理可以包含详细的代码规范检查清单。</p><h3 id="_3-可重用性-reusability" tabindex="-1">3. 可重用性（Reusability） </h3><p>一旦创建，子代理可以在不同项目间复用，甚至可以与团队成员共享。这意味着团队可以逐步积累一个强大的AI工具库，实现工作流程的一致性。</p><h3 id="_4-灵活的权限管理-flexible-permissions" tabindex="-1">4. 灵活的权限管理（Flexible Permissions） </h3><p>每个子代理可以配置不同的工具访问级别。例如，你可以让"数据分析"子代理访问文件系统和数据处理工具，而限制"代码格式化"子代理只能访问代码编辑工具。</p><h2 id="如何配置子代理" tabindex="-1">如何配置子代理 </h2><p>创建子代理非常简单，只需要以下几步：</p><h3 id="第0步-打开子代理界面" tabindex="-1">第0步：打开子代理界面 </h3><pre><code class="language-bash">/agents</code></pre><p><picture><img alt="子代理管理界面" decoding="async" loading="lazy" src="../images/eae936d56d6c61fc5d22297ee49446b5.png"/></picture></p><h3 id="第1步-选择创建选项" tabindex="-1">第1步：选择创建选项 </h3><p>选择"Create New Agent"，可以看到，这里的sub-agent有自己的上下文，有自己的系统提示词，还可以配置能使用的工具。</p><p><picture><img alt="创建新代理界面" decoding="async" loading="lazy" src="../images/23155f29f16122151b3bb392b8973395.png"/></picture></p><p>决定创建项目级还是用户级子代理：</p><ul><li><strong>项目级</strong>：存储在<code>.claude/agents/</code>目录，只在当前项目下可用，适合团队项目</li><li><strong>用户级</strong>：存储在<code>~/.claude/agents/</code>目录，适合个人项目</li></ul><p><picture><img alt="选择代理级别" decoding="async" loading="lazy" src="../images/add2e4e160350cc1a4a1508db952ee9d.png"/></picture></p><h3 id="第2步-创建子代理的方式" tabindex="-1">第2步：创建子代理的方式 </h3><p>建议先让Claude生成初始版本，然后根据需求自定义。系统提供了两种创建方式：</p><p><picture><img alt="创建方式选择" decoding="async" loading="lazy" src="../images/f3fef7fa95cc8f97bf7799bb3bc2564a.png"/></picture></p><h3 id="第3步-详细描述子代理的用途" tabindex="-1">第3步：详细描述子代理的用途 </h3><p>选择方式一：让Claude根据描述自动生成</p><p><picture><img alt="描述代理用途" decoding="async" loading="lazy" src="../images/21da7f73a020b22d7d2dc8f17f5a03b6.png"/></picture></p><h3 id="第4步-选择要授予的工具权限" tabindex="-1">第4步：选择要授予的工具权限 </h3><p><picture><img alt="工具权限配置" decoding="async" loading="lazy" src="../images/a27deeeadc43188bf6563253ab08d5e3.png"/></picture></p><p>使用回车键选择和反选，空格子表示未选中：</p><p><picture><img alt="权限选择界面" decoding="async" loading="lazy" src="../images/9706336b604e2421107fe60b343689e4.png"/></picture></p><h3 id="第5步-选择背景颜色" tabindex="-1">第5步：选择背景颜色 </h3><p>这个设计很贴心，执行时可以通过颜色判断哪个agent在执行：</p><p><picture><img alt="颜色选择界面" decoding="async" loading="lazy" src="../images/581c68b12cbd22af23e8d5459f1d943a.png"/></picture></p><h3 id="最后-预览配置" tabindex="-1">最后：预览配置 </h3><p>系统会展示子代理的完整信息，包括名称、位置、使用的工具和系统提示词：</p><p><picture><img alt="配置预览界面" decoding="async" loading="lazy" src="../images/3cced6f4fa5532c0e0baebb693593768.png"/></picture></p><p>最后回车保存，退出时会显示已创建的sub-agent：</p><p><picture><img alt="创建完成提示" decoding="async" loading="lazy" src="../images/b2da19db1aa2cf683afeeea9ed623fb2.png"/></picture></p><h2 id="自定义agent方式" tabindex="-1">自定义Agent方式 </h2><h3 id="_1-选择自定义配置" tabindex="-1">1. 选择自定义配置 </h3><p><picture><img alt="自定义配置选项" decoding="async" loading="lazy" src="../images/c13279276809eb8db65f8109b8c67977.png"/></picture></p><h3 id="_2-选择agent类型" tabindex="-1">2. 选择Agent类型 </h3><p><picture><img alt="Agent类型选择" decoding="async" loading="lazy" src="../images/081b18e8f55d77ebd55910def3eb33cf.png"/></picture></p><p>注意：不支持中文，空格也不能有，只能使用英文、数字和横线：</p><p><picture><img alt="命名规则提示" decoding="async" loading="lazy" src="../images/e1e21d2ef6d463fbea374002bd2d97e3.png"/></picture></p><p>按照提示使用英文和横线命名：</p><p><picture><img alt="命名示例" decoding="async" loading="lazy" src="../images/46882a0ff1f53c6c41d84ac89f288d05.png"/></picture></p><h3 id="_3-编写提示词" tabindex="-1">3. 编写提示词 </h3><p><picture><img alt="编写提示词界面" decoding="async" loading="lazy" src="../images/c96bed4c2fd2b02723841f162fa46d31.png"/></picture></p><p>粘贴提示词内容：</p><p><picture><img alt="提示词输入" decoding="async" loading="lazy" src="../images/7e1a142f801cc9f235a00f087a4b66de.png"/></picture></p><h3 id="_4-添加描述信息" tabindex="-1">4. 添加描述信息 </h3><p><picture><img alt="描述信息输入" decoding="async" loading="lazy" src="../images/48e55ed05e11a238a0e3218ffedf3709.png"/></picture></p><p>后续配置步骤与前面介绍的一致。</p><h2 id="如何使用子代理" tabindex="-1">如何使用子代理 </h2><p>使用非常简单，直接在提示词中指定即可：</p><pre><code class="language-bash">使用 code-reviewer 帮我排查这个项目可能存在的问题</code></pre><p><picture><img alt="使用子代理示例" decoding="async" loading="lazy" src="../images/44e3a639d8a9e9be0ff1b62850a87b96.png"/></picture></p><p>颜色设计确实很实用，能清楚地知道哪个代理在工作。</p><h2 id="其他操作" tabindex="-1">其他操作 </h2><p>通过<code>/agents</code>命令进入后，可以看到已创建的agents，选择进入可以进行各种操作：</p><p><picture><img alt="代理列表" decoding="async" loading="lazy" src="../images/f3c8e32ad6b5b43cbafd9bb02249a04e.png"/></picture></p><p>进入后可以查看、编辑、删除等操作：</p><p><picture><img alt="代理管理选项" decoding="async" loading="lazy" src="../images/e0c8241e396933a735de2a0f62fc9bc3.png"/></picture></p><h2 id="深入配置细节" tabindex="-1">深入配置细节 </h2><h3 id="文件目录结构" tabindex="-1">文件目录结构 </h3><p>在<code>~/.claude</code>目录下有agents目录，存储配置好的代理文件：</p><p><picture><img alt="文件目录结构" decoding="async" loading="lazy" src="../images/9cd2f7437f3032a55483b0702f562852.png"/></picture></p><h3 id="文件格式" tabindex="-1">文件格式 </h3><p>每个子代理都是一个Markdown文件，格式如下：</p><pre><code class="language-markdown">---
+name: code-reviewer
+description: 专门进行代码质量审查，检查代码规范、潜在bug和性能问题。使用时请主动调用。
+tools: read_file, str_replace_editor, run_command
+---
+
+# 代码审查专家
+
+你是一个经验丰富的代码审查专家，专注于：
+
+1. **代码质量检查**
+   - 遵循项目的编码规范
+   - 识别潜在的bug和安全问题
+   - 提出性能优化建议
+
+2. **最佳实践**
+   - 确保代码可读性和可维护性
+   - 检查错误处理是否完善
+   - 验证测试覆盖率
+
+3. **审查流程**
+   - 首先理解代码的整体结构
+   - 逐个检查每个函数和模块
+   - 提供具体的改进建议</code></pre><h3 id="工具配置选项" tabindex="-1">工具配置选项 </h3><p>子代理可以访问Claude Code的所有内部工具，包括：</p><ul><li><strong>文件操作</strong>：<code>read_file</code>, <code>write_file</code>, <code>str_replace_editor</code></li><li><strong>命令执行</strong>：<code>run_command</code>, <code>terminal</code></li><li><strong>开发工具</strong>：<code>python</code>, <code>node</code>, <code>npm</code></li><li><strong>MCP工具</strong>：来自配置的MCP服务器的任何工具</li></ul><p>如果省略<code>tools</code>字段，子代理将继承主线程的所有工具权限。</p><h2 id="实战案例展示" tabindex="-1">实战案例展示 </h2><h3 id="调试大师" tabindex="-1">调试大师 </h3><pre><code class="language-markdown">---
+name: debugger
+description: 专门处理错误、测试失败和异常行为的调试专家。遇到任何问题时主动使用。
+tools: Read, Edit, Bash, Grep, Glob
+---
+
+# 调试专家
+
+你是一个专精于根因分析的调试专家。被调用时的工作流程：
+
+1. 捕获错误信息和堆栈跟踪
+2. 识别复现步骤
+3. 定位故障位置
+4. 实施最小化修复
+5. 验证解决方案有效性
+
+调试过程：
+- 分析错误信息和日志
+- 检查最近的代码变更
+- 形成并测试假设
+- 添加策略性调试日志
+- 检查变量状态
+
+对于每个问题，需要提供：
+- 根本原因解释
+- 支持诊断的证据
+- 具体的代码修复方案
+- 测试方法
+- 预防建议
+
+专注于修复根本问题，而不仅仅是处理表面症状。</code></pre><h3 id="数据科学家" tabindex="-1">数据科学家 </h3><pre><code class="language-markdown">---
+name: data-scientist
+description: 数据分析专家，专精于SQL查询、BigQuery操作和数据洞察。处理数据分析任务和查询时主动使用。
+tools: Bash, Read, Write
+---
+
+# 数据科学家
+
+你是一个专精于SQL和BigQuery分析的数据科学家。被调用时的工作流程：
+
+1. 理解数据分析需求
+2. 编写高效的SQL查询
+3. 适时使用BigQuery命令行工具（bq）
+4. 分析并总结结果
+5. 清晰地呈现发现
+
+关键实践：
+- 编写带有适当过滤条件的优化SQL查询
+- 使用合适的聚合和连接操作
+- 为复杂逻辑添加注释说明
+- 格式化结果以提高可读性
+- 提供数据驱动的建议
+
+对于每项分析：
+- 解释查询方法
+- 记录所有假设
+- 突出关键发现
+- 基于数据提出后续步骤建议
+
+始终确保查询高效且成本可控。</code></pre><h2 id="高级用法技巧" tabindex="-1">高级用法技巧 </h2><h3 id="_1-子代理链式调用" tabindex="-1">1. 子代理链式调用 </h3><p>官方文档提到，可以通过复杂的工作流链接多个子代理：</p><pre><code class="language-bash">首先让code-reviewer检查代码，然后让performance-optimizer优化性能，最后让doc-writer更新相关文档</code></pre><p><picture><img alt="多代理协作" decoding="async" loading="lazy" src="../images/44b8401e61daf198181a09f34fa3dff8.png"/></picture></p><h3 id="_2-动态子代理选择" tabindex="-1">2. 动态子代理选择 </h3><p>Claude Code会根据上下文智能选择子代理。通过在<code>description</code>字段中使用"PROACTIVELY"或"MUST BE USED"等关键词，可以增加子代理被自动调用的概率。</p><h3 id="_3-显式调用" tabindex="-1">3. 显式调用 </h3><p>也可以在命令中明确要求使用特定子代理：</p><pre><code class="language-bash">使用debugger子代理来分析这个错误</code></pre><h2 id="最佳实践建议" tabindex="-1">最佳实践建议 </h2><ol><li><p><strong>从Claude生成开始</strong>：官方强烈推荐先让Claude根据你的需求生成初始子代理，然后逐步迭代优化</p></li><li><p><strong>保持专注性</strong>：每个子代理应该有单一、明确的职责。避免创建"全能型"子代理</p></li><li><p><strong>详细的系统提示</strong>：在系统提示中包含具体的指令、示例和约束条件</p></li><li><p><strong>合理的工具授权</strong>：只授予必要的工具权限，既保证安全，又能帮助子代理专注于相关操作</p></li><li><p><strong>版本控制集成</strong>：将项目级子代理纳入版本控制（如Git），方便团队协作和持续改进</p></li></ol><h2 id="性能考量" tabindex="-1">性能考量 </h2><p>使用子代理时需要注意：</p><ul><li><strong>上下文效率</strong>：子代理有助于保护主上下文，使整体会话能够持续更长时间</li><li><strong>延迟考虑</strong>：每次调用子代理都会从零开始，可能需要时间来收集必要的上下文信息</li><li><strong>合理使用</strong>：简单任务不需要子代理，复杂的多方面查询才能充分发挥其优势</li></ul><h2 id="展望未来" tabindex="-1">展望未来 </h2><p>子代理功能的推出，标志着AI编程助手正在向更加智能、专业的方向发展。它不再是一个简单的代码生成工具，而是一个能够理解任务、智能分工、高效协作的AI团队。</p><p>通过子代理，开发者可以：</p><ul><li><strong>构建专属的AI开发团队</strong></li><li><strong>标准化团队的工作流程</strong></li><li><strong>积累和分享专业知识</strong></li><li><strong>大幅提升开发效率</strong></li></ul><p>随着越来越多的开发者创建和分享自己的子代理，一个丰富的AI工具生态系统正在形成。未来，我们可能只需要简单地描述需求，Claude Code就能自动调配合适的子代理组合，像一个经验丰富的技术负责人一样，高效地完成复杂的开发任务。</p><h2 id="总结" tabindex="-1">总结 </h2><p>Claude Code的子代理功能真的是个游戏规则改变者！</p><p><strong>核心优势</strong>：</p><ul><li>🎯 专业性更强</li><li>⚡ 效率大幅提升</li><li>🔄 可重复使用</li><li>📊 上下文独立</li></ul><p>每个子代理都很专业，再也不用担心Claude Code"什么都干但都不精"了！这个功能让AI编程从个人工具真正升级为专业团队协作模式。</p><p><picture><img alt="Claude Code发展图" decoding="async" loading="lazy" src="../images/063a0d07ee0946f0bde8255fbdecfdc7.png"/></picture></p><p>现在就开始创建你的专属AI开发团队吧！🚀</p>
+    <footer class="doc-footer">
+      <p>本文由 <a href="https://goodbyeri.cc" target="_blank" rel="noopener">goodbyeri.cc</a> 文档库整理校订。接入方式:将 <code>ANTHROPIC_BASE_URL</code> 设为 <code>https://goodbyeri.cc</code>,密钥使用 goodbyeri.cc 控制台创建的 API Key。</p>
+    </footer>
+  </article>
+</body>
+</html>

@@ -39,6 +39,17 @@ export type UpdateOptionResponse = {
   message: string
 }
 
+export type DeepKeyGroupSyncResponse = {
+  success: boolean
+  message: string
+  data?: {
+    group_ratio: Record<string, number>
+    user_usable_groups: Record<string, string>
+    auto_groups: string[]
+    count: number
+  }
+}
+
 export type ConfirmPaymentComplianceResponse = {
   success: boolean
   message: string
@@ -252,6 +263,7 @@ export type BillingSettings = {
   QuotaForInvitee: number
   TopUpLink: string
   'general_setting.docs_link': string
+  'general_setting.monitor_link': string
   'quota_setting.enable_free_model_pre_consume': boolean
   QuotaPerUnit: number
   USDExchangeRate: number
@@ -429,6 +441,7 @@ export type UpstreamConfig = {
 export type FetchUpstreamRatiosRequest = {
   upstreams: UpstreamConfig[]
   timeout: number
+  markup_percent: number
 }
 
 export type TestResult = {

@@ -1,0 +1,10 @@
+# Local deployment override: build the complete application from this checkout.
+# Use with docker-compose.yml; this file is not a standalone Compose project.
+services:
+  new-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    image: blackrain-relay:local
+    environment:
+      - GIN_MODE=${GIN_MODE:-release}
