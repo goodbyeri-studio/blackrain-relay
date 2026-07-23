@@ -1,0 +1,40 @@
+name: ${PERSONAL_DEV_WEB_COMPOSE_PROJECT:-meimei-api-personal-web}
+
+# Local-only frontend for the optional personal VPS backend. No API, database,
+# cache, or backend Secret is placed in the local Docker environment.
+services:
+  web-dev:
+    image: oven/bun:1.3.14
+    restart: unless-stopped
+    working_dir: /workspace/web/default
+    environment:
+      VITE_REACT_APP_SERVER_URL: http://host.docker.internal:${PERSONAL_DEV_LOCAL_API_PORT:-3310}
+    volumes:
+      - ../..:/workspace
+      - bun_cache:/root/.bun/install/cache
+      - web_node_modules:/workspace/web/node_modules
+      - default_node_modules:/workspace/web/default/node_modules
+    command: >
+      sh -lc "cd /workspace/web
+      && bun install --frozen-lockfile
+      && cd default
+      && bun run dev --host 0.0.0.0 --port 3000"
+    ports:
+      - "127.0.0.1:${PERSONAL_DEV_WEB_PORT:-3002}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "fetch('http://127.0.0.1:3000').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+
+volumes:
+  bun_cache:
+  web_node_modules:
+  default_node_modules:

@@ -1,0 +1,96 @@
+name: ${PERSONAL_DEV_COMPOSE_PROJECT:-meimei-api-personal-dev}
+
+# Optional backend stack for a developer-owned VPS. It deliberately shares no
+# network, volume, database, cache, or runtime env with another project.
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PERSONAL_DEV_POSTGRES_USER:?PERSONAL_DEV_POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${PERSONAL_DEV_POSTGRES_PASSWORD:?PERSONAL_DEV_POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${PERSONAL_DEV_POSTGRES_DB:?PERSONAL_DEV_POSTGRES_DB is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command:
+      [
+        "valkey-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${PERSONAL_DEV_VALKEY_PASSWORD:?PERSONAL_DEV_VALKEY_PASSWORD is required}",
+      ]
+    environment:
+      PERSONAL_DEV_VALKEY_PASSWORD: ${PERSONAL_DEV_VALKEY_PASSWORD:?PERSONAL_DEV_VALKEY_PASSWORD is required}
+    volumes:
+      - valkey_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'valkey-cli -a "$${PERSONAL_DEV_VALKEY_PASSWORD}" ping | grep -qx PONG',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/personal-dev/Dockerfile
+      provenance: false
+    image: meimei-api-personal-dev:local
+    restart: unless-stopped
+    command: --log-dir /app/logs
+    env_file:
+      - ${PERSONAL_DEV_RUNTIME_ENV_FILE:?PERSONAL_DEV_RUNTIME_ENV_FILE is required}
+    environment:
+      SQL_DSN: postgresql://${PERSONAL_DEV_POSTGRES_USER}:${PERSONAL_DEV_POSTGRES_PASSWORD}@postgres:5432/${PERSONAL_DEV_POSTGRES_DB}?sslmode=disable
+      REDIS_CONN_STRING: redis://:${PERSONAL_DEV_VALKEY_PASSWORD}@valkey:6379/0
+      NODE_NAME: meimei-api-personal-dev
+      NODE_TYPE: master
+    ports:
+      - "127.0.0.1:${PERSONAL_DEV_API_PORT:-3100}:3000"
+    volumes:
+      - app_data:/data
+      - app_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks:
+      - internal
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:3000/healthz/ready >/dev/null || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  app_data:
+  app_logs:
+  postgres_data:
+  valkey_data:

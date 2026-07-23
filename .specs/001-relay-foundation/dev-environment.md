@@ -2,9 +2,16 @@
 
 ## 目标
 
-日常开发默认采用混合模式：PostgreSQL 与 Redis 在 Docker 中运行，Go 后端与 `web/default` 前端在宿主机运行并保留热更新。需要验证容器后端时，也可以使用现有 `Dockerfile.dev` 启动完整 API dev stack。该环境不用于 staging、production 或对外售卖。
+仓库保留两种互不替代的开发方式：
 
-## 一次性初始化
+1. **标准本地模式**：所有贡献者均可使用。PostgreSQL 与 Redis 在本地 Docker 中运行，Go 后端与 `web/default` 前端可在宿主机运行并保留热更新；也可以用现有 `Dockerfile.dev` 启动完整本地 API dev stack。
+2. **Personal dev 模式**：仅供拥有个人云端开发 VPS 的开发者选择。Go API、PostgreSQL 和 Valkey 在个人 VPS 的隔离 Compose project 中运行，本地 Docker 只运行 default 前端，通过 Tailscale SSH 同步源码和转发 API。
+
+两种模式都不用于 staging、production 或对外售卖。Personal dev 是附加能力，不改变或废弃任何现有本地 Compose、Make target 和微信支付本地 override。
+
+## 标准本地模式
+
+### 一次性初始化
 
 ```bash
 make dev-bootstrap
@@ -13,7 +20,7 @@ make dev-infra-up
 
 `dev-bootstrap` 会生成本地 `.env.dev`，构建一次 classic/default 前端产物，并保留 default 前端的开发依赖。由于两个 workspace 依赖不同的 `date-fns` 主版本，classic 与 default 必须按该命令隔离安装和构建。
 
-## 日常启动
+### 日常启动
 
 混合模式分别打开两个终端：
 
@@ -45,7 +52,7 @@ make dev-frontend
 
 Go 代码未变化时可用 `make dev-api` 直接复用本地 dev 镜像。
 
-## 本地完整镜像验证
+### 本地完整镜像验证
 
 需要从当前检出源码构建包含前后端产物的完整镜像时，必须同时加载基础 Compose 文件和本地构建 override；`docker-compose.local.yml` 不是独立的 Compose 项目：
 
@@ -77,7 +84,7 @@ docker compose \
 
 PowerShell 使用 `$env:WECHAT_PAY_ENV_FILE` 和 `$env:WECHAT_PAY_SECRET_DIR` 设置相同变量。支付 override 未被加载时无需配置这两个变量；加载后若变量缺失，Compose 会在启动前给出明确错误。
 
-## 常用命令
+### 常用命令
 
 ```bash
 make dev-infra-status
@@ -90,9 +97,31 @@ make dev-down
 make dev-reset
 ```
 
-## 安全边界
+### 安全边界
 
 - `.env.dev` 被 Git 忽略；提交的是 `.env.dev.example`。
 - 示例密码只允许本机开发，不得复制到云端环境。
 - production 必须使用独立 Secret、托管数据库、TLS、备份、监控和发布流水线；本项目暂不维护长期 staging 环境。
 - 首次 production 发布只允许内部账户与 BlackRain Cloud 测试租户小流量验证，通过计费、限流、流式和对账 smoke 后再开放销售。
+
+## Personal dev 模式（可选）
+
+Personal dev 的实现位于 [`deploy/personal-dev/`](../../deploy/personal-dev/)，完整本地模式仍使用仓库根目录原有 Compose 文件。初始化并启动：
+
+```bash
+make personal-dev-init
+make personal-dev-up
+```
+
+默认职责边界：
+
+- 本地 OrbStack 只运行 `meimei-api-personal-web`，默认地址 `http://127.0.0.1:3002`。
+- 本地源码仍是唯一编辑源；前端通过 bind mount 热更新。
+- 当前 worktree 通过 Tailscale SSH 增量同步到 `/opt/dev/projects/meimei-api/source`。
+- VPS 使用 `meimei-api-fpsmeimei` Compose project 独立运行 API、PostgreSQL 和 Valkey。
+- 远端 API 只绑定 `127.0.0.1:3100`，本地通过 `127.0.0.1:3310` SSH tunnel 访问。
+- runtime env 保存在本地 `~/.config/goodbyeri/personal-dev/meimei-api.env` 和远端项目 runtime 目录，不进入仓库。
+
+Go 后端变化后运行 `make personal-dev-rebuild`；前端变化由本地开发服务器直接热更新。`make personal-dev-down` 只停止 personal dev containers 和 tunnel，不删除 volumes，也不会操作标准本地开发 stack。
+
+Personal dev 与同一 VPS 上的其他项目必须使用不同的目录、Compose project、network、volumes、数据库、缓存、端口和 Secret。个人 VPS 公网 SSH 必须由云 Firewall 阻断，管理连接只通过 Tailscale；PostgreSQL、Valkey 和开发 API 均不得直接暴露到公网。
