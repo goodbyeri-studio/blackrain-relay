@@ -36,6 +36,10 @@ type DeepKeyCatalogSyncResult struct {
 	Updated     int `json:"updated"`
 }
 
+type deepKeyCatalogAvailability struct {
+	modelsByGroup map[string]map[string]struct{}
+}
+
 // GetAllDeepKeyModelNames returns model names configured on both enabled and
 // disabled DeepKey channels. Disabled channels are included so a model that
 // disappears from the upstream catalog can still be explicitly unpublished.
@@ -72,6 +76,10 @@ func SyncDeepKeyCatalogModels(items []DeepKeyCatalogItem) (DeepKeyCatalogSyncRes
 	if DB == nil {
 		return DeepKeyCatalogSyncResult{}, errors.New("database is not initialized")
 	}
+	availability, err := loadDeepKeyCatalogAvailability()
+	if err != nil {
+		return DeepKeyCatalogSyncResult{}, err
+	}
 	knownNames, err := GetAllDeepKeyModelNames()
 	if err != nil {
 		return DeepKeyCatalogSyncResult{}, err
@@ -89,11 +97,6 @@ func SyncDeepKeyCatalogModels(items []DeepKeyCatalogItem) (DeepKeyCatalogSyncRes
 			byName[name] = DeepKeyCatalogItem{ModelName: name}
 		}
 	}
-	enabledGroups, err := GetEnabledDeepKeyGroups()
-	if err != nil {
-		return DeepKeyCatalogSyncResult{}, err
-	}
-
 	result := DeepKeyCatalogSyncResult{Total: len(byName)}
 	err = DB.Transaction(func(tx *gorm.DB) error {
 		now := common.GetTimestamp()
@@ -102,7 +105,8 @@ func SyncDeepKeyCatalogModels(items []DeepKeyCatalogItem) (DeepKeyCatalogSyncRes
 		for name := range byName {
 			names = append(names, name)
 		}
-		if err := tx.Where("catalog_only = ? OR model_name IN ?", true, names).Find(&existing).Error; err != nil {
+		query := tx.Where("catalog_only = ? OR model_name IN ?", true, names).Order("id ASC")
+		if err := lockForUpdate(query).Find(&existing).Error; err != nil {
 			return err
 		}
 		existingByName := make(map[string]*Model, len(existing))
@@ -112,9 +116,7 @@ func SyncDeepKeyCatalogModels(items []DeepKeyCatalogItem) (DeepKeyCatalogSyncRes
 
 		for name, item := range byName {
 			_, available := availableNames[name]
-			if available && len(item.EnableGroups) > 0 && !hasEnabledDeepKeyGroup(item.EnableGroups, enabledGroups) {
-				available = false
-			}
+			available = available && availability.hasModel(name, item.EnableGroups)
 			meta := existingByName[name]
 			if meta == nil {
 				status := 0
@@ -215,7 +217,10 @@ func SyncDeepKeyCatalogModels(items []DeepKeyCatalogItem) (DeepKeyCatalogSyncRes
 	return result, err
 }
 
-func GetEnabledDeepKeyGroups() (map[string]struct{}, error) {
+func loadDeepKeyCatalogAvailability() (*deepKeyCatalogAvailability, error) {
+	if DB == nil {
+		return nil, errors.New("database is not initialized")
+	}
 	var channels []Channel
 	if err := DB.Select("id", "base_url").Where("status = ?", common.ChannelStatusEnabled).Find(&channels).Error; err != nil {
 		return nil, err
@@ -227,31 +232,44 @@ func GetEnabledDeepKeyGroups() (map[string]struct{}, error) {
 			channelIDs = append(channelIDs, channel.Id)
 		}
 	}
-	groups := make(map[string]struct{})
+	availability := &deepKeyCatalogAvailability{modelsByGroup: make(map[string]map[string]struct{})}
 	if len(channelIDs) == 0 {
-		return groups, nil
+		return availability, nil
 	}
 	var rows []struct {
 		GroupName string
+		ModelName string
 	}
-	if err := DB.Table("abilities").Select(commonGroupCol+" AS group_name").Where("channel_id IN ? AND enabled = ?", channelIDs, true).Distinct().Scan(&rows).Error; err != nil {
+	if err := DB.Table("abilities").Select(commonGroupCol+" AS group_name, model AS model_name").Where("channel_id IN ? AND enabled = ?", channelIDs, true).Distinct().Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {
 		group := row.GroupName
-		if group = strings.TrimSpace(group); group != "" {
-			groups[group] = struct{}{}
+		modelName := strings.TrimSpace(row.ModelName)
+		if group = strings.TrimSpace(group); group != "" && modelName != "" {
+			if availability.modelsByGroup[group] == nil {
+				availability.modelsByGroup[group] = make(map[string]struct{})
+			}
+			availability.modelsByGroup[group][modelName] = struct{}{}
 		}
 	}
-	return groups, nil
+	return availability, nil
 }
 
-func hasEnabledDeepKeyGroup(groups []string, enabled map[string]struct{}) bool {
+func (availability *deepKeyCatalogAvailability) hasModel(modelName string, groups []string) bool {
+	if availability == nil || len(groups) == 0 {
+		return false
+	}
 	for _, group := range groups {
 		if group == "all" {
-			return true
+			for _, models := range availability.modelsByGroup {
+				if _, ok := models[modelName]; ok {
+					return true
+				}
+			}
+			continue
 		}
-		if _, ok := enabled[group]; ok {
+		if _, ok := availability.modelsByGroup[group][modelName]; ok {
 			return true
 		}
 	}
@@ -259,8 +277,15 @@ func hasEnabledDeepKeyGroup(groups []string, enabled map[string]struct{}) bool {
 }
 
 func FilterPublishedDeepKeyCatalog(items []Pricing) ([]Pricing, error) {
-	if DB == nil || len(items) == 0 {
+	if DB == nil {
+		return nil, errors.New("database is not initialized")
+	}
+	if len(items) == 0 {
 		return items, nil
+	}
+	availability, err := loadDeepKeyCatalogAvailability()
+	if err != nil {
+		return nil, err
 	}
 	names := make([]string, 0, len(items))
 	for _, item := range items {
@@ -277,7 +302,7 @@ func FilterPublishedDeepKeyCatalog(items []Pricing) ([]Pricing, error) {
 	filtered := make([]Pricing, 0, len(items))
 	for _, item := range items {
 		meta, ok := state[item.ModelName]
-		if !ok || (meta.Status == 1 && (!meta.CatalogOnly || meta.UpstreamAvailable)) {
+		if ok && meta.Status == 1 && (!meta.CatalogOnly || meta.UpstreamAvailable) && availability.hasModel(item.ModelName, item.EnableGroup) {
 			filtered = append(filtered, item)
 		}
 	}

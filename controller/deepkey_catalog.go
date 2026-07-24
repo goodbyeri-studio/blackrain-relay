@@ -54,7 +54,6 @@ var (
 	deepKeyCatalogRefresh singleflight.Group
 	deepKeyCatalogFetcher = fetchDeepKeyPricingCatalog
 	deepKeyCatalogSyncMu  sync.Mutex
-	deepKeyCatalogSynced  *deepKeyPricingCatalog
 )
 
 func syncDeepKeyCatalogModels(catalog *deepKeyPricingCatalog) (model.DeepKeyCatalogSyncResult, error) {
@@ -63,9 +62,6 @@ func syncDeepKeyCatalogModels(catalog *deepKeyPricingCatalog) (model.DeepKeyCata
 	}
 	deepKeyCatalogSyncMu.Lock()
 	defer deepKeyCatalogSyncMu.Unlock()
-	if deepKeyCatalogSynced == catalog {
-		return model.DeepKeyCatalogSyncResult{}, nil
-	}
 	items := make([]model.DeepKeyCatalogItem, 0, len(catalog.Models))
 	for _, item := range catalog.Models {
 		items = append(items, model.DeepKeyCatalogItem{
@@ -81,15 +77,8 @@ func syncDeepKeyCatalogModels(catalog *deepKeyPricingCatalog) (model.DeepKeyCata
 	if err != nil {
 		return model.DeepKeyCatalogSyncResult{}, err
 	}
-	deepKeyCatalogSynced = catalog
 	model.RefreshPricing()
 	return result, nil
-}
-
-func resetDeepKeyCatalogSyncState() {
-	deepKeyCatalogSyncMu.Lock()
-	deepKeyCatalogSynced = nil
-	deepKeyCatalogSyncMu.Unlock()
 }
 
 func applyDeepKeyCatalogPolicy(items []model.Pricing, groupRatio map[string]float64) error {
@@ -195,7 +184,6 @@ func refreshDeepKeyPricingCatalog() (*deepKeyPricingCatalog, error) {
 		deepKeyCatalogCache.fetchedAt = time.Now()
 		deepKeyCatalogCache.retryAt = time.Time{}
 		deepKeyCatalogCache.Unlock()
-		resetDeepKeyCatalogSyncState()
 		return freshCatalog, nil
 	})
 	if err != nil {

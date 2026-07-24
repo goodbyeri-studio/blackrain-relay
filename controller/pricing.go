@@ -73,10 +73,8 @@ func GetPricing(c *gin.Context) {
 	if catalog, err := getDeepKeyPricingCatalog(); err != nil {
 		common.SysLog("load DeepKey pricing catalog failed: " + err.Error())
 	} else {
-		catalogModels := catalog.Models
-		if _, err := syncDeepKeyCatalogModels(catalog); err != nil {
-			common.SysLog("sync DeepKey catalog models failed: " + err.Error())
-		} else if filtered, err := model.FilterPublishedDeepKeyCatalog(catalog.Models); err != nil {
+		catalogModels := []model.Pricing{}
+		if filtered, err := model.FilterPublishedDeepKeyCatalog(catalog.Models); err != nil {
 			common.SysLog("filter DeepKey catalog models failed: " + err.Error())
 		} else {
 			catalogModels = filtered

@@ -15,8 +15,6 @@ import (
 
 // GetAllModelsMeta 获取模型列表（分页）
 func GetAllModelsMeta(c *gin.Context) {
-	syncDeepKeyModelsForAdmin()
-
 	pageInfo := common.GetPageQuery(c)
 	status := c.Query("status")
 	syncOfficial := c.Query("sync_official")
@@ -44,8 +42,6 @@ func GetAllModelsMeta(c *gin.Context) {
 
 // SearchModelsMeta 搜索模型列表
 func SearchModelsMeta(c *gin.Context) {
-	syncDeepKeyModelsForAdmin()
-
 	keyword := c.Query("keyword")
 	vendor := c.Query("vendor")
 	status := c.Query("status")
@@ -71,17 +67,6 @@ func SearchModelsMeta(c *gin.Context) {
 	})
 }
 
-func syncDeepKeyModelsForAdmin() {
-	catalog, err := getDeepKeyPricingCatalog()
-	if err != nil {
-		common.SysLog("load DeepKey pricing catalog for admin failed: " + err.Error())
-		return
-	}
-	if _, err := syncDeepKeyCatalogModels(catalog); err != nil {
-		common.SysLog("sync DeepKey catalog models for admin failed: " + err.Error())
-	}
-}
-
 // SyncDeepKeyCatalog forces an upstream refresh and persists model availability.
 func SyncDeepKeyCatalog(c *gin.Context) {
 	catalog, err := refreshDeepKeyPricingCatalog()
@@ -89,13 +74,11 @@ func SyncDeepKeyCatalog(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	resetDeepKeyCatalogSyncState()
 	result, err := syncDeepKeyCatalogModels(catalog)
 	if err != nil {
 		common.ApiError(c, err)
 		return
 	}
-	model.RefreshPricing()
 	common.ApiSuccess(c, result)
 }
 
