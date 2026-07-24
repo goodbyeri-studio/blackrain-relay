@@ -23,7 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { formatLogQuota } from '@/lib/format'
+import { formatLogQuotaCNY } from '@/lib/format'
 
 import type { UsageLog } from '../data/schema'
 import { parseLogOther } from '../lib/format'
@@ -44,7 +44,7 @@ function splitQuotaDisplay(value: string): { prefix: string; amount: string } {
 export function UsageLogCostCell(props: UsageLogCostCellProps) {
   if (!isDisplayableLogType(props.log.type)) return null
 
-  const quotaText = formatLogQuota(props.log.quota)
+  const quotaText = formatLogQuotaCNY(props.log.quota)
   const other = parseLogOther(props.log.other)
   const isSubscription = other?.billing_source === 'subscription'
 

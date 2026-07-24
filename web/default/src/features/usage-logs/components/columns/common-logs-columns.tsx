@@ -36,9 +36,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { getUserAvatarFallback, getUserAvatarStyle } from '@/lib/avatar'
-import { formatBillingCurrencyFromUSD } from '@/lib/currency'
+import { formatCurrencyFromUSDAsCNY } from '@/lib/currency'
 import {
-  formatLogQuota,
+  formatLogQuotaCNY,
   formatTimestampToDate,
   formatUseTime,
 } from '@/lib/format'
@@ -143,7 +143,7 @@ function buildTypeDetailSegments(
       })
     }
     segments.push({
-      text: `${t('Fee')}: ${formatLogQuota(other?.fee_quota ?? log.quota)}`,
+      text: `${t('Fee')}: ${formatLogQuotaCNY(other?.fee_quota ?? log.quota)}`,
       muted: true,
     })
     return segments
@@ -155,9 +155,9 @@ function buildTypeDetailSegments(
 
   const priceOpts = { digitsLarge: 4, digitsSmall: 6, abbreviate: false }
   const formatPrice = (price: number) =>
-    `${formatBillingCurrencyFromUSD(price, priceOpts)}/M`
+    `${formatCurrencyFromUSDAsCNY(price, priceOpts)}/M`
   const formatPriceCompact = (price: number) =>
-    formatBillingCurrencyFromUSD(price, priceOpts)
+    formatCurrencyFromUSDAsCNY(price, priceOpts)
   const formatPriceList = (prices: string[], showUnit: boolean) => {
     const text = prices.join(' / ')
     return showUnit ? `${text}/M` : text
@@ -221,7 +221,7 @@ function buildTypeDetailSegments(
     const isPerCall = isPerCallBilling(modelPrice)
     if (isPerCall && modelPrice != null) {
       segments.push({
-        text: `${t('Per-call')} · ${formatBillingCurrencyFromUSD(modelPrice, priceOpts)}`,
+        text: `${t('Per-call')} · ${formatCurrencyFromUSDAsCNY(modelPrice, priceOpts)}`,
       })
     } else if (other.model_ratio != null) {
       const ratioParts = [

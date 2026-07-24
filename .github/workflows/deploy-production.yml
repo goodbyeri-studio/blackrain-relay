@@ -210,6 +210,78 @@ jobs:
             echo '::error::PROD_APP_ROOT must be an absolute path below /opt without parent traversal'
             exit 1
           }
+      - name: Prepare WeChat Pay configuration
+        if: inputs.operation == 'deploy'
+        env:
+          WECHAT_PAY_APP_ID: ${{ vars.WECHAT_PAY_APP_ID }}
+          WECHAT_PAY_MCH_ID: ${{ vars.WECHAT_PAY_MCH_ID }}
+          WECHAT_PAY_MERCHANT_SERIAL_NO: ${{ vars.WECHAT_PAY_MERCHANT_SERIAL_NO }}
+          WECHAT_PAY_PUBLIC_KEY_ID: ${{ vars.WECHAT_PAY_PUBLIC_KEY_ID }}
+          WECHAT_PAY_NOTIFY_URL: ${{ vars.WECHAT_PAY_NOTIFY_URL }}
+          WECHAT_PAY_API_V3_KEY: ${{ secrets.WECHAT_PAY_API_V3_KEY }}
+          WECHAT_PAY_MERCHANT_PRIVATE_KEY_PEM: ${{ secrets.WECHAT_PAY_MERCHANT_PRIVATE_KEY_PEM }}
+          WECHAT_PAY_PUBLIC_KEY_PEM: ${{ secrets.WECHAT_PAY_PUBLIC_KEY_PEM }}
+        run: |
+          require_single_line() {
+            local name="$1"
+            local value="$2"
+            [[ -n "$value" && "$value" != *$'\n'* && "$value" != *$'\r'* ]] || {
+              echo "::error::$name is missing or contains a line break"
+              exit 1
+            }
+          }
+
+          require_single_line WECHAT_PAY_APP_ID "$WECHAT_PAY_APP_ID"
+          require_single_line WECHAT_PAY_MCH_ID "$WECHAT_PAY_MCH_ID"
+          require_single_line WECHAT_PAY_MERCHANT_SERIAL_NO "$WECHAT_PAY_MERCHANT_SERIAL_NO"
+          require_single_line WECHAT_PAY_PUBLIC_KEY_ID "$WECHAT_PAY_PUBLIC_KEY_ID"
+          require_single_line WECHAT_PAY_NOTIFY_URL "$WECHAT_PAY_NOTIFY_URL"
+          require_single_line WECHAT_PAY_API_V3_KEY "$WECHAT_PAY_API_V3_KEY"
+
+          [[ "$WECHAT_PAY_APP_ID" =~ ^[A-Za-z0-9_-]+$ ]] || {
+            echo '::error::WECHAT_PAY_APP_ID contains invalid characters'
+            exit 1
+          }
+          [[ "$WECHAT_PAY_MCH_ID" =~ ^[0-9]+$ ]] || {
+            echo '::error::WECHAT_PAY_MCH_ID must be numeric'
+            exit 1
+          }
+          [[ "$WECHAT_PAY_MERCHANT_SERIAL_NO" =~ ^[A-Fa-f0-9]+$ ]] || {
+            echo '::error::WECHAT_PAY_MERCHANT_SERIAL_NO must be hexadecimal'
+            exit 1
+          }
+          [[ "$WECHAT_PAY_PUBLIC_KEY_ID" =~ ^[A-Za-z0-9_-]+$ ]] || {
+            echo '::error::WECHAT_PAY_PUBLIC_KEY_ID contains invalid characters'
+            exit 1
+          }
+          [[ "$WECHAT_PAY_NOTIFY_URL" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?/[^?#]*$ ]] || {
+            echo '::error::WECHAT_PAY_NOTIFY_URL must be a public HTTPS URL without query or fragment'
+            exit 1
+          }
+          [[ ${#WECHAT_PAY_API_V3_KEY} -eq 32 ]] || {
+            echo '::error::WECHAT_PAY_API_V3_KEY must contain exactly 32 characters'
+            exit 1
+          }
+
+          bundle="$RUNNER_TEMP/wechat-pay"
+          install -m 700 -d "$bundle"
+          printf '%s\n' "$WECHAT_PAY_MERCHANT_PRIVATE_KEY_PEM" > "$bundle/merchant-private-key.pem"
+          printf '%s\n' "$WECHAT_PAY_PUBLIC_KEY_PEM" > "$bundle/wechatpay-public-key.pem"
+          chmod 600 "$bundle/merchant-private-key.pem" "$bundle/wechatpay-public-key.pem"
+          openssl pkey -in "$bundle/merchant-private-key.pem" -check -noout >/dev/null
+          openssl pkey -pubin -in "$bundle/wechatpay-public-key.pem" -noout >/dev/null
+
+          {
+            printf 'WECHAT_PAY_APP_ID=%s\n' "$WECHAT_PAY_APP_ID"
+            printf 'WECHAT_PAY_MCH_ID=%s\n' "$WECHAT_PAY_MCH_ID"
+            printf 'WECHAT_PAY_MERCHANT_SERIAL_NO=%s\n' "$WECHAT_PAY_MERCHANT_SERIAL_NO"
+            printf 'WECHAT_PAY_MERCHANT_PRIVATE_KEY_PATH=/run/secrets/wechatpay/merchant-private-key.pem\n'
+            printf 'WECHAT_PAY_PUBLIC_KEY_ID=%s\n' "$WECHAT_PAY_PUBLIC_KEY_ID"
+            printf 'WECHAT_PAY_PUBLIC_KEY_PATH=/run/secrets/wechatpay/wechatpay-public-key.pem\n'
+            printf 'WECHAT_PAY_API_V3_KEY=%s\n' "$WECHAT_PAY_API_V3_KEY"
+            printf 'WECHAT_PAY_NOTIFY_URL=%s\n' "$WECHAT_PAY_NOTIFY_URL"
+          } > "$bundle/wechat-pay.env"
+          chmod 600 "$bundle/wechat-pay.env"
       - name: Install doctl
         uses: digitalocean/action-doctl@135ac0aa0eed4437d547c6f12c364d3006b42824 # v2.5.1
         with:
@@ -268,7 +340,19 @@ jobs:
             exit 1
           }
           scp "${ssh_args[@]}" deploy/production/deploy.sh deploy/production/docker-compose.yml \
+            deploy/production/install-wechat-pay.sh \
             "$PROD_DEPLOY_USER@$PROD_HOST:$PROD_APP_ROOT/"
+          if [[ "${{ inputs.operation }}" == 'deploy' ]]; then
+            remote_bundle="$PROD_APP_ROOT/.wechat-pay-$GITHUB_RUN_ID"
+            ssh "${ssh_args[@]}" "$PROD_DEPLOY_USER@$PROD_HOST" \
+              "install -m 700 -d '$remote_bundle'"
+            scp "${ssh_args[@]}" "$RUNNER_TEMP/wechat-pay/wechat-pay.env" \
+              "$RUNNER_TEMP/wechat-pay/merchant-private-key.pem" \
+              "$RUNNER_TEMP/wechat-pay/wechatpay-public-key.pem" \
+              "$PROD_DEPLOY_USER@$PROD_HOST:$remote_bundle/"
+            ssh "${ssh_args[@]}" "$PROD_DEPLOY_USER@$PROD_HOST" \
+              "cd '$PROD_APP_ROOT' && chmod 700 ./install-wechat-pay.sh && ./install-wechat-pay.sh '$remote_bundle'"
+          fi
       - name: Authenticate production host to DOCR
         env:
           DOCR_TOKEN: ${{ secrets.DOCR_PUSH_TOKEN }}

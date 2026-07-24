@@ -15,6 +15,7 @@ services:
     volumes:
       - /var/lib/meimei-api/data:/data
       - /var/log/meimei-api:/app/logs
+      - /etc/meimei-api/secrets/wechatpay:/run/secrets/wechatpay:ro
     security_opt:
       - no-new-privileges:true
     healthcheck:

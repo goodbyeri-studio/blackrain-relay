@@ -25,7 +25,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { IconBadge } from '@/components/ui/icon-badge'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatQuota } from '@/lib/format'
+import { formatQuotaCNY } from '@/lib/format'
 
 import type { UserWalletData } from '../types'
 
@@ -106,12 +106,12 @@ export function AffiliateRewardsCard({
             {[
               [
                 t('Pending Rewards'),
-                formatQuota(user?.aff_quota ?? 0),
+                formatQuotaCNY(user?.aff_quota ?? 0),
                 TrendingUp,
               ],
               [
                 t('Total Rewards'),
-                formatQuota(user?.aff_history_quota ?? 0),
+                formatQuotaCNY(user?.aff_history_quota ?? 0),
                 BarChart3,
               ],
               [t('Invited Users'), String(user?.aff_count ?? 0), Users],

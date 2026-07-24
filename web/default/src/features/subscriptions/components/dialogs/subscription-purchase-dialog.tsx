@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { CalendarClock, Crown, Package, ScanLine } from 'lucide-react'
+import { Crown, Package, ScanLine } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -36,7 +36,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { WechatNativeDialog } from '@/features/wallet/components/dialogs/wechat-native-dialog'
 import { useSystemConfig } from '@/hooks/use-system-config'
-import { formatQuota } from '@/lib/format'
+import { formatQuotaCNY } from '@/lib/format'
 import { DEFAULT_CURRENCY_CONFIG } from '@/stores/system-config-store'
 
 import {
@@ -47,7 +47,7 @@ import {
   paySubscriptionBalance,
 } from '../../api'
 import { useSubscriptionWechatPayment } from '../../hooks/use-subscription-wechat-payment'
-import { formatDuration, formatPlanPrice, formatResetPeriod } from '../../lib'
+import { formatPlanPrice, formatResetPeriod } from '../../lib'
 import type { PlanRecord } from '../../types'
 
 interface PaymentMethod {
@@ -311,15 +311,6 @@ export function SubscriptionPurchaseDialog(props: Props) {
                 {plan.title}
               </span>
             </div>
-            <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground text-sm'>
-                {t('Validity Period')}
-              </span>
-              <span className='flex items-center gap-1 text-sm'>
-                <CalendarClock className='h-3.5 w-3.5' />
-                {formatDuration(plan, t)}
-              </span>
-            </div>
             {formatResetPeriod(plan, t) !== t('No Reset') && (
               <div className='flex justify-between'>
                 <span className='text-muted-foreground text-sm'>
@@ -334,7 +325,7 @@ export function SubscriptionPurchaseDialog(props: Props) {
               </span>
               <span className='flex items-center gap-1 text-sm'>
                 <Package className='h-3.5 w-3.5' />
-                {totalAmount > 0 ? formatQuota(totalAmount) : t('Unlimited')}
+                {totalAmount > 0 ? formatQuotaCNY(totalAmount) : t('Unlimited')}
               </span>
             </div>
             {plan.upgrade_group && (
@@ -364,11 +355,11 @@ export function SubscriptionPurchaseDialog(props: Props) {
           <div className='flex flex-col gap-2 rounded-md border p-3'>
             <div className='flex items-center justify-between gap-2 text-xs'>
               <span className='text-muted-foreground'>{t('Required')}</span>
-              <span>{formatQuota(balanceCost)}</span>
+              <span>{formatQuotaCNY(balanceCost)}</span>
             </div>
             <div className='flex items-center justify-between gap-2 text-xs'>
               <span className='text-muted-foreground'>{t('Available')}</span>
-              <span>{formatQuota(userQuota)}</span>
+              <span>{formatQuotaCNY(userQuota)}</span>
             </div>
             {!allowBalancePay ? (
               <Alert variant='destructive'>

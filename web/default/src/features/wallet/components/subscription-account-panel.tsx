@@ -41,7 +41,7 @@ import type {
   PlanRecord,
   UserSubscriptionRecord,
 } from '@/features/subscriptions/types'
-import { formatQuota } from '@/lib/format'
+import { formatQuotaCNY } from '@/lib/format'
 
 const BILLING_PREFERENCES = [
   'subscription_first',
@@ -272,8 +272,8 @@ export function SubscriptionAccountPanel(props: SubscriptionAccountPanelProps) {
                   <div className='text-muted-foreground mt-2 text-xs'>
                     {totalAmount > 0 ? (
                       <span>
-                        {t('Used')} {formatQuota(usedAmount)} · {t('Remaining')}{' '}
-                        {formatQuota(remainingAmount)}
+                        {t('Used')} {formatQuotaCNY(usedAmount)} ·{' '}
+                        {t('Remaining')} {formatQuotaCNY(remainingAmount)}
                       </span>
                     ) : (
                       <span>

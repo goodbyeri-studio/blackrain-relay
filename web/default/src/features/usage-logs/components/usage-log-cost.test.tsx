@@ -58,6 +58,7 @@ describe('usage log cost cell', () => {
       />
     )
 
+    assert.match(markup, />¥<\/span>/)
     assert.match(markup, /0\.246912/)
     assert.doesNotMatch(markup, /Subscription/)
   })
@@ -75,6 +76,6 @@ describe('usage log cost cell', () => {
     )
 
     assert.match(markup, /Subscription/)
-    assert.match(markup, /Deducted by subscription:.*0\.246912/)
+    assert.match(markup, /Deducted by subscription:.*¥0\.246912/)
   })
 })

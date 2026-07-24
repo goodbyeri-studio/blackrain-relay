@@ -23,7 +23,7 @@ import { toast } from 'sonner'
 
 import { Dialog } from '@/components/dialog'
 import { Label } from '@/components/ui/label'
-import { formatQuota, formatCompactNumber } from '@/lib/format'
+import { formatQuotaCNY, formatCompactNumber } from '@/lib/format'
 
 import { getUserInfo } from '../../api'
 import type { UserInfo } from '../../types'
@@ -116,11 +116,11 @@ export function UserInfoDialog({
           <div className='grid grid-cols-2 gap-4'>
             <InfoItem
               label={t('Balance')}
-              value={formatQuota(userInfo.quota)}
+              value={formatQuotaCNY(userInfo.quota)}
             />
             <InfoItem
               label={t('Used Quota')}
-              value={formatQuota(userInfo.used_quota)}
+              value={formatQuotaCNY(userInfo.used_quota)}
             />
           </div>
 
@@ -158,7 +158,7 @@ export function UserInfoDialog({
               {userInfo.aff_quota !== undefined && userInfo.aff_quota > 0 && (
                 <InfoItem
                   label={t('Invitation Quota')}
-                  value={formatQuota(userInfo.aff_quota)}
+                  value={formatQuotaCNY(userInfo.aff_quota)}
                 />
               )}
             </>

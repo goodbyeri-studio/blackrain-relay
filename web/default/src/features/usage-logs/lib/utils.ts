@@ -28,6 +28,7 @@ import {
   getUserTaskLogs,
 } from '../api'
 import {
+  LOG_TYPE_ENUM,
   LOG_TYPES,
   DISPLAYABLE_LOG_TYPES,
   TIMING_LOG_TYPES,
@@ -270,6 +271,7 @@ export async function fetchLogsByCategory(
       columnFilters,
       isAdmin,
     })
+    params.type = LOG_TYPE_ENUM.CONSUME
     return isAdmin ? await getAllLogs(params) : await getUserLogs(params)
   }
 

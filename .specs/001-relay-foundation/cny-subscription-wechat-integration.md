@@ -22,8 +22,23 @@
 
 PEM Secret 适合 GitHub Actions 或平台环境变量直接注入；文件路径方式适合只读 Secret 卷。应用两种方式都支持，且不记录密钥内容。
 
+生产发布由 `.github/workflows/deploy-production.yml` 在 `production` Environment 中读取上述配置：
+
+- 单行标识和 URL 使用 GitHub Variables，API v3 密钥与 PEM 使用 GitHub Secrets。
+- Runner 先验证变量、32 字符 API v3 密钥和 PEM 格式，再通过临时目录上传到生产机。
+- 生产机将 PEM 安装到 `/etc/meimei-api/secrets/wechatpay`，容器只读挂载到 `/run/secrets/wechatpay`；`production.env` 只保存容器内路径和必要变量。
+- 安装脚本保留 `production.env` 中所有非 `WECHAT_PAY_*` 配置，并替换旧微信配置；日志不得输出密钥或 PEM 内容。
+
+## 客户展示规则
+
+- 钱包、套餐购买和计费详情中的额度金额统一显示为人民币符号 `¥`，数值按 `1:1` 展示。
+- 生产后台 `USDExchangeRate` 设置为 `1`；该运行时选项保存在生产数据库中，不由镜像或部署脚本重置。
+- 客户套餐卡片和购买弹窗不显示“有效期：1 个月”，但套餐持续时间和到期结算逻辑保持不变。
+- 客户计费详情只查询消费日志（`type=2`）；登录和管理日志仍写入数据库并保留审计用途。
+
 ## 验证
 
 - Go：`go test ./model ./controller ./setting`
-- 前端：`tsgo -b`、`oxlint`、`rsbuild build`
+- 前端：`tsgo -b`、变更文件 `oxlint`、受保护头格式检查、`rsbuild build`
+- 部署：`bash -n deploy/production/install-wechat-pay.sh`、`bash -n deploy/production/deploy.sh`、production workflow 检查
 - 支付回调必须在微信商户平台配置为 `WECHAT_PAY_NOTIFY_URL` 的精确地址。

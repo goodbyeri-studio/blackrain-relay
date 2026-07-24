@@ -418,6 +418,33 @@ export function formatCurrencyFromUSD(
   return formatCurrencyValue(value, merged, meta)
 }
 
+/** Format USD-backed values as CNY without changing the server billing mode. */
+export function formatCurrencyFromUSDAsCNY(
+  amountUSD: number | null | undefined,
+  options?: CurrencyFormatOptions
+): string {
+  if (amountUSD == null || Number.isNaN(amountUSD)) return '-'
+
+  const meta: DisplayMeta = {
+    kind: 'currency',
+    symbol: '¥',
+    currencyCode: 'CNY',
+    exchangeRate: 1,
+  }
+  return formatCurrencyValue(amountUSD, mergeOptions(options), meta)
+}
+
+/** Format quota units as CNY while preserving their stored USD value. */
+export function formatQuotaAsCNY(
+  quota: number | null | undefined,
+  options?: CurrencyFormatOptions
+): string {
+  if (quota == null || Number.isNaN(quota)) return '-'
+
+  const { config } = getCurrencyDisplay()
+  return formatCurrencyFromUSDAsCNY(quota / config.quotaPerUnit, options)
+}
+
 /**
  * Format USD amounts for billing/payment contexts (never shows tokens).
  *

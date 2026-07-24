@@ -20,6 +20,7 @@ import dayjs from '@/lib/dayjs'
 
 import {
   formatCurrencyFromUSD,
+  formatQuotaAsCNY,
   formatQuotaWithCurrency,
   getCurrencyDisplay,
 } from './currency'
@@ -71,6 +72,14 @@ export function formatCurrencyUSD(value: number | null | undefined): string {
  */
 export function formatQuota(quota: number): string {
   return formatQuotaWithCurrency(quota, {
+    digitsLarge: 2,
+    digitsSmall: 4,
+    abbreviate: true,
+  })
+}
+
+export function formatQuotaCNY(quota: number): string {
+  return formatQuotaAsCNY(quota, {
     digitsLarge: 2,
     digitsSmall: 4,
     abbreviate: true,
@@ -207,6 +216,14 @@ export function formatTimeStr(date: Date): string {
  */
 export function formatLogQuota(quota: number): string {
   return formatQuotaWithCurrency(quota, {
+    digitsLarge: 4,
+    digitsSmall: 6,
+    abbreviate: false,
+  })
+}
+
+export function formatLogQuotaCNY(quota: number): string {
+  return formatQuotaAsCNY(quota, {
     digitsLarge: 4,
     digitsSmall: 6,
     abbreviate: false,
