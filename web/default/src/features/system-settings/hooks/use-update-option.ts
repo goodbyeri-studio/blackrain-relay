@@ -38,6 +38,8 @@ const STATUS_RELATED_KEYS = [
   'general_setting.custom_currency_symbol',
   'general_setting.custom_currency_exchange_rate',
   'DefaultUseAutoGroup',
+  'console_setting.announcements',
+  'console_setting.announcements_enabled',
 ]
 
 const USER_GROUP_RELATED_KEYS = [

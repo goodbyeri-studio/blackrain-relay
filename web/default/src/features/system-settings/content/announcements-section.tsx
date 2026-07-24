@@ -63,6 +63,8 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import dayjs from '@/lib/dayjs'
 
+import { FormDirtyIndicator } from '../components/form-dirty-indicator'
+import { FormNavigationGuard } from '../components/form-navigation-guard'
 import { SettingsSwitchField } from '../components/settings-form-layout'
 import { SettingsSection } from '../components/settings-section'
 import { useUpdateOption } from '../hooks/use-update-option'
@@ -183,10 +185,11 @@ export function AnnouncementsSection({
 
   const handleToggleEnabled = async (checked: boolean) => {
     try {
-      await updateOption.mutateAsync({
+      const result = await updateOption.mutateAsync({
         key: 'console_setting.announcements_enabled',
         value: checked,
       })
+      if (!result.success) return
       setIsEnabled(checked)
       toast.success(t('Setting saved'))
     } catch {
@@ -275,10 +278,11 @@ export function AnnouncementsSection({
 
   const handleSaveAll = async () => {
     try {
-      await updateOption.mutateAsync({
+      const result = await updateOption.mutateAsync({
         key: 'console_setting.announcements',
         value: JSON.stringify(announcements),
       })
+      if (!result.success) return
       setHasChanges(false)
       toast.success(t('Timeline saved successfully'))
     } catch {
@@ -334,6 +338,8 @@ export function AnnouncementsSection({
 
   return (
     <SettingsSection title={t('Timeline Management')}>
+      <FormNavigationGuard when={hasChanges} />
+      <FormDirtyIndicator isDirty={hasChanges} />
       <div className='space-y-4'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <div className='flex flex-wrap items-center gap-2'>
