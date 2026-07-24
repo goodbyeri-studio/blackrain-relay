@@ -15,7 +15,6 @@ import (
 
 // GetAllModelsMeta 获取模型列表（分页）
 func GetAllModelsMeta(c *gin.Context) {
-
 	pageInfo := common.GetPageQuery(c)
 	status := c.Query("status")
 	syncOfficial := c.Query("sync_official")
@@ -43,7 +42,6 @@ func GetAllModelsMeta(c *gin.Context) {
 
 // SearchModelsMeta 搜索模型列表
 func SearchModelsMeta(c *gin.Context) {
-
 	keyword := c.Query("keyword")
 	vendor := c.Query("vendor")
 	status := c.Query("status")
@@ -67,6 +65,21 @@ func SearchModelsMeta(c *gin.Context) {
 		"page_size":     pageInfo.GetPageSize(),
 		"vendor_counts": vendorCounts,
 	})
+}
+
+// SyncDeepKeyCatalog forces an upstream refresh and persists model availability.
+func SyncDeepKeyCatalog(c *gin.Context) {
+	catalog, err := refreshDeepKeyPricingCatalog()
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	result, err := syncDeepKeyCatalogModels(catalog)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccess(c, result)
 }
 
 // GetModelMeta 根据 ID 获取单条模型信息
@@ -130,11 +143,19 @@ func UpdateModelMeta(c *gin.Context) {
 
 	if statusOnly {
 		// 只更新状态，防止误清空其他字段
-		if err := model.DB.Model(&model.Model{}).Where("id = ?", m.Id).Update("status", m.Status).Error; err != nil {
+		if err := model.UpdateModelPublicationStatus(m.Id, m.Status); err != nil {
 			common.ApiError(c, err)
 			return
 		}
 	} else {
+		var existing model.Model
+		if err := model.DB.First(&existing, m.Id).Error; err != nil {
+			common.ApiError(c, err)
+			return
+		}
+		if existing.CatalogOnly {
+			m.Status = existing.Status
+		}
 		// 名称冲突检查
 		if dup, err := model.IsModelNameDuplicated(m.Id, m.ModelName); err != nil {
 			common.ApiError(c, err)

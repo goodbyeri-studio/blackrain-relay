@@ -73,9 +73,15 @@ func GetPricing(c *gin.Context) {
 	if catalog, err := getDeepKeyPricingCatalog(); err != nil {
 		common.SysLog("load DeepKey pricing catalog failed: " + err.Error())
 	} else {
+		catalogModels := []model.Pricing{}
+		if filtered, err := model.FilterPublishedDeepKeyCatalog(catalog.Models); err != nil {
+			common.SysLog("filter DeepKey catalog models failed: " + err.Error())
+		} else {
+			catalogModels = filtered
+		}
 		// The public catalog is descriptive data, not an authorization source.
 		// Only expose catalog models whose groups are already enabled locally.
-		pricing = mergePricingCatalog(pricing, filterPricingByUsableGroups(catalog.Models, usableGroup))
+		pricing = mergePricingCatalog(pricing, filterPricingByUsableGroups(catalogModels, usableGroup))
 		vendors = mergePricingVendors(vendors, catalog.Vendors)
 		for catalogGroup, ratio := range catalog.GroupRatio {
 			if _, allowed := usableGroup[catalogGroup]; !allowed {

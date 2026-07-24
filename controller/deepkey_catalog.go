@@ -53,7 +53,33 @@ var deepKeyCatalogCache = struct {
 var (
 	deepKeyCatalogRefresh singleflight.Group
 	deepKeyCatalogFetcher = fetchDeepKeyPricingCatalog
+	deepKeyCatalogSyncMu  sync.Mutex
 )
+
+func syncDeepKeyCatalogModels(catalog *deepKeyPricingCatalog) (model.DeepKeyCatalogSyncResult, error) {
+	if catalog == nil {
+		return model.DeepKeyCatalogSyncResult{}, nil
+	}
+	deepKeyCatalogSyncMu.Lock()
+	defer deepKeyCatalogSyncMu.Unlock()
+	items := make([]model.DeepKeyCatalogItem, 0, len(catalog.Models))
+	for _, item := range catalog.Models {
+		items = append(items, model.DeepKeyCatalogItem{
+			ModelName:    item.ModelName,
+			Description:  item.Description,
+			Icon:         item.Icon,
+			Tags:         item.Tags,
+			VendorID:     item.VendorID,
+			EnableGroups: item.EnableGroup,
+		})
+	}
+	result, err := model.SyncDeepKeyCatalogModels(items)
+	if err != nil {
+		return model.DeepKeyCatalogSyncResult{}, err
+	}
+	model.RefreshPricing()
+	return result, nil
+}
 
 func applyDeepKeyCatalogPolicy(items []model.Pricing, groupRatio map[string]float64) error {
 	for i := range items {
