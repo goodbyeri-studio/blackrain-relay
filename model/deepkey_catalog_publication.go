@@ -105,6 +105,7 @@ func SyncDeepKeyCatalogModels(items []DeepKeyCatalogItem) (DeepKeyCatalogSyncRes
 		for name := range byName {
 			names = append(names, name)
 		}
+		sort.Strings(names)
 		query := tx.Where("catalog_only = ? OR model_name IN ?", true, names).Order("id ASC")
 		if err := lockForUpdate(query).Find(&existing).Error; err != nil {
 			return err
@@ -114,7 +115,8 @@ func SyncDeepKeyCatalogModels(items []DeepKeyCatalogItem) (DeepKeyCatalogSyncRes
 			existingByName[existing[i].ModelName] = &existing[i]
 		}
 
-		for name, item := range byName {
+		for _, name := range names {
+			item := byName[name]
 			_, available := availableNames[name]
 			available = available && availability.hasModel(name, item.EnableGroups)
 			meta := existingByName[name]
